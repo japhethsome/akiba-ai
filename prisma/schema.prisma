@@ -1,0 +1,129 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  users               User[]
+  suppliers           Supplier[]
+  products            Product[]
+  transactions        Transaction[]
+  inventoryLogs       InventoryLog[]
+  forecastResults     ForecastResult[]
+  reorderSuggestions  ReorderSuggestion[]
+  insights            Insight[]
+}
+
+model User {
+  user_id       String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          String   // 'owner' or 'attendant'
+  created_at    DateTime @default(now())
+  store_id      String
+  store         Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+  inventoryLogs InventoryLog[]
+}
+
+model Supplier {
+  supplier_id    String   @id @default(uuid())
+  name           String
+  contact        String
+  location       String?
+  store_id       String
+  lead_time_days Int      @default(0)
+  store          Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  products       Product[]
+}
+
+model Product {
+  product_id     String   @id @default(uuid())
+  name           String
+  category       String
+  unit_price     Decimal
+  stock_quantity Int      @default(0)
+  reorder_level  Int      @default(10)
+  supplier_id    String?
+  created_at     DateTime @default(now())
+  image_url      String?
+  store_id       String
+  store          Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  supplier       Supplier? @relation(fields: [supplier_id], references: [supplier_id])
+  transactions   Transaction[]
+  inventoryLogs  InventoryLog[]
+  forecastResults ForecastResult[]
+}
+
+model Transaction {
+  transaction_id   String   @id @default(uuid())
+  product_id       String
+  user_id          String
+  quantity         Int
+  total_price      Decimal
+  transaction_type String   // 'sale' or 'restock'
+  store_id         String
+  created_at       DateTime @default(now())
+  product          Product  @relation(fields: [product_id], references: [product_id])
+  user             User     @relation(fields: [user_id], references: [user_id])
+  store            Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  inventoryLog     InventoryLog?
+}
+
+model InventoryLog {
+  log_id           String   @id @default(uuid())
+  product_id       String
+  change_type      String   // 'add' or 'remove'
+  quantity_changed Int
+  timestamp        DateTime @default(now())
+  store_id         String
+  created_at       DateTime @default(now())
+  reason           String?
+  transaction_id   String?  @unique
+  user_id          String?
+  product          Product  @relation(fields: [product_id], references: [product_id])
+  transaction      Transaction? @relation(fields: [transaction_id], references: [transaction_id])
+  user             User?    @relation(fields: [user_id], references: [user_id])
+  store            Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+}
+
+model ForecastResult {
+  forecast_id      String   @id @default(uuid())
+  store_id         String
+  product_id       String
+  predicted_demand Int
+  forecast_period  String
+  created_at       DateTime @default(now())
+  store            Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  product          Product  @relation(fields: [product_id], references: [product_id])
+}
+
+model ReorderSuggestion {
+  suggestions_id     String   @id @default(uuid())
+  store_id           String
+  product_id         String
+  suggested_quantity Int
+  reason             String?
+  created_at         DateTime @default(now())
+  store              Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+}
+
+model Insight {
+  insight_id  String   @id @default(uuid())
+  store_id    String
+  query       String
+  response    String
+  created_at  DateTime @default(now())
+  store       Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+}
