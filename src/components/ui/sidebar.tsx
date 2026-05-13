@@ -21,81 +21,97 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-[240px] bg-inverse-surface text-inverse-on-surface flex-col z-[60]">
-        <div className="h-[64px] flex items-center px-md border-b border-white/10 gap-sm">
-          <span className="material-symbols-outlined text-primary-fixed text-[28px] fill-1">
-            account_balance_wallet
-          </span>
-          <span className="text-primary-fixed font-bold text-[18px]">
-            Akiba <span className="text-secondary-container">AI</span>
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-[240px] flex-col z-[60]"
+        style={{ background: "linear-gradient(180deg, #1a2e24 0%, #111c16 100%)" }}>
+
+        {/* Brand */}
+        <div className="h-16 flex items-center px-5 border-b gap-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(134,248,201,0.15)" }}>
+            <span className="material-symbols-outlined text-[18px]" style={{ color: "#86f8c9" }}>account_balance_wallet</span>
+          </div>
+          <span className="font-black text-lg text-white">
+            Akiba <span style={{ color: "#86f8c9" }}>AI</span>
           </span>
         </div>
 
-        <nav className="flex-1 py-lg px-xs space-y-base overflow-y-auto">
+        {/* Nav */}
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-md px-md h-[48px] rounded-xl cursor-pointer transition-all ${
-                  isActive
-                    ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
-                    : item.isAi
-                    ? "text-secondary-container hover:bg-white/10"
-                    : "text-inverse-on-surface/70 hover:bg-white/10 hover:text-inverse-on-surface"
-                }`}
+                className="flex items-center gap-3 px-3 h-11 rounded-xl transition-all text-sm font-bold"
+                style={isActive
+                  ? { background: "#00694c", color: "white" }
+                  : item.isAi
+                  ? { color: "#958dff" }
+                  : { color: "rgba(255,255,255,0.65)" }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               >
-                <span className={`material-symbols-outlined ${isActive ? 'fill-1' : ''} ${item.isAi && !isActive ? 'text-secondary-container' : ''}`}>
+                <span className="material-symbols-outlined text-[20px]"
+                  style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                   {item.icon}
                 </span>
-                <span className="font-body-md">{item.label}</span>
+                <span>{item.label}</span>
+                {item.isAi && !isActive && (
+                  <span className="ml-auto text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                    style={{ background: "rgba(149,141,255,0.2)", color: "#958dff" }}>AI</span>
+                )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="user-profile border-t border-white/10 p-md flex items-center gap-sm mt-auto">
-          <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm">
-            W
-          </div>
+        {/* User profile */}
+        <div className="border-t p-4 flex items-center gap-3" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+            style={{ background: "#008560", color: "#f5fff7" }}>W</div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-body-md text-inverse-on-surface font-medium truncate">Wanjiku M.</span>
-            <span className="text-[10px] text-inverse-on-surface/50 uppercase font-bold tracking-wider">Owner</span>
+            <span className="text-sm text-white font-bold truncate">Wanjiku M.</span>
+            <span className="text-[10px] uppercase font-black tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Owner</span>
           </div>
-          <button className="material-symbols-outlined text-inverse-on-surface/50 hover:text-error transition-colors">
+          <button className="material-symbols-outlined text-[20px] transition-colors"
+            style={{ color: "rgba(255,255,255,0.4)" }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#ba1a1a"}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.4)"}>
             logout
           </button>
         </div>
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] bg-surface border-t border-outline-variant flex justify-around items-center z-[100] px-xs">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-[#bccac1] flex justify-around items-center z-[100] px-2">
         {navItems.slice(0, 4).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 py-sm px-md transition-colors ${
-                isActive ? "text-primary" : "text-on-surface-variant"
-              }`}
+              className="flex flex-col items-center gap-1 py-2 px-3 transition-colors"
+              style={{ color: isActive ? "#00694c" : "#6d7a73" }}
             >
-              <span className={`material-symbols-outlined ${isActive ? 'fill-1' : ''}`}>
+              <span className="material-symbols-outlined text-[22px]"
+                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                 {item.icon}
               </span>
-              <span className="text-[10px] font-bold uppercase">{item.label.split(' ')[0]}</span>
+              <span className="text-[10px] font-black uppercase">{item.label.split(' ')[0]}</span>
             </Link>
           );
         })}
         <Link
-          href="/settings"
-          className={`flex flex-col items-center gap-1 py-sm px-md transition-colors ${
-            pathname === "/settings" ? "text-primary" : "text-on-surface-variant"
-          }`}
+          href="/ai-insights"
+          className="flex flex-col items-center gap-1 py-2 px-3 transition-colors"
+          style={{ color: pathname === "/ai-insights" ? "#584fbc" : "#6d7a73" }}
         >
-          <span className="material-symbols-outlined">person</span>
-          <span className="text-[10px] font-bold uppercase">Me</span>
+          <span className="material-symbols-outlined text-[22px]"
+            style={{ fontVariationSettings: pathname === "/ai-insights" ? "'FILL' 1" : "'FILL' 0" }}>
+            auto_awesome
+          </span>
+          <span className="text-[10px] font-black uppercase">AI</span>
         </Link>
       </nav>
     </>

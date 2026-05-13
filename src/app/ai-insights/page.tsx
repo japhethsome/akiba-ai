@@ -5,14 +5,10 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { TopBar } from "@/components/ui/topbar";
 
 const quickPrompts = [
-  "📊 Show my P&L",
-  "⚠️ What's low on stock?",
-  "🏆 Best seller this month",
-  "💀 Show dead stock",
-  "📦 What should I reorder?",
-  "💰 Am I making profit?",
-  "📈 Sales trend this week",
-  "🛒 Slow-moving products",
+  "📊 Show my P&L", "⚠️ What's low on stock?",
+  "🏆 Best seller this month", "💀 Show dead stock",
+  "📦 What should I reorder?", "💰 Am I making profit?",
+  "📈 Sales trend this week", "🛒 Slow-moving products",
 ];
 
 const topSellers = [
@@ -33,281 +29,199 @@ interface Message {
 
 export default function AIInsightsPage() {
   const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "ai",
-      text: "Habari! 👋 Mimi ni StockSense AI. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!",
-      time: "Just now",
-    },
-    {
-      role: "user",
-      text: "What was my best-selling item this week?",
-      time: "2 min ago",
-    },
-    {
-      role: "ai",
-      type: "analysis",
-      text: "Your top performer this week was Sugar 1kg with 96 units sold, generating KES 12,480 in revenue. This is 23% higher than last week — consider ordering an extra 50 units before the weekend rush.",
-      time: "2 min ago",
-      data: { label: "Sugar 1kg", progress: 85 },
-    },
-    {
-      role: "user",
-      text: "Je, kuna bidhaa zinazoisha hivi sasa?",
-      time: "1 min ago",
-    },
-    {
-      role: "ai",
-      type: "warning",
-      text: "Ndiyo! Kuna bidhaa 3 zinazohitaji restock haraka:\n• Cooking Oil 2L — imekwisha kabisa (0 units)\n• Nails 4-inch — units 5 zimebaki (chini ya kiwango cha 10)\n• Broiler Feed 50kg — units 3 zimebaki\nNapendekeza uagize leo ili usipoteze mauzo ya kesho.",
-      time: "1 min ago",
-    },
+    { role: "ai", text: "Habari! 👋 Mimi ni Akiba AI. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!", time: "Just now" },
+    { role: "user", text: "What was my best-selling item this week?", time: "2 min ago" },
+    { role: "ai", type: "analysis", text: "Your top performer this week was Sugar 1kg with 96 units sold, generating KES 12,480 in revenue. This is 23% higher than last week — consider ordering an extra 50 units before the weekend rush.", time: "2 min ago", data: { label: "Sugar 1kg", progress: 85 } },
+    { role: "user", text: "Je, kuna bidhaa zinazoisha hivi sasa?", time: "1 min ago" },
+    { role: "ai", type: "warning", text: "Ndiyo! Kuna bidhaa 3 zinazohitaji restock haraka:\n• Cooking Oil 2L — imekwisha kabisa (0 units)\n• Nails 4-inch — units 5 zimebaki\n• Broiler Feed 50kg — units 3 zimebaki\nNapendekeza uagize leo ili usipoteze mauzo ya kesho.", time: "1 min ago" },
   ]);
 
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isThinking]);
 
   const handleSend = (text: string) => {
     if (!text.trim()) return;
-
-    const userMsg: Message = {
-      role: "user",
-      text: text,
-      time: "Just now",
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, { role: "user", text, time: "Just now" }]);
     setInput("");
     setIsThinking(true);
-
-    // Mock AI response
     setTimeout(() => {
       setIsThinking(false);
-      let aiResponse: Message = {
-        role: "ai",
-        text: "I'm analyzing your data now. Based on your recent transactions, everything looks stable, but I've noticed a slight drop in weekend traffic. Would you like a more detailed P&L breakdown?",
-        time: "Just now",
-      };
-
+      let aiResponse: Message = { role: "ai", text: "I'm analyzing your data now. Based on your recent transactions, everything looks stable. Would you like a detailed P&L breakdown?", time: "Just now" };
       if (text.toLowerCase().includes("dead") || text.toLowerCase().includes("slow")) {
-        aiResponse = {
-          role: "ai",
-          type: "table",
-          text: "Here are products that haven't sold in the last 90+ days:",
-          time: "Just now",
-          data: [
-            { p: "Wire Mesh 1m", l: "97 days ago", s: "32 units", c: "27,200" },
-            { p: "Cement 50kg", l: "112 days ago", s: "8 units", c: "32,000" },
-          ]
-        };
+        aiResponse = { role: "ai", type: "table", text: "Here are products that haven't sold in the last 90+ days:", time: "Just now", data: [{ p: "Wire Mesh 1m", l: "97 days ago", s: "32 units", c: "27,200" }, { p: "Cement 50kg", l: "112 days ago", s: "8 units", c: "32,000" }] };
       }
-
-      setMessages((prev) => [...prev, aiResponse]);
+      setMessages(prev => [...prev, aiResponse]);
     }, 2000);
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen" style={{ background: "#f5fbf5" }}>
       <Sidebar />
       <div className="flex-1 md:ml-[240px] flex flex-col min-w-0">
         <TopBar title="AI Insights" />
 
-        <main className="flex-1 p-margin-mobile md:p-lg grid md:grid-cols-[320px_1fr] gap-md max-w-7xl mx-auto w-full h-[calc(100vh-64px)] overflow-hidden">
-          {/* LEFT PANEL: QUICK INSIGHTS */}
-          <div className="hidden md:flex bg-surface-container-lowest rounded-xl border border-outline-variant h-full flex-col p-md overflow-y-auto shadow-sm">
-            <h2 className="text-h2 font-black text-on-surface mb-md">Quick Insights</h2>
+        <main className="flex-1 p-4 md:p-5 grid md:grid-cols-[300px_1fr] gap-4 max-w-7xl mx-auto w-full overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
 
-            {/* P&L Summary Card */}
-            <div className="bg-primary-container text-on-primary-container p-md rounded-xl mb-md shadow-sm">
-              <span className="text-label-caps font-black opacity-80 mb-sm block uppercase tracking-wider">This Week&apos;s Performance</span>
-              <div className="grid grid-cols-3 gap-xs text-center">
-                <div className="flex flex-col">
-                  <span className="text-[16px] font-black">84.2K</span>
-                  <span className="text-[10px] font-bold opacity-70 uppercase">Rev</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[16px] font-black">61.4K</span>
-                  <span className="text-[10px] font-bold opacity-70 uppercase">Costs</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[16px] font-black text-primary-fixed">22.8K</span>
-                  <span className="text-[10px] font-bold opacity-70 uppercase">Profit</span>
-                </div>
+          {/* LEFT PANEL */}
+          <div className="hidden md:flex bg-white rounded-xl border border-[#bccac1] h-full flex-col p-4 overflow-y-auto shadow-sm gap-4">
+            <h2 className="text-base font-black text-[#171d1a]">Quick Insights</h2>
+
+            {/* P&L Card */}
+            <div className="p-4 rounded-xl shadow-sm" style={{ background: "#008560", color: "#f5fff7" }}>
+              <span className="text-[10px] font-black opacity-70 block uppercase tracking-widest mb-3">This Week&apos;s Performance</span>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                {[["84.2K", "Rev"], ["61.4K", "Costs"], ["22.8K", "Profit"]].map(([v, l]) => (
+                  <div key={l} className="flex flex-col">
+                    <span className="text-lg font-black" style={{ color: l === "Profit" ? "#86f8c9" : "white" }}>{v}</span>
+                    <span className="text-[9px] font-black uppercase opacity-60">{l}</span>
+                  </div>
+                ))}
               </div>
-              <div className="mt-md pt-sm border-t border-white/10 flex justify-center">
-                <span className="text-primary-fixed font-black text-label-caps">↑ 8% vs last week</span>
+              <div className="mt-3 pt-2 border-t flex justify-center" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+                <span className="text-[11px] font-black" style={{ color: "#86f8c9" }}>↑ 8% vs last week</span>
               </div>
             </div>
 
-            <span className="text-label-caps text-on-surface-variant font-black uppercase mb-sm tracking-widest text-[10px]">Ask a question:</span>
-            <div className="flex flex-wrap gap-xs mb-md">
+            <span className="text-[10px] text-[#6d7a73] font-black uppercase tracking-widest">Ask a question:</span>
+            <div className="flex flex-wrap gap-2">
               {quickPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => handleSend(prompt)}
-                  className="bg-surface-container border border-outline-variant rounded-full px-sm py-base text-label-caps font-bold text-on-surface hover:bg-secondary-container hover:text-on-secondary-container hover:border-secondary transition-all active:scale-95 shadow-sm"
-                >
+                <button key={prompt} onClick={() => handleSend(prompt)}
+                  className="bg-[#f5fbf5] border border-[#bccac1] rounded-full px-3 py-1 text-xs font-bold text-[#171d1a] hover:border-[#584fbc] hover:bg-[#f0eeff] transition-all active:scale-95">
                   {prompt}
                 </button>
               ))}
             </div>
 
-            <span className="text-label-caps text-on-surface-variant font-black uppercase mb-sm tracking-widest text-[10px]">Top 5 Sellers</span>
-            <div className="space-y-xs">
+            <span className="text-[10px] text-[#6d7a73] font-black uppercase tracking-widest">Top 5 Sellers</span>
+            <div className="space-y-1">
               {topSellers.map((item) => (
-                <div key={item.rank} className="flex items-center justify-between py-xs border-b border-outline-variant/30 last:border-0">
-                  <div className="flex items-center gap-sm">
-                    <div className="w-6 h-6 rounded-full bg-primary text-on-primary font-black text-[11px] flex items-center justify-center">
-                      {item.rank}
-                    </div>
-                    <span className="text-body-md font-medium text-on-surface">{item.name}</span>
+                <div key={item.rank} className="flex items-center justify-between py-1.5 border-b border-[#e4eae4] last:border-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-[#00694c] text-white font-black text-[11px] flex items-center justify-center">{item.rank}</div>
+                    <span className="text-sm font-medium text-[#171d1a]">{item.name}</span>
                   </div>
-                  <span className="text-body-md font-black text-on-surface">KES {item.amount}</span>
+                  <span className="text-sm font-black text-[#171d1a]">KES {item.amount}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* RIGHT PANEL: CHAT INTERFACE */}
-          <div className="flex flex-col h-full bg-surface rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-            <header className="flex items-center justify-between px-md py-sm border-b border-outline-variant bg-surface-container-low/50">
-              <div className="flex items-center gap-sm">
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shadow-sm">
-                  <span className="material-symbols-outlined text-on-secondary fill-1 text-[20px]">auto_awesome</span>
+          {/* RIGHT PANEL: CHAT */}
+          <div className="flex flex-col h-full bg-white rounded-xl border border-[#bccac1] overflow-hidden shadow-sm">
+            <header className="flex items-center justify-between px-4 py-3 border-b border-[#bccac1] bg-[#f5fbf5]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm" style={{ background: "#584fbc" }}>
+                  <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                 </div>
                 <div>
-                  <h2 className="text-body-lg font-black text-on-surface leading-none">Akiba AI</h2>
-                  <span className="text-primary font-black text-[10px] uppercase tracking-widest">● Online</span>
+                  <h2 className="text-sm font-black text-[#171d1a] leading-none">Akiba AI</h2>
+                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#00694c" }}>● Online</span>
                 </div>
               </div>
-              <div className="bg-surface-container rounded-full flex p-0.5 border border-outline-variant">
-                <button className="px-sm py-base font-black text-[10px] bg-primary text-on-primary rounded-full uppercase transition-all">EN</button>
-                <button className="px-sm py-base font-black text-[10px] text-on-surface-variant rounded-full uppercase hover:bg-surface-container-high transition-all">SW</button>
+              <div className="flex gap-1 p-0.5 rounded-full border border-[#bccac1] bg-white">
+                <button className="px-3 py-1 text-[10px] font-black rounded-full uppercase transition-all" style={{ background: "#00694c", color: "white" }}>EN</button>
+                <button className="px-3 py-1 text-[10px] font-black rounded-full uppercase text-[#6d7a73] hover:bg-[#f5fbf5] transition-all">SW</button>
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-md py-md space-y-md bg-background/30 scroll-smooth">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth" style={{ background: "#f9fcf9" }}>
               {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in-up`}>
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  style={{ animation: "fadeInUp 0.3s ease-out" }}>
                   {msg.role === "ai" && (
-                    <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center mr-sm mt-1 shadow-sm flex-shrink-0">
-                      <span className="material-symbols-outlined text-on-secondary text-[16px] fill-1">auto_awesome</span>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center mr-2 mt-1 shadow-sm flex-shrink-0"
+                      style={{ background: "#584fbc" }}>
+                      <span className="material-symbols-outlined text-white text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                     </div>
                   )}
-                  <div className={`max-w-[85%] md:max-w-[80%] flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                    <div
-                      className={`p-md rounded-[16px] shadow-sm ${
-                        msg.role === "user"
-                          ? "bg-primary text-on-primary rounded-tr-[4px]"
-                          : "bg-surface-container-lowest border border-outline-variant text-on-surface rounded-tl-[4px]"
-                      }`}
-                    >
+                  <div className={`max-w-[85%] flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                    <div className="p-3 rounded-2xl shadow-sm text-sm leading-relaxed"
+                      style={msg.role === "user"
+                        ? { background: "#00694c", color: "white", borderTopRightRadius: "4px" }
+                        : { background: "white", border: "1px solid #bccac1", color: "#171d1a", borderTopLeftRadius: "4px" }}>
                       {msg.type === "analysis" && (
-                        <div className="inline-flex items-center gap-xs bg-secondary/10 text-secondary font-black text-[10px] rounded-full px-sm py-base mb-sm uppercase tracking-wider">
-                          <span className="material-symbols-outlined text-[14px] fill-1">auto_awesome</span>
+                        <div className="inline-flex items-center gap-1 text-[10px] font-black rounded-full px-2 py-0.5 mb-2 uppercase tracking-wider"
+                          style={{ background: "rgba(88,79,188,0.1)", color: "#584fbc" }}>
+                          <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                           AI Analysis
                         </div>
                       )}
-                      
-                      <div className="whitespace-pre-wrap text-body-md font-medium leading-relaxed">{msg.text}</div>
-
+                      <div className="whitespace-pre-wrap font-medium">{msg.text}</div>
                       {msg.data && msg.type === "analysis" && (
-                        <div className="mt-md space-y-xs">
+                        <div className="mt-3 space-y-1">
                           <div className="flex justify-between text-[10px] font-black uppercase opacity-70">
-                            <span>{msg.data.label}</span>
-                            <span>{msg.data.progress}% Trend</span>
+                            <span>{msg.data.label}</span><span>{msg.data.progress}%</span>
                           </div>
-                          <div className="h-2 bg-surface-container rounded-full overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: `${msg.data.progress}%` }}></div>
+                          <div className="h-1.5 bg-[#e4eae4] rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${msg.data.progress}%`, background: "#00694c" }} />
                           </div>
                         </div>
                       )}
-
                       {msg.type === "table" && (
-                        <div className="mt-md overflow-hidden rounded-xl border border-outline-variant">
-                          <table className="w-full text-[11px] border-collapse">
-                            <thead className="bg-surface-container-high border-b border-outline-variant">
-                              <tr>
-                                <th className="p-xs text-left font-black uppercase">Product</th>
-                                <th className="p-xs text-left font-black uppercase">Last Sold</th>
-                                <th className="p-xs text-right font-black uppercase">Stock</th>
-                                <th className="p-xs text-right font-black uppercase">Value</th>
-                              </tr>
+                        <div className="mt-3 overflow-hidden rounded-xl border border-[#bccac1]">
+                          <table className="w-full text-[11px]">
+                            <thead className="bg-[#f5fbf5] border-b border-[#bccac1]">
+                              <tr>{["Product","Last Sold","Stock","Value"].map(h=><th key={h} className="p-1.5 text-left font-black uppercase text-[#6d7a73]">{h}</th>)}</tr>
                             </thead>
-                            <tbody className="divide-y divide-outline-variant">
+                            <tbody className="divide-y divide-[#e4eae4]">
                               {msg.data.map((row: any, ri: number) => (
                                 <tr key={ri} className="bg-white">
-                                  <td className="p-xs font-bold">{row.p}</td>
-                                  <td className="p-xs opacity-70">{row.l}</td>
-                                  <td className="p-xs text-right">{row.s}</td>
-                                  <td className="p-xs text-right font-bold">KES {row.c}</td>
+                                  <td className="p-1.5 font-bold">{row.p}</td>
+                                  <td className="p-1.5 text-[#6d7a73]">{row.l}</td>
+                                  <td className="p-1.5">{row.s}</td>
+                                  <td className="p-1.5 font-bold">KES {row.c}</td>
                                 </tr>
                               ))}
                             </tbody>
                           </table>
-                          <div className="p-sm bg-surface-container-low flex flex-col gap-sm">
-                             <p className="text-[11px] font-medium text-on-surface-variant italic">Consider running a 10-15% clearance on these to free up KES 59,200.</p>
-                             <button className="bg-secondary text-on-secondary rounded-lg h-[36px] px-sm font-black text-[10px] uppercase tracking-wider shadow-sm active:scale-95 transition-transform">Suggest a clearance strategy</button>
+                          <div className="p-2 bg-[#f5fbf5] flex flex-col gap-2">
+                            <p className="text-[11px] text-[#6d7a73] italic">Consider a 10-15% clearance to free up KES 59,200.</p>
+                            <button className="h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider text-white active:scale-95 transition-transform" style={{ background: "#584fbc" }}>Suggest a clearance strategy</button>
                           </div>
                         </div>
                       )}
                     </div>
-                    <span className={`text-[10px] font-bold uppercase mt-xs ${msg.role === "user" ? "text-on-surface-variant" : "text-on-surface-variant opacity-60"}`}>
-                      {msg.time}
-                    </span>
+                    <span className="text-[10px] font-bold uppercase mt-1" style={{ color: "#6d7a73" }}>{msg.time}</span>
                   </div>
                 </div>
               ))}
 
               {isThinking && (
-                <div className="flex justify-start animate-fade-in-up">
-                  <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center mr-sm mt-1 shadow-sm">
-                    <span className="material-symbols-outlined text-on-secondary text-[16px] fill-1">auto_awesome</span>
+                <div className="flex justify-start">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center mr-2 mt-1 shadow-sm" style={{ background: "#584fbc" }}>
+                    <span className="material-symbols-outlined text-white text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                   </div>
-                  <div className="bg-surface-container-lowest border border-outline-variant rounded-[16px] rounded-tl-[4px] p-md flex items-center gap-xs h-[44px] shadow-sm">
-                    <div className="w-2 h-2 bg-on-surface-variant/40 rounded-full animate-bounce [animation-delay:0s]"></div>
-                    <div className="w-2 h-2 bg-on-surface-variant/40 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                    <div className="w-2 h-2 bg-on-surface-variant/40 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  <div className="bg-white border border-[#bccac1] rounded-2xl rounded-tl-[4px] p-3 flex items-center gap-1.5 h-11 shadow-sm">
+                    {[0, 0.2, 0.4].map((d, i) => (
+                      <div key={i} className="w-2 h-2 bg-[#bccac1] rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />
+                    ))}
                   </div>
                 </div>
               )}
               <div ref={chatEndRef} />
             </div>
 
-            <div className="border-t border-outline-variant bg-surface p-md">
-              <form 
-                className="flex items-end gap-sm"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSend(input);
-                }}
-              >
+            <div className="border-t border-[#bccac1] bg-white p-3">
+              <form className="flex items-end gap-2" onSubmit={e => { e.preventDefault(); handleSend(input); }}>
                 <textarea
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend(input);
-                    }
-                  }}
-                  placeholder="Ask about your stock, sales, or profit..."
-                  className="flex-1 min-h-[48px] max-h-[120px] resize-none bg-surface-container-low border border-outline-variant rounded-xl px-md py-sm font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all overflow-y-auto"
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(input); } }}
+                  placeholder="Ask about your stock, sales, or profit…"
+                  className="flex-1 min-h-[44px] max-h-[120px] resize-none rounded-xl px-3 py-2.5 text-sm outline-none transition-all overflow-y-auto"
+                  style={{ background: "#f5fbf5", border: "1.5px solid #bccac1", color: "#171d1a" }}
+                  onFocus={e => e.target.style.borderColor = "#00694c"}
+                  onBlur={e => e.target.style.borderColor = "#bccac1"}
                 />
-                <button
-                  type="submit"
-                  disabled={!input.trim() || isThinking}
-                  className="w-[48px] h-[48px] bg-primary text-on-primary rounded-xl flex items-center justify-center hover:opacity-90 active:scale-[0.95] transition-all disabled:opacity-30 shadow-sm flex-shrink-0"
-                >
-                  <span className="material-symbols-outlined">send</span>
+                <button type="submit" disabled={!input.trim() || isThinking}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm flex-shrink-0 disabled:opacity-30"
+                  style={{ background: "#00694c", color: "white" }}>
+                  <span className="material-symbols-outlined text-[22px]">send</span>
                 </button>
               </form>
             </div>
@@ -316,13 +230,7 @@ export default function AIInsightsPage() {
       </div>
 
       <style jsx global>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.3s ease-out forwards;
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );

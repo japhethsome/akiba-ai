@@ -8,38 +8,34 @@ interface TopBarProps {
 
 export function TopBar({ title }: TopBarProps) {
   return (
-    <header className="h-[64px] bg-surface border-b border-outline-variant flex items-center justify-between px-md sticky top-0 z-50">
-      <div className="flex items-center gap-md">
-        <button className="material-symbols-outlined md:hidden text-on-surface-variant">
+    <header className="h-16 bg-white border-b border-[#bccac1] flex items-center justify-between px-4 md:px-6 sticky top-0 z-50 shadow-sm">
+      <div className="flex items-center gap-4">
+        <button className="material-symbols-outlined md:hidden text-[#3d4943] text-[24px]">
           menu
         </button>
-        <h1 className="hidden md:block text-h1 font-black text-on-surface">
-          {title}
-        </h1>
-        <div className="hidden md:flex items-center bg-surface-container rounded-full px-sm py-base gap-xs">
-          <span className="material-symbols-outlined text-[16px] text-on-surface-variant">storefront</span>
-          <span className="font-label-caps text-on-surface-variant uppercase font-bold tracking-wider">
-            Wanjiku General Store
-          </span>
+        <h1 className="text-xl font-black text-[#171d1a]">{title}</h1>
+        <div className="hidden md:flex items-center bg-[#f5fbf5] border border-[#bccac1] rounded-full px-3 py-1 gap-2">
+          <span className="material-symbols-outlined text-[16px] text-[#3d4943]">storefront</span>
+          <span className="text-xs text-[#3d4943] uppercase font-black tracking-wider">Wanjiku General Store</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-md">
+      <div className="flex items-center gap-4">
         <div className="relative cursor-pointer group">
-          <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">
+          <span className="material-symbols-outlined text-[#3d4943] group-hover:text-[#00694c] transition-colors">
             notifications_active
           </span>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full flex items-center justify-center text-[10px] text-on-error font-bold border-2 border-surface">
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#ba1a1a] rounded-full flex items-center justify-center text-[10px] text-white font-black border-2 border-white">
             3
           </div>
         </div>
-        
-        <div className="flex items-center gap-xs bg-surface-container-low border border-outline-variant px-sm py-1 rounded-full cursor-pointer hover:bg-surface-container transition-colors">
-          <span className="material-symbols-outlined text-[18px] text-on-surface-variant">globe</span>
-          <span className="text-label-caps font-black text-on-surface">EN</span>
+
+        <div className="flex items-center gap-1 bg-[#f5fbf5] border border-[#bccac1] px-3 py-1 rounded-full cursor-pointer hover:bg-[#eaefea] transition-colors">
+          <span className="material-symbols-outlined text-[18px] text-[#3d4943]">globe</span>
+          <span className="text-xs font-black text-[#171d1a]">EN</span>
         </div>
 
-        <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container font-black flex items-center justify-center shadow-sm">
+        <div className="w-9 h-9 rounded-full bg-[#008560] text-white font-black text-sm flex items-center justify-center shadow-sm">
           W
         </div>
       </div>

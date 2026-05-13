@@ -1,35 +1,19 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
+import Link from "next/link";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartData } from "chart.js";
+import { Bar } from "react-chartjs-2";
 import { Sidebar } from "@/components/ui/sidebar";
 import { TopBar } from "@/components/ui/topbar";
-import Link from "next/link";
-import { 
-  Chart as ChartJS, 
-  CategoryScale, 
-  LinearScale, 
-  BarElement, 
-  Title, 
-  Tooltip, 
-  Legend,
-  ChartData
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const kpis = [
-  { label: "Total Products", value: "248", icon: "inventory_2", color: "text-primary", bg: "bg-primary/10", status: "NORMAL" },
-  { label: "Low Stock Items", value: "12", icon: "warning", color: "text-error", bg: "bg-error/10", badge: "Needs attention", badgeBg: "bg-error-container", badgeText: "text-on-error-container", status: "OUT OF STOCK" },
-  { label: "Today's Revenue", value: "18,450", icon: "payments", color: "text-tertiary", bg: "bg-tertiary/10", currency: "KES", trend: "↑ 12% vs yesterday", trendColor: "text-primary", status: "NORMAL" },
-  { label: "Inventory Value", value: "284,000", icon: "account_balance", color: "text-secondary", bg: "bg-secondary/10", currency: "KES", status: "NORMAL" },
+  { label: "Total Products", value: "248", icon: "inventory_2", iconColor: "#00694c", iconBg: "rgba(0,105,76,0.1)" },
+  { label: "Low Stock Items", value: "12", icon: "warning", iconColor: "#ba1a1a", iconBg: "rgba(186,26,26,0.1)", badge: "Needs attention", badgeStyle: { background: "#ffdad6", color: "#410002" } },
+  { label: "Today's Revenue", value: "18,450", icon: "payments", iconColor: "#805200", iconBg: "rgba(128,82,0,0.1)", currency: "KES", trend: "↑ 12% vs yesterday", trendColor: "#00694c" },
+  { label: "Inventory Value", value: "284,000", icon: "account_balance", iconColor: "#584fbc", iconBg: "rgba(88,79,188,0.1)", currency: "KES" },
 ];
 
 const inventoryData = [
@@ -43,176 +27,184 @@ const inventoryData = [
   { name: "Broiler Feed 50kg", category: "Agro-vet", stock: 3, reorder: 5, price: 2800, status: "LOW STOCK" },
 ];
 
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, React.CSSProperties> = {
+    "IN STOCK": { background: "rgba(0,105,76,0.1)", color: "#00694c" },
+    "LOW STOCK": { background: "rgba(128,82,0,0.12)", color: "#805200" },
+    "OUT OF STOCK": { background: "#ffdad6", color: "#410002" },
+  };
+  return (
+    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase"
+      style={styles[status] ?? {}}>
+      {status}
+    </span>
+  );
+}
+
 export default function DashboardPage() {
   const chartData: ChartData<"bar"> = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        label: "Sales",
-        data: [12400, 9800, 15600, 11200, 18900, 22100, 16800],
-        backgroundColor: "#00694c",
-        borderRadius: 6,
-      },
-    ],
+    datasets: [{
+      label: "Sales (KES)",
+      data: [12400, 9800, 15600, 11200, 18900, 22100, 16800],
+      backgroundColor: "#00694c",
+      borderRadius: 6,
+    }],
   };
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
+    plugins: { legend: { display: false } },
     scales: {
-      y: {
-        grid: {
-          color: "#bccac1",
-          drawTicks: false,
-        },
-        border: { display: false },
-      },
-      x: {
-        grid: { display: false },
-      },
+      y: { grid: { color: "#bccac1" }, border: { display: false } },
+      x: { grid: { display: false } },
     },
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen" style={{ background: "#f5fbf5" }}>
       <Sidebar />
-      
+
       <div className="flex-1 md:ml-[240px] flex flex-col min-w-0">
         <TopBar title="Dashboard" />
-        
-        <main className="flex-1 p-margin-mobile md:p-lg space-y-xl pb-24 md:pb-lg max-w-7xl mx-auto w-full">
+
+        <main className="flex-1 p-4 md:p-6 space-y-5 pb-24 md:pb-6 max-w-7xl mx-auto w-full">
+
           {/* KPI CARDS */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-md">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {kpis.map((kpi, i) => (
-              <div key={i} className="bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
-                <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center mb-sm`}>
-                  <span className={`material-symbols-outlined ${kpi.color}`}>{kpi.icon}</span>
+              <div key={i} className="bg-white rounded-xl p-4 border border-[#bccac1] shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
+                  style={{ background: kpi.iconBg }}>
+                  <span className="material-symbols-outlined text-[22px]" style={{ color: kpi.iconColor }}>{kpi.icon}</span>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-0.5">
                   <div className="flex items-baseline gap-1">
-                    {kpi.currency && <span className="text-on-surface-variant text-body-md font-bold">{kpi.currency}</span>}
-                    <span className={`text-currency-display ${kpi.status === "OUT OF STOCK" ? "text-error" : "text-on-surface"}`}>{kpi.value}</span>
+                    {kpi.currency && <span className="text-xs text-[#3d4943] font-bold">{kpi.currency}</span>}
+                    <span className="text-2xl font-black text-[#171d1a] leading-none">{kpi.value}</span>
                   </div>
-                  <span className="text-label-caps text-on-surface-variant font-bold uppercase">{kpi.label}</span>
+                  <span className="text-[10px] text-[#6d7a73] font-black uppercase tracking-wider">{kpi.label}</span>
                   {kpi.badge && (
-                    <span className={`${kpi.badgeBg} ${kpi.badgeText} text-[10px] font-black uppercase px-xs py-base rounded-full mt-xs inline-block w-fit`}>
-                      {kpi.badge}
-                    </span>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full mt-1 w-fit"
+                      style={kpi.badgeStyle}>{kpi.badge}</span>
                   )}
-                  {kpi.trend && <span className={`${kpi.trendColor} text-label-caps font-bold mt-1`}>{kpi.trend}</span>}
+                  {kpi.trend && (
+                    <span className="text-[11px] font-black mt-1" style={{ color: kpi.trendColor }}>{kpi.trend}</span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
           {/* SALES CHART */}
-          <div className="bg-surface-container-lowest rounded-xl p-md border border-outline-variant shadow-sm">
-            <div className="flex justify-between items-center mb-md">
-              <h2 className="text-h2 font-black text-on-surface">Sales This Week</h2>
-              <div className="flex gap-xs bg-surface-container p-1 rounded-full">
-                <button className="bg-primary text-on-primary px-sm py-base rounded-full text-label-caps font-bold">7D</button>
-                <button className="text-on-surface-variant px-sm py-base rounded-full text-label-caps font-bold hover:bg-surface-container-high transition-colors">30D</button>
-                <button className="text-on-surface-variant px-sm py-base rounded-full text-label-caps font-bold hover:bg-surface-container-high transition-colors">3M</button>
+          <div className="bg-white rounded-xl p-4 md:p-5 border border-[#bccac1] shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-black text-[#171d1a]">Sales This Week</h2>
+              <div className="flex gap-1 bg-[#f5fbf5] p-1 rounded-full border border-[#bccac1]">
+                {["7D", "30D", "3M"].map((p, i) => (
+                  <button key={p} className="px-3 py-1 rounded-full text-xs font-black transition-all"
+                    style={i === 0
+                      ? { background: "#00694c", color: "white" }
+                      : { color: "#6d7a73" }}>
+                    {p}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="h-[240px] md:h-[300px] w-full">
+            <div className="h-56 md:h-72 w-full">
               <Bar data={chartData} options={chartOptions} />
             </div>
           </div>
 
           {/* INVENTORY TABLE */}
-          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
-            <div className="flex justify-between items-center p-md border-b border-outline-variant bg-surface-container-low/30">
-              <h2 className="text-h2 font-black text-on-surface">Inventory</h2>
-              <div className="flex gap-sm">
+          <div className="bg-white rounded-xl border border-[#bccac1] shadow-sm overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-[#bccac1]">
+              <h2 className="text-lg font-black text-[#171d1a]">Inventory</h2>
+              <div className="flex gap-2">
                 <div className="relative hidden sm:block">
-                  <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-                  <input type="text" placeholder="Search products..." className="h-[40px] pl-10 pr-md bg-surface-container-low rounded-xl border border-outline-variant font-body-md focus:border-primary outline-none transition-all w-48 focus:w-64" />
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[#6d7a73]">search</span>
+                  <input type="text" placeholder="Search products…"
+                    className="h-10 pl-9 pr-4 bg-[#f5fbf5] rounded-xl border border-[#bccac1] text-sm focus:border-[#00694c] outline-none transition-all w-44 focus:w-60" />
                 </div>
-                <button className="h-[40px] px-md bg-primary text-on-primary rounded-xl font-bold text-label-caps flex items-center gap-xs active:scale-95 transition-transform shadow-sm">
+                <button className="h-10 px-4 bg-[#00694c] text-white rounded-xl font-black text-xs flex items-center gap-2 active:scale-95 transition-transform shadow-sm hover:bg-[#005a40]">
                   <span className="material-symbols-outlined text-[18px]">add</span>
                   Add Product
                 </button>
               </div>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto">
-              {/* Table Headers (Desktop) */}
-              <div className="hidden md:grid grid-cols-6 px-md py-sm bg-surface-container-high border-b border-outline-variant text-label-caps text-on-surface-variant font-black tracking-wider uppercase">
+              <div className="hidden md:grid grid-cols-6 px-4 py-2 bg-[#f5fbf5] border-b border-[#bccac1] text-[10px] text-[#6d7a73] font-black tracking-widest uppercase">
                 <span>Product</span>
                 <span>Category</span>
                 <span>Stock</span>
-                <span>Reorder Point</span>
+                <span>Reorder Pt</span>
                 <span>Unit Price</span>
                 <span className="text-right">Status</span>
               </div>
 
-              {/* Table Rows */}
-              <div className="divide-y divide-outline-variant">
+              <div className="divide-y divide-[#e4eae4]">
                 {inventoryData.map((item, i) => (
-                  <div key={i} className="md:grid md:grid-cols-6 px-md py-md md:py-sm items-center hover:bg-surface-container transition-colors cursor-pointer group">
+                  <div key={i} className="md:grid md:grid-cols-6 px-4 py-3 md:py-2.5 items-center hover:bg-[#f5fbf5] transition-colors cursor-pointer group">
                     <div className="flex justify-between md:block items-center mb-1 md:mb-0">
-                      <span className="font-bold text-on-surface md:text-body-md">{item.name}</span>
-                      <div className="md:hidden">
-                        {item.status === "IN STOCK" && <span className="bg-primary/10 text-primary rounded-full px-xs py-base text-[10px] font-black uppercase">IN STOCK</span>}
-                        {item.status === "LOW STOCK" && <span className="bg-tertiary-container/20 text-tertiary rounded-full px-xs py-base text-[10px] font-black uppercase">LOW STOCK</span>}
-                        {item.status === "OUT OF STOCK" && <span className="bg-error-container text-on-error-container rounded-full px-xs py-base text-[10px] font-black uppercase">OUT OF STOCK</span>}
+                      <span className="text-sm font-bold text-[#171d1a]">{item.name}</span>
+                      <div className="md:hidden"><StatusBadge status={item.status} /></div>
+                    </div>
+                    <span className="hidden md:block text-sm text-[#6d7a73]">{item.category}</span>
+                    <div className="flex justify-between md:block items-center">
+                      <span className="md:hidden text-[10px] text-[#6d7a73] font-black uppercase">Stock</span>
+                      <span className="text-sm font-bold" style={{ color: item.stock <= item.reorder ? "#ba1a1a" : "#171d1a" }}>{item.stock}</span>
+                    </div>
+                    <div className="flex justify-between md:block items-center">
+                      <span className="md:hidden text-[10px] text-[#6d7a73] font-black uppercase">Reorder At</span>
+                      <span className="text-sm text-[#6d7a73]">{item.reorder}</span>
+                    </div>
+                    <div className="flex justify-between md:block items-center">
+                      <span className="md:hidden text-[10px] text-[#6d7a73] font-black uppercase">Price</span>
+                      <span className="text-sm font-black text-[#171d1a]">KES {item.price}</span>
+                    </div>
+                    <div className="hidden md:flex justify-end items-center gap-3">
+                      <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+                        <button className="material-symbols-outlined text-[18px] text-[#6d7a73] hover:text-[#00694c] p-1">edit</button>
+                        <button className="material-symbols-outlined text-[18px] text-[#6d7a73] hover:text-[#ba1a1a] p-1">delete</button>
                       </div>
-                    </div>
-                    <span className="hidden md:block text-body-md text-on-surface-variant">{item.category}</span>
-                    <div className="flex justify-between md:block items-center">
-                      <span className="md:hidden text-label-caps text-on-surface-variant font-bold uppercase">Stock</span>
-                      <span className={`text-body-md ${item.stock <= item.reorder ? 'text-error font-bold' : 'text-on-surface'}`}>{item.stock}</span>
-                    </div>
-                    <div className="flex justify-between md:block items-center">
-                      <span className="md:hidden text-label-caps text-on-surface-variant font-bold uppercase">Reorder At</span>
-                      <span className="text-body-md text-on-surface-variant">{item.reorder}</span>
-                    </div>
-                    <div className="flex justify-between md:block items-center">
-                      <span className="md:hidden text-label-caps text-on-surface-variant font-bold uppercase">Unit Price</span>
-                      <span className="text-body-md font-bold text-on-surface">KES {item.price}</span>
-                    </div>
-                    <div className="hidden md:flex justify-end items-center gap-md">
-                      <div className="opacity-0 group-hover:opacity-100 flex gap-xs transition-opacity">
-                        <button className="material-symbols-outlined text-on-surface-variant hover:text-primary p-1">edit</button>
-                        <button className="material-symbols-outlined text-on-surface-variant hover:text-error p-1">delete</button>
-                      </div>
-                      {item.status === "IN STOCK" && <span className="bg-primary/10 text-primary rounded-full px-xs py-base text-[10px] font-black uppercase">IN STOCK</span>}
-                      {item.status === "LOW STOCK" && <span className="bg-tertiary-container/20 text-tertiary rounded-full px-xs py-base text-[10px] font-black uppercase">LOW STOCK</span>}
-                      {item.status === "OUT OF STOCK" && <span className="bg-error-container text-on-error-container rounded-full px-xs py-base text-[10px] font-black uppercase">OUT OF STOCK</span>}
+                      <StatusBadge status={item.status} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex justify-between items-center px-md py-sm bg-surface-container-high/50 border-t border-outline-variant">
-              <span className="text-body-md text-on-surface-variant font-medium">Showing 8 of 248 products</span>
-              <div className="flex items-center gap-sm">
-                <button className="material-symbols-outlined text-on-surface-variant hover:text-primary disabled:opacity-30" disabled>chevron_left</button>
-                <span className="text-label-caps font-bold text-on-surface">1 / 31</span>
-                <button className="material-symbols-outlined text-on-surface-variant hover:text-primary">chevron_right</button>
+            <div className="flex justify-between items-center px-4 py-2.5 bg-[#f5fbf5] border-t border-[#bccac1]">
+              <span className="text-xs text-[#6d7a73]">Showing 8 of 248 products</span>
+              <div className="flex items-center gap-2">
+                <button className="material-symbols-outlined text-[20px] text-[#6d7a73] opacity-30 cursor-not-allowed">chevron_left</button>
+                <span className="text-xs font-black text-[#171d1a]">1 / 31</span>
+                <button className="material-symbols-outlined text-[20px] text-[#6d7a73] hover:text-[#00694c]">chevron_right</button>
               </div>
             </div>
           </div>
 
           {/* AI INSIGHTS STRIP */}
-          <div className="ai-purple-tint rounded-xl p-md flex flex-col md:flex-row items-center gap-md justify-between shadow-sm">
-            <div className="flex items-center gap-md">
-              <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary shadow-sm">
-                <span className="material-symbols-outlined fill-1">auto_awesome</span>
+          <div className="rounded-xl p-4 flex flex-col md:flex-row items-center gap-4 justify-between shadow-sm"
+            style={{ background: "rgba(88,79,188,0.07)", borderLeft: "4px solid #584fbc" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: "#584fbc" }}>
+                <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
               </div>
-              <p className="text-body-md text-on-surface font-medium">
-                ✨ <span className="text-secondary font-bold">AI Analysis:</span> You have 3 reorder recommendations ready based on your sales this week.
+              <p className="text-sm text-[#171d1a] font-medium">
+                ✨ <span className="text-[#584fbc] font-black">AI Analysis:</span> You have 3 reorder recommendations ready based on your sales this week.
               </p>
             </div>
-            <Link href="/forecasts" className="bg-secondary text-on-secondary h-[40px] px-md rounded-xl font-bold text-label-caps flex items-center justify-center active:scale-95 transition-transform w-full md:w-auto shadow-sm">
+            <Link href="/forecasts"
+              className="bg-[#584fbc] text-white h-10 px-5 rounded-xl font-black text-xs flex items-center justify-center active:scale-95 transition-transform w-full md:w-auto shadow-sm hover:bg-[#4a42a0] whitespace-nowrap">
               View Recommendations
             </Link>
           </div>
+
         </main>
       </div>
     </div>
