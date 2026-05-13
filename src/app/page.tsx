@@ -1,11 +1,102 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+
+type Language = "en" | "sw";
+
+const translations = {
+  en: {
+    nav: { home: "Home", features: "Features", pricing: "Pricing" },
+    hero: {
+      badge: "AI-POWERED INVENTORY",
+      title1: "Your Business.",
+      title2: "Smarter.",
+      title3: "Stronger.",
+      desc: "Help SMEs in Uasin Gishu never run out of stock, never lose sales, and always know what to reorder — in English or Kiswahili.",
+      cta: "Start Your Free Trial",
+      demo: "Watch Demo",
+      salesLabel: "Daily Sales"
+    },
+    challenge: {
+      badge: "THE CHALLENGE",
+      title: "Running a shop shouldn't feel like guesswork",
+      desc: "Most SMEs in Kenya manage inventory with notebooks and gut feeling. That costs them money every single day.",
+      cards: [
+        { title: "Capital Trapped in Dead Stock", desc: "Ordering by intuition means slow-moving goods pile up, tying up cash that could restock fast-sellers." },
+        { title: "Stockouts Kill Daily Revenue", desc: "Fast-moving items run out before you notice. Every empty shelf is a customer walking to your competitor." },
+        { title: "No Clarity on Real Profit", desc: "Cash in the till ≠ profit. Without P&L visibility, owners can't tell if the business is actually growing." }
+      ]
+    },
+    features: {
+      title: "Built for Kenyan SME Growth",
+      bento1: { title: "Real-Time Inventory Tracking", desc: "Track every unit across your store with automated low-stock alerts. Any change, anywhere, syncs instantly.", alert1: "Low Stock: Wheat Flour", alert2: "Restocked: Sugar 1kg" },
+      bento2: { title: "QR & Barcode Scanning", desc: "Scan products to log stock instantly. No manual typing, no errors during busy hours." },
+      ai: {
+        badge: "AI INSIGHT",
+        title: "Never miss a Friday rush again.",
+        desc: "Our AI analyzes your local trends and predicts that Rice and Sugar demand will increase by 25% this weekend.",
+        cta: "Generate Sales Forecast",
+        rec: "Recommended Restock",
+        match: "AI Best Match",
+        cost: "Estimated Cost"
+      }
+    }
+  },
+  sw: {
+    nav: { home: "Mwanzo", features: "Vipengele", pricing: "Bei" },
+    hero: {
+      badge: "INVENTORI YA AI",
+      title1: "Biashara Yako.",
+      title2: "Werevu Zaidi.",
+      title3: "Imara Zaidi.",
+      desc: "Saidia biashara ndogo ndogo katika Uasin Gishu wasiishiwe na bidhaa, wasipoteze mauzo, na wajue cha kuagiza — kwa Kiingereza au Kiswahili.",
+      cta: "Anza Jaribio la Bure",
+      demo: "Tazama Maonyesho",
+      salesLabel: "Mauzo ya Kila Siku"
+    },
+    challenge: {
+      badge: "CHANGAMOTO",
+      title: "Kuendesha duka kusiwe ni kubahatisha",
+      desc: "Biashara nyingi nchini Kenya husimamia bidhaa kwa madaftari. Hiyo inawagharimu pesa kila siku.",
+      cards: [
+        { title: "Mtaji Umekwama kwa Bidhaa Zisizouzika", desc: "Kuagiza kwa hisia kunafanya bidhaa zisizouzika zirundikane, kukwama kwa pesa ambazo zingeweza kununua bidhaa zinazouzika haraka." },
+        { title: "Kukosekana kwa Bidhaa Kunaua Mapato", desc: "Bidhaa zinazouzika haraka huisha kabla hujaona. Kila rafu tupu ni mteja anayekwenda kwa mshindani wako." },
+        { title: "Hakuna Uwazi wa Faida Halisi", desc: "Pesa kwenye droo sio faida. Bila kuona P&L, wamiliki hawawezi kujua ikiwa biashara inakua kweli." }
+      ]
+    },
+    features: {
+      title: "Imeundwa kwa Ukuaji wa Biashara za Kenya",
+      bento1: { title: "Ufuatiliaji wa Bidhaa kwa Wakati Halisi", desc: "Fuatilia kila bidhaa dukani mwako kwa arifa za kiotomatiki za bidhaa zinazoisha.", alert1: "Bidhaa Inapungua: Ngano", alert2: "Imeongezwa: Sukari 1kg" },
+      bento2: { title: "Skanning ya QR na Barcode", desc: "Skani bidhaa ili kurekodi hisa papo hapo. Hakuna makosa wakati wa masaa yenye shughuli nyingi." },
+      ai: {
+        badge: "MAONI YA AI",
+        title: "Usikose mauzo ya Ijumaa tena.",
+        desc: "AI yetu inachanganua mienendo yako na kutabiri kwamba mahitaji ya Mchele na Sukari yataongezeka kwa 25% wikendi hii.",
+        cta: "Tengeneza Utabiri wa Mauzo",
+        rec: "Agizo Linalopendekezwa",
+        match: "AI Inalingana Bora",
+        cost: "Gharama Inayokadiriwa"
+      }
+    }
+  }
+};
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+  const [lang, setLang] = useState<Language>("en");
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
+
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -13,322 +104,366 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const t = translations[lang];
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#f5fbf5]">
+    <div className="flex flex-col min-h-screen bg-[#f5fbf5] overflow-x-hidden">
 
       {/* TOP APP BAR */}
-      <header className={`fixed top-0 left-0 right-0 h-16 z-[100] transition-all duration-300 border-b border-[#bccac1] bg-[#f5fbf5] ${scrolled ? "shadow-md" : ""}`}>
+      <header className={`fixed top-0 left-0 right-0 h-16 z-[100] transition-all duration-300 border-b border-[#bccac1] bg-[#f5fbf5]/80 backdrop-blur-md ${scrolled ? "shadow-md" : ""}`}>
         <div className="max-w-6xl mx-auto h-full flex items-center justify-between px-4 md:px-6">
-          <span className="text-2xl font-black text-[#00694c]">Akiba <span className="text-[#584fbc]">AI</span></span>
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-2xl font-black text-[#00694c]"
+          >
+            Akiba <span className="text-[#584fbc]">AI</span>
+          </motion.div>
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-[#00694c] font-bold text-sm">Home</Link>
-            <Link href="#features" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">Features</Link>
-            <Link href="#pricing" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">Pricing</Link>
+            <Link href="/" className="text-[#00694c] font-bold text-sm">{t.nav.home}</Link>
+            <Link href="#features" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">{t.nav.features}</Link>
+            <Link href="#pricing" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">{t.nav.pricing}</Link>
           </nav>
           <div className="relative">
-            <button onClick={() => setLangMenuOpen(!langMenuOpen)} className="flex items-center gap-1 rounded-lg hover:bg-[#eaefea] px-2 py-1 cursor-pointer">
+            <button onClick={() => setLangMenuOpen(!langMenuOpen)} className="flex items-center gap-1 rounded-lg hover:bg-[#eaefea] px-2 py-1 cursor-pointer transition-colors">
               <span className="material-symbols-outlined text-[#3d4943] text-[20px]">globe</span>
-              <span className="text-xs text-[#3d4943] font-bold">English</span>
-              <span className="material-symbols-outlined text-[#3d4943] text-[20px]">expand_more</span>
+              <span className="text-xs text-[#3d4943] font-bold uppercase">{lang === 'en' ? 'English' : 'Kiswahili'}</span>
+              <motion.span 
+                animate={{ rotate: langMenuOpen ? 180 : 0 }}
+                className="material-symbols-outlined text-[#3d4943] text-[20px]"
+              >
+                expand_more
+              </motion.span>
             </button>
-            {langMenuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-white border border-[#bccac1] rounded-xl shadow-lg p-1 flex flex-col gap-1 z-[110]">
-                <button className="px-3 py-1 text-xs text-[#00694c] bg-[#eaefea] rounded-lg text-left font-bold">English</button>
-                <button className="px-3 py-1 text-xs text-[#3d4943] hover:bg-[#eaefea] rounded-lg text-left">Kiswahili</button>
-              </div>
-            )}
+            <AnimatePresence>
+              {langMenuOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-2 w-40 bg-white border border-[#bccac1] rounded-xl shadow-xl p-1.5 flex flex-col gap-1 z-[110]"
+                >
+                  <button onClick={() => { setLang('en'); setLangMenuOpen(false); }} className={`px-3 py-2 text-xs rounded-lg text-left font-bold transition-colors ${lang === 'en' ? 'bg-[#eaefea] text-[#00694c]' : 'text-[#3d4943] hover:bg-[#f5fbf5]'}`}>English</button>
+                  <button onClick={() => { setLang('sw'); setLangMenuOpen(false); }} className={`px-3 py-2 text-xs rounded-lg text-left font-bold transition-colors ${lang === 'sw' ? 'bg-[#eaefea] text-[#00694c]' : 'text-[#3d4943] hover:bg-[#f5fbf5]'}`}>Kiswahili</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </header>
 
       {/* HERO */}
-      <section className="pt-28 pb-16 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-          <div className="animate-fade-in-up">
-            <div className="inline-block bg-[#958dff] text-[#2b1c8f] text-xs px-4 py-1.5 rounded-full mb-4 font-bold uppercase tracking-wider">
-              AI-POWERED INVENTORY
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black leading-tight mb-4 text-[#171d1a]">
-              Your Business. <span className="text-[#00694c]">Smarter.</span> Stronger.
+      <section ref={heroRef} className="relative pt-32 pb-20 px-4 md:px-6 overflow-hidden">
+        <motion.div 
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute top-20 right-0 w-96 h-96 bg-[#68dbae]/10 rounded-full blur-[100px] pointer-events-none"
+        />
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-center relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="inline-block bg-[#958dff] text-[#2b1c8f] text-[10px] px-4 py-1.5 rounded-full mb-6 font-black uppercase tracking-widest"
+            >
+              {t.hero.badge}
+            </motion.div>
+            <h1 className="text-5xl md:text-6xl font-black leading-tight mb-6 text-[#171d1a]">
+              {t.hero.title1} <span className="text-[#00694c]">{t.hero.title2}</span> {t.hero.title3}
             </h1>
-            <p className="text-base text-[#3d4943] mb-8 leading-relaxed w-full">
-              Help SMEs in Uasin Gishu never run out of stock, never lose sales,
-              and always know what to reorder — in English or Kiswahili.
+            <p className="text-lg text-[#3d4943] mb-10 leading-relaxed max-w-xl">
+              {t.hero.desc}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/auth" className="bg-[#00694c] text-white h-12 px-6 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm">
-                Start Your Free Trial
-                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              <Link href="/auth" className="bg-[#00694c] text-white h-14 px-8 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:scale-[1.02] transition-all shadow-lg hover:shadow-[#00694c]/20">
+                {t.hero.cta}
+                <span className="material-symbols-outlined text-[24px]">arrow_forward</span>
               </Link>
-              <button className="bg-[#e4eae4] text-[#171d1a] h-12 px-6 rounded-xl font-bold active:scale-[0.98] transition-transform">
-                Watch Demo
+              <button className="bg-white border-2 border-[#bccac1] text-[#171d1a] h-14 px-8 rounded-2xl font-black active:scale-[0.95] hover:bg-[#eff5ef] transition-all">
+                {t.hero.demo}
               </button>
             </div>
-          </div>
-          <div className="relative mt-8 md:mt-0">
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-[#68dbae]/20 rounded-full blur-3xl"></div>
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[#bccac1] aspect-video bg-[#e4eae4] flex items-center justify-center">
-              <span className="material-symbols-outlined text-[80px] text-[#00694c]/30">storefront</span>
-            </div>
-            <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-lg border border-[#bccac1] flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#008560] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#f5fff7] text-[24px]">trending_up</span>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, rotateY: -10 }}
+            whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, type: "spring" }}
+            className="relative mt-12 md:mt-0 group perspective-1000"
+          >
+            <div className="absolute -top-12 -right-12 w-80 h-80 bg-[#584fbc]/5 rounded-full blur-[80px] group-hover:bg-[#584fbc]/10 transition-colors" />
+            
+            <motion.div 
+              whileHover={{ rotateX: 5, rotateY: -5, scale: 1.02 }}
+              className="relative rounded-[32px] overflow-hidden shadow-2xl border border-[#bccac1] aspect-square bg-white"
+            >
+              <Image 
+                src="/hero.png" 
+                alt="Kenyan Shop Owner" 
+                fill 
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#000]/40 to-transparent pointer-events-none" />
+            </motion.div>
+
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              whileInView={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="absolute -bottom-8 -left-8 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[#bccac1] flex items-center gap-5"
+            >
+              <div className="w-14 h-14 rounded-full bg-[#008560] flex items-center justify-center shadow-lg">
+                <span className="material-symbols-outlined text-white text-[32px] fill-1">trending_up</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-xs text-[#3d4943] font-bold uppercase tracking-wider">Daily Sales</span>
-                <span className="text-2xl font-black text-[#171d1a]"><span className="text-sm text-[#3d4943] font-bold mr-1">KES</span>42,500</span>
+                <span className="text-[10px] text-[#3d4943] font-black uppercase tracking-widest opacity-60">{t.hero.salesLabel}</span>
+                <span className="text-3xl font-black text-[#171d1a]"><span className="text-sm text-[#3d4943] font-bold mr-1">KES</span>42,500</span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      {/* PROBLEM SECTION */}
-      <section className="py-16 px-4 md:px-6 bg-[#eff5ef]/60">
+      {/* CHALLENGE SECTION */}
+      <section className="py-24 px-4 md:px-6 bg-[#eff5ef]/40 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12 max-w-2xl mx-auto">
-            <span className="text-xs text-[#584fbc] font-black mb-2 block uppercase tracking-widest">THE CHALLENGE</span>
-            <h2 className="text-3xl font-black text-[#171d1a] mb-4">Running a shop shouldn&apos;t feel like guesswork</h2>
-            <p className="text-sm text-[#3d4943] leading-relaxed">Most SMEs in Kenya manage inventory with notebooks and gut feeling. That costs them money every single day.</p>
+          <div className="text-center mb-16 max-w-2xl mx-auto">
+            <motion.span 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              className="text-[10px] text-[#584fbc] font-black mb-4 block uppercase tracking-[0.3em]"
+            >
+              {t.challenge.badge}
+            </motion.span>
+            <h2 className="text-4xl font-black text-[#171d1a] mb-6">{t.challenge.title}</h2>
+            <p className="text-base text-[#3d4943] leading-relaxed opacity-80">{t.challenge.desc}</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { icon: "inventory", color: "text-[#ba1a1a]", bg: "bg-[#ba1a1a]/10", title: "Capital Trapped in Dead Stock", desc: "Ordering by intuition means slow-moving goods pile up, tying up cash that could restock fast-sellers." },
-              { icon: "remove_shopping_cart", color: "text-[#805200]", bg: "bg-[#805200]/10", title: "Stockouts Kill Daily Revenue", desc: "Fast-moving items run out before you notice. Every empty shelf is a customer walking to your competitor." },
-              { icon: "visibility_off", color: "text-[#584fbc]", bg: "bg-[#584fbc]/10", title: "No Clarity on Real Profit", desc: "Cash in the till ≠ profit. Without P&L visibility, owners can't tell if the business is actually growing." },
-            ].map((c, i) => (
-              <div key={i} className="bg-white p-6 rounded-xl border border-[#bccac1] shadow-sm hover:border-[#00694c] transition-colors group">
-                <div className={`w-10 h-10 ${c.bg} rounded-lg flex items-center justify-center ${c.color} mb-4 group-hover:scale-110 transition-transform`}>
-                  <span className="material-symbols-outlined">{c.icon}</span>
+          <div className="grid md:grid-cols-3 gap-6">
+            {t.challenge.cards.map((c, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="bg-white p-8 rounded-[24px] border border-[#bccac1] shadow-sm hover:border-[#00694c] hover:shadow-xl transition-all group"
+              >
+                <div className={`w-12 h-12 ${i === 0 ? 'bg-[#ba1a1a]/10 text-[#ba1a1a]' : i === 1 ? 'bg-[#805200]/10 text-[#805200]' : 'bg-[#584fbc]/10 text-[#584fbc]'} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
+                  <span className="material-symbols-outlined text-[28px]">{i === 0 ? 'inventory' : i === 1 ? 'remove_shopping_cart' : 'visibility_off'}</span>
                 </div>
-                <h3 className="text-base font-bold text-[#171d1a] mb-2">{c.title}</h3>
-                <p className="text-sm text-[#3d4943] leading-relaxed">{c.desc}</p>
-              </div>
+                <h3 className="text-lg font-black text-[#171d1a] mb-3">{c.title}</h3>
+                <p className="text-sm text-[#3d4943] leading-relaxed opacity-70">{c.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* BENTO GRID FEATURES */}
-      <section id="features" className="py-16 px-4 md:px-6">
+      <section id="features" className="py-24 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-black text-[#171d1a] mb-8">Built for Kenyan SME Growth</h2>
-          <div className="grid md:grid-cols-12 gap-4">
+          <motion.h2 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className="text-4xl font-black text-[#171d1a] mb-12"
+          >
+            {t.features.title}
+          </motion.h2>
+          <div className="grid md:grid-cols-12 gap-6">
             {/* Bento 1 */}
-            <div className="md:col-span-8 bg-[#eff5ef] p-6 rounded-xl border border-[#bccac1] hover:border-[#00694c] transition-colors group relative overflow-hidden">
-              <div className="w-10 h-10 bg-[#00694c]/10 rounded-lg flex items-center justify-center text-[#00694c] mb-4 group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined">inventory_2</span>
+            <motion.div 
+              whileHover={{ scale: 0.99 }}
+              className="md:col-span-8 bg-[#eff5ef] p-8 rounded-[32px] border border-[#bccac1] hover:border-[#00694c] transition-all group relative overflow-hidden min-h-[300px]"
+            >
+              <div className="w-12 h-12 bg-[#00694c]/10 rounded-xl flex items-center justify-center text-[#00694c] mb-6 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-[28px]">inventory_2</span>
               </div>
-              <h3 className="text-base font-bold text-[#171d1a] mb-2">Real-Time Inventory Tracking</h3>
-              <p className="text-sm text-[#3d4943] leading-relaxed max-w-sm">Track every unit across your store with automated low-stock alerts. Any change, anywhere, syncs instantly.</p>
-              <div className="hidden sm:block absolute top-4 right-4 space-y-2">
-                <div className="bg-white p-2 rounded-lg border border-[#bccac1] flex items-center gap-2 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-[#ba1a1a] animate-pulse"></div>
-                  <span className="text-[11px] text-[#3d4943] font-medium">Low Stock: Unga wa Ngano</span>
-                </div>
-                <div className="bg-white p-2 rounded-lg border border-[#bccac1] flex items-center gap-2 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-[#00694c]"></div>
-                  <span className="text-[11px] text-[#3d4943] font-medium">Restocked: Sugar 1kg</span>
-                </div>
+              <h3 className="text-xl font-black text-[#171d1a] mb-3">{t.features.bento1.title}</h3>
+              <p className="text-base text-[#3d4943] leading-relaxed max-w-sm opacity-80">{t.features.bento1.desc}</p>
+              
+              <div className="hidden sm:flex absolute top-8 right-8 flex-col gap-3">
+                <motion.div 
+                  initial={{ x: 50, opacity: 0 }}
+                  whileInView={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-white p-3 rounded-xl border border-[#bccac1] flex items-center gap-3 shadow-lg"
+                >
+                  <div className="w-3 h-3 rounded-full bg-[#ba1a1a] animate-pulse" />
+                  <span className="text-[11px] text-[#3d4943] font-black uppercase tracking-wider">{t.features.bento1.alert1}</span>
+                </motion.div>
+                <motion.div 
+                  initial={{ x: 50, opacity: 0 }}
+                  whileInView={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                  className="bg-white p-3 rounded-xl border border-[#bccac1] flex items-center gap-3 shadow-lg"
+                >
+                  <div className="w-3 h-3 rounded-full bg-[#00694c]" />
+                  <span className="text-[11px] text-[#3d4943] font-black uppercase tracking-wider">{t.features.bento1.alert2}</span>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
+
             {/* Bento 2 */}
-            <div className="md:col-span-4 bg-[#eff5ef] p-6 rounded-xl border border-[#bccac1] hover:border-[#584fbc] transition-colors group">
-              <div className="w-10 h-10 bg-[#584fbc]/10 rounded-lg flex items-center justify-center text-[#584fbc] mb-4 group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined">qr_code_scanner</span>
+            <motion.div 
+              whileHover={{ rotateY: 10, scale: 1.02 }}
+              className="md:col-span-4 bg-[#eff5ef] p-8 rounded-[32px] border border-[#bccac1] hover:border-[#584fbc] transition-all group flex flex-col justify-center perspective-1000"
+            >
+              <div className="w-12 h-12 bg-[#584fbc]/10 rounded-xl flex items-center justify-center text-[#584fbc] mb-6 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-[28px]">qr_code_scanner</span>
               </div>
-              <h3 className="text-base font-bold text-[#171d1a] mb-2">QR &amp; Barcode Scanning</h3>
-              <p className="text-sm text-[#3d4943] leading-relaxed">Scan products to log stock instantly. No manual typing, no errors during busy hours.</p>
-            </div>
+              <h3 className="text-xl font-black text-[#171d1a] mb-3">{t.features.bento2.title}</h3>
+              <p className="text-base text-[#3d4943] leading-relaxed opacity-80">{t.features.bento2.desc}</p>
+            </motion.div>
+
             {/* Bento 3 - AI */}
-            <div className="md:col-span-12 ai-purple-tint p-6 rounded-xl relative overflow-hidden flex flex-col md:flex-row gap-8">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="material-symbols-outlined text-[#584fbc]" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
-                  <span className="text-xs text-[#584fbc] font-black uppercase tracking-widest">AI INSIGHT</span>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              className="md:col-span-12 ai-purple-tint p-10 rounded-[40px] relative overflow-hidden flex flex-col md:flex-row gap-12"
+            >
+              <div className="flex-1 relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="material-symbols-outlined text-[#584fbc] text-[28px]" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
+                  <span className="text-xs text-[#584fbc] font-black uppercase tracking-[0.3em]">{t.features.ai.badge}</span>
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black text-[#171d1a] mb-3 leading-tight">Never miss a Friday rush again.</h2>
-                <p className="text-sm text-[#3d4943] max-w-xl mb-6 leading-relaxed">
-                  Our AI analyzes your local trends and predicts that <span className="font-bold text-[#171d1a]">Rice and Sugar</span> demand will increase by 25% this weekend based on your last 30 days of sales data.
+                <h2 className="text-4xl md:text-5xl font-black text-[#171d1a] mb-6 leading-tight max-w-lg">{t.features.ai.title}</h2>
+                <p className="text-lg text-[#3d4943] max-w-xl mb-10 leading-relaxed opacity-90">
+                  {t.features.ai.desc}
                 </p>
-                <button className="bg-[#584fbc] text-white h-12 px-6 rounded-xl font-bold flex items-center gap-2 active:scale-[0.98] transition-transform shadow-sm">
-                  Generate Sales Forecast
-                  <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                <button className="bg-[#584fbc] text-white h-14 px-10 rounded-2xl font-black flex items-center gap-3 active:scale-[0.95] hover:scale-[1.05] transition-all shadow-xl hover:shadow-[#584fbc]/30">
+                  {t.features.ai.cta}
+                  <span className="material-symbols-outlined text-[24px]">auto_awesome</span>
                 </button>
               </div>
-              <div className="w-full md:w-80 bg-white p-4 rounded-xl shadow-sm border border-[#bccac1] space-y-4">
+
+              <motion.div 
+                whileHover={{ y: -10, rotate: -1 }}
+                className="w-full md:w-96 bg-white/90 backdrop-blur-sm p-8 rounded-[32px] shadow-2xl border border-[#bccac1] space-y-6 relative z-10"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#3d4943] font-bold uppercase tracking-wider">Recommended Restock</span>
-                  <span className="text-[#00694c] font-black text-xs flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>AI Best Match
+                  <span className="text-[10px] text-[#3d4943] font-black uppercase tracking-widest opacity-60">{t.features.ai.rec}</span>
+                  <span className="text-[#00694c] font-black text-[10px] flex items-center gap-1 bg-[#00694c]/10 px-2 py-1 rounded-full uppercase">
+                    <span className="material-symbols-outlined text-[14px]" style={{fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>{t.features.ai.match}
                   </span>
                 </div>
-                {[["Sugar 1kg","150 Units"],["Unga wa Ngano 2kg","80 Units"],["Cooking Oil 2L","45 Units"]].map(([name,qty])=>(
-                  <div key={name} className="flex justify-between items-center py-2 border-b border-[#bccac1] last:border-0">
-                    <span className="text-sm text-[#171d1a]">{name}</span>
-                    <span className="text-sm font-black text-[#171d1a]">{qty}</span>
-                  </div>
-                ))}
-                <div className="pt-2 border-t border-[#bccac1] flex justify-between items-center">
-                  <span className="text-xs text-[#3d4943] font-bold uppercase tracking-wider">Estimated Cost</span>
-                  <span className="text-xl font-black text-[#171d1a]"><span className="text-sm text-[#3d4943] font-bold mr-1">KES</span>32,400</span>
+                <div className="space-y-4">
+                  {[["Sugar 1kg","150 Units"],["Wheat Flour 2kg","80 Units"],["Cooking Oil 2L","45 Units"]].map(([name,qty], idx)=>(
+                    <motion.div 
+                      key={name} 
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + (idx * 0.1) }}
+                      className="flex justify-between items-center py-3 border-b border-[#e4eae4] last:border-0"
+                    >
+                      <span className="text-sm font-bold text-[#171d1a]">{name}</span>
+                      <span className="text-sm font-black text-[#00694c]">{qty}</span>
+                    </motion.div>
+                  ))}
                 </div>
-              </div>
-            </div>
-            {/* Bentos 4-6 */}
-            {[
-              { col: 4, icon: "wifi_off", color: "text-[#00694c]", bg: "bg-[#00694c]/10", border: "hover:border-[#00694c]", title: "Works Without Internet", desc: "Built as a Progressive Web App. Record sales and update stock even when your network is unstable or down." },
-              { col: 4, icon: "translate", color: "text-[#805200]", bg: "bg-[#805200]/10", border: "hover:border-[#805200]", title: "English & Kiswahili", desc: "AI summaries and alerts in the language you're most comfortable with. Tumia lugha yako." },
-              { col: 4, icon: "bar_chart", color: "text-[#584fbc]", bg: "bg-[#584fbc]/10", border: "hover:border-[#584fbc]", title: "Plain-Language P&L Reports", desc: "See your profit and loss explained in simple terms. Know if your business made or lost money this week." },
-            ].map((b, i) => (
-              <div key={i} className={`md:col-span-${b.col} bg-[#eff5ef] p-6 rounded-xl border border-[#bccac1] ${b.border} transition-colors group`}>
-                <div className={`w-10 h-10 ${b.bg} rounded-lg flex items-center justify-center ${b.color} mb-4 group-hover:scale-110 transition-transform`}>
-                  <span className="material-symbols-outlined">{b.icon}</span>
+                <div className="pt-4 border-t border-[#bccac1] flex justify-between items-center">
+                  <span className="text-[10px] text-[#3d4943] font-black uppercase tracking-widest opacity-60">{t.features.ai.cost}</span>
+                  <span className="text-2xl font-black text-[#171d1a]"><span className="text-sm text-[#3d4943] font-bold mr-1">KES</span>32,400</span>
                 </div>
-                <h3 className="text-base font-bold text-[#171d1a] mb-2">{b.title}</h3>
-                <p className="text-sm text-[#3d4943] leading-relaxed">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section className="py-16 px-4 md:px-6 bg-[#eff5ef]/60">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-black text-[#171d1a] text-center mb-12">From guesswork to clarity in 3 steps</h2>
-          <div className="grid md:grid-cols-3 gap-10">
-            {[
-              { n: "1", icon: "add_box", color: "text-[#00694c]", bg: "bg-[#00694c]", title: "Add Your Products", desc: "Digitize your current inventory in minutes. Scan barcodes or type manually — one product at a time." },
-              { n: "2", icon: "point_of_sale", color: "text-[#584fbc]", bg: "bg-[#584fbc]", title: "Record Daily Sales", desc: "Your clerk logs each sale. Stock levels drop automatically. No more end-of-day stocktaking errors." },
-              { n: "3", icon: "auto_awesome", color: "text-[#584fbc]", bg: "bg-[#584fbc]", title: "Get AI Insights", desc: "The system forecasts what you'll need, flags slow movers, and explains your finances in plain language." },
-            ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center text-center">
-                <div className={`w-12 h-12 ${s.bg} text-white rounded-full font-black flex items-center justify-center mb-4 shadow-lg text-lg`}>{s.n}</div>
-                <span className={`material-symbols-outlined ${s.color} text-[48px] mb-4`}>{s.icon}</span>
-                <h3 className="text-base font-bold text-[#171d1a] mb-2">{s.title}</h3>
-                <p className="text-sm text-[#3d4943] leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SOCIAL PROOF */}
-      <section className="py-16 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-black text-[#171d1a] text-center mb-12">Trusted by SMEs across Uasin Gishu</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { quote: "Akiba AI showed me I was over-ordering cooking oil every month. I saved over KES 8,000 in the first two weeks.", name: "Wanjiku M.", role: "Mini-Mart Owner, Eldoret" },
-              { quote: "The AI told me to restock unga before the end-month rush. I didn't run out for the first time in 3 months.", name: "Kipchoge A.", role: "Hardware Store, Turbo" },
-              { quote: "Nilikuwa natumia daftari tu. Sasa ninaona faida yangu kila siku. Mfumo huu ni wa bei nafuu sana.", name: "Aisha O.", role: "Agro-vet, Kapsabet" },
-            ].map((t, i) => (
-              <div key={i} className="bg-white p-6 rounded-xl border border-[#bccac1] shadow-sm flex flex-col">
-                <div className="text-[#a16900] flex gap-1 mb-4 text-lg">★★★★★</div>
-                <p className="text-base text-[#171d1a] italic flex-1 mb-6 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#008560] flex items-center justify-center text-[#f5fff7] font-black">{t.name[0]}</div>
-                  <div>
-                    <p className="text-sm font-bold text-[#171d1a]">{t.name}</p>
-                    <p className="text-xs text-[#3d4943] font-bold uppercase tracking-wider">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING */}
-      <section id="pricing" className="py-16 px-4 md:px-6 bg-[#f5fbf5]">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-black text-[#171d1a] mb-2">Simple, Affordable Pricing</h2>
-            <p className="text-sm text-[#3d4943]">No hidden fees. No technical setup required. Cancel anytime.</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <div className="bg-[#eff5ef] p-8 rounded-xl border border-[#bccac1] flex flex-col">
-              <span className="text-xs text-[#00694c] font-black uppercase tracking-widest mb-4">FREE</span>
-              <div className="mb-4">
-                <span className="text-sm text-[#3d4943] font-bold">KES</span>
-                <span className="text-4xl font-black text-[#171d1a] ml-1">0</span>
-                <span className="text-sm text-[#3d4943] font-bold ml-1">/ month</span>
-              </div>
-              <p className="text-sm text-[#3d4943] leading-relaxed flex-1 mb-8">
-                Get started at no cost with support for up to 50 products, basic daily sales logging, and automated low-stock alerts. Available in both English and Kiswahili so your whole team can use it comfortably from day one.
-              </p>
-              <button className="bg-[#e4eae4] text-[#171d1a] h-12 w-full rounded-xl font-bold active:scale-[0.98] transition-transform">Get Started Free</button>
-            </div>
-            <div className="bg-[#008560] text-[#f5fff7] p-8 rounded-xl border-2 border-[#00694c] relative overflow-hidden flex flex-col">
-              <div className="absolute top-4 right-4 bg-[#00694c] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Most Popular</div>
-              <span className="text-xs font-black uppercase tracking-widest mb-4 opacity-80">PRO</span>
-              <div className="mb-4">
-                <span className="text-sm font-bold opacity-70">KES</span>
-                <span className="text-4xl font-black ml-1">999</span>
-                <span className="text-sm font-bold ml-1 opacity-70">/ month</span>
-              </div>
-              <p className="text-sm opacity-90 leading-relaxed flex-1 mb-8">
-                Unlock the full power of Akiba AI with unlimited products, AI-driven demand forecasting, and plain-language P&amp;L reports. Includes a bilingual AI chatbot, multi-user access, full offline PWA capability, and supplier management — everything you need to scale with confidence.
-              </p>
-              <button className="bg-[#f5fff7] text-[#00694c] h-12 w-full rounded-xl font-black text-lg active:scale-[0.98] transition-transform">Start 14-Day Free Trial</button>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* CTA BANNER */}
-      <section className="py-16 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto bg-[#008560] text-[#f5fff7] p-10 rounded-[32px] relative overflow-hidden">
-          <span className="material-symbols-outlined absolute top-4 right-4 text-[120px] opacity-10 rotate-12">rocket_launch</span>
-          <div className="relative z-10 max-w-2xl">
-            <h2 className="text-4xl font-black leading-tight mb-4">Ready to grow your SME smarter?</h2>
-            <p className="text-base mb-8 opacity-90 leading-relaxed">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their finances.</p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/auth" className="bg-[#f5fff7] text-[#00694c] h-12 px-8 rounded-xl font-black flex items-center justify-center active:scale-[0.98] transition-transform shadow-lg">Start Your Free Trial</Link>
-              <button className="border-2 border-[#f5fff7] text-[#f5fff7] h-12 px-8 rounded-xl font-black active:scale-[0.98] transition-transform">Contact Sales</button>
+      <section className="py-24 px-4 md:px-6">
+        <motion.div 
+          whileHover={{ scale: 0.995 }}
+          className="max-w-6xl mx-auto bg-[#008560] text-[#f5fff7] p-12 md:p-20 rounded-[48px] relative overflow-hidden shadow-2xl"
+        >
+          <motion.span 
+            animate={{ 
+              rotate: [12, 15, 12],
+              y: [0, -10, 0]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="material-symbols-outlined absolute -top-10 -right-10 text-[240px] opacity-10"
+          >
+            rocket_launch
+          </motion.span>
+          <div className="relative z-10 max-w-2xl text-center md:text-left mx-auto md:mx-0">
+            <h2 className="text-5xl md:text-6xl font-black leading-tight mb-8">Ready to grow your SME smarter?</h2>
+            <p className="text-xl mb-12 opacity-90 leading-relaxed font-medium">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their finances.</p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start">
+              <Link href="/auth" className="bg-[#f5fff7] text-[#00694c] h-16 px-12 rounded-2xl font-black text-lg flex items-center justify-center active:scale-[0.95] hover:scale-[1.05] transition-all shadow-2xl">
+                {t.hero.cta}
+              </Link>
+              <button className="border-2 border-white/40 text-white h-16 px-12 rounded-2xl font-black text-lg hover:bg-white/10 transition-all active:scale-[0.95]">
+                Contact Sales
+              </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#2c322e] text-[#dee4de] py-12 px-4 md:px-6 mt-auto">
+      <footer className="bg-[#171d1a] text-[#dee4de] py-20 px-4 md:px-6 mt-auto">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-2 md:col-span-1">
-              <span className="text-2xl font-black text-[#86f8c9] mb-3 block">Akiba <span className="text-[#958dff]">AI</span></span>
-              <p className="text-sm opacity-70 mb-4 leading-relaxed">Smart inventory for the modern Kenyan business.</p>
-              <div className="flex gap-4">
-                <span className="material-symbols-outlined cursor-pointer hover:text-[#86f8c9] transition-colors">social_leaderboard</span>
-                <span className="material-symbols-outlined cursor-pointer hover:text-[#86f8c9] transition-colors">alternate_email</span>
+              <span className="text-3xl font-black text-[#86f8c9] mb-6 block">Akiba <span className="text-[#958dff]">AI</span></span>
+              <p className="text-sm opacity-60 mb-8 leading-relaxed max-w-xs">Smart inventory for the modern Kenyan business. Automate, predict, and grow.</p>
+              <div className="flex gap-6">
+                <Link href="#" className="material-symbols-outlined cursor-pointer hover:text-[#86f8c9] transition-all hover:scale-110">social_leaderboard</Link>
+                <Link href="#" className="material-symbols-outlined cursor-pointer hover:text-[#86f8c9] transition-all hover:scale-110">alternate_email</Link>
               </div>
             </div>
             {[
-              { title: "Product", links: ["Features", "Inventory", "Forecasting", "AI Insights"] },
-              { title: "Support", links: ["Help Center", "Kiswahili Guide", "Contact Us"] },
-              { title: "Company", links: ["About", "Privacy Policy", "Terms of Service"] },
+              { title: "Product", links: [
+                { name: t.nav.features, href: "#features" },
+                { name: t.nav.pricing, href: "#pricing" },
+                { name: "Forecasting", href: "/forecasts" },
+                { name: "AI Insights", href: "/ai-insights" }
+              ] },
+              { title: "Support", links: [
+                { name: "Help Center", href: "#" },
+                { name: "Kiswahili Guide", href: "#" },
+                { name: "Contact Us", href: "#" }
+              ] },
+              { title: "Company", links: [
+                { name: "About", href: "#" },
+                { name: "Privacy Policy", href: "#" },
+                { name: "Terms of Service", href: "#" }
+              ] },
             ].map((col) => (
               <div key={col.title}>
-                <h4 className="font-black text-[#ecf2ed] mb-4 uppercase text-xs tracking-widest">{col.title}</h4>
-                <ul className="space-y-2 text-sm opacity-70">
-                  {col.links.map(l => <li key={l} className="hover:opacity-100 cursor-pointer transition-opacity">{l}</li>)}
+                <h4 className="font-black text-white mb-6 uppercase text-[10px] tracking-[0.2em]">{col.title}</h4>
+                <ul className="space-y-3 text-sm opacity-60">
+                  {col.links.map(l => (
+                    <li key={l.name}>
+                      <Link href={l.href} className="hover:opacity-100 hover:text-[#86f8c9] cursor-pointer transition-all">
+                        {l.name}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
           </div>
-          <div className="pt-8 border-t border-white/10 text-center">
-            <p className="text-xs opacity-40 uppercase tracking-widest">&copy; 2025 Akiba AI. Secure &amp; Encrypted.</p>
+          <div className="pt-10 border-t border-white/5 text-center">
+            <p className="text-[10px] opacity-30 uppercase tracking-[0.4em] font-black">&copy; 2025 Akiba AI. Secure &amp; Encrypted.</p>
           </div>
         </div>
       </footer>
 
       <style jsx global>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+        .perspective-1000 { perspective: 1000px; }
+        .ai-purple-tint {
+          background: linear-gradient(135deg, #f0eeff 0%, #f9f8ff 100%);
+          border: 1px solid rgba(88, 79, 188, 0.2);
         }
-        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+        html { scroll-behavior: smooth; }
       `}</style>
     </div>
   );
