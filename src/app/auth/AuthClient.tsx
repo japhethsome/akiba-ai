@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { registerOwner, loginUser } from "@/lib/actions/auth";
-import { useRouter } from "next/navigation";
+import { registerOwner, loginUser, registerAttendant } from "@/lib/actions/auth";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Language = "en" | "sw";
 
@@ -97,11 +97,20 @@ const translations = {
 
 export default function AuthClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  
   const [mode, setMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [lang, setLang] = useState<Language>("en");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (inviteToken) {
+      setMode("register");
+    }
+  }, [inviteToken]);
 
   const t = translations[lang];
 
@@ -114,7 +123,12 @@ export default function AuthClient() {
     
     let result;
     if (mode === "register") {
-      result = await registerOwner(formData);
+      if (inviteToken) {
+        formData.append("inviteToken", inviteToken);
+        result = await registerAttendant(formData);
+      } else {
+        result = await registerOwner(formData);
+      }
     } else {
       result = await loginUser(formData);
     }
@@ -331,22 +345,16 @@ export default function AuthClient() {
                         className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                     </div>
                   </div>
-                  <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.emailLabel}</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
-                      <input type="email" placeholder="owner@business.com" name="email" required
-                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                  {!inviteToken && (
+                    <div className="group">
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.storeName}</label>
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">storefront</span>
+                        <input type="text" placeholder="Eldo Groceries" name="storeName" required={!inviteToken}
+                          className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.storeName}</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">storefront</span>
-                      <input type="text" placeholder="Eldo Groceries" name="storeName" required
-                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
-                    </div>
-                  </div>
+                  )}
                   <div className="group">
                     <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943]">{t.form.langLabel}</label>
                     <div className="flex gap-2 p-1 bg-[#f0f4f0] rounded-xl border border-[#bccac1]">
@@ -361,15 +369,26 @@ export default function AuthClient() {
                   </div>
                 </motion.div>
               )}
-
+              
               <div className="group">
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.phoneLabel}</label>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.emailLabel}</label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">phone_iphone</span>
-                  <input type="tel" placeholder="07XX XXX XXX" name="phone"
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
+                  <input type="email" placeholder="owner@business.com" name="email" required
                     className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                 </div>
               </div>
+
+              {mode === "register" && (
+                <div className="group">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.phoneLabel}</label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">phone_iphone</span>
+                    <input type="tel" placeholder="07XX XXX XXX" name="phone"
+                      className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                  </div>
+                </div>
+              )}
 
               <div className="group">
                 <div className="flex justify-between items-center mb-2">

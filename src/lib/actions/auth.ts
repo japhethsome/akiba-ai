@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { setSession } from "@/lib/session";
 
 export async function registerOwner(formData: FormData) {
   const name = formData.get("name") as string;
@@ -47,10 +48,63 @@ export async function registerOwner(formData: FormData) {
       return { user: newUser, store: newStore };
     });
 
+    await setSession(result.user.user_id, result.user.role, result.store.id);
+
     return { success: true, user: result.user };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Registration error:", error);
-    return { error: "Something went wrong during registration" };
+    return { success: false, error: error.message };
+  }
+}
+
+export async function registerAttendant(formData: FormData) {
+  try {
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
+    const password = formData.get("password") as string;
+    const inviteToken = formData.get("inviteToken") as string;
+
+    if (!inviteToken) throw new Error("Missing invitation token.");
+
+    const invitation = await prisma.invitation.findUnique({
+      where: { token: inviteToken },
+    });
+
+    if (!invitation || invitation.used || invitation.expires_at < new Date()) {
+      throw new Error("Invalid or expired invitation.");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        phone,
+        password_hash: hashedPassword,
+        role: "attendant",
+        store_id: invitation.store_id,
+      },
+    });
+
+    // Mark invitation as used
+    await prisma.invitation.update({
+      where: { id: invitation.id },
+      data: { used: true },
+    });
+
+    const token = await signToken({ userId: user.user_id, role: user.role });
+    (await cookies()).set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }
 
@@ -78,10 +132,18 @@ export async function loginUser(formData: FormData) {
       return { error: "Invalid email or password" };
     }
 
-    // In a real app, you'd set a cookie/session here
+    await setSession(user.user_id, user.role, user.store_id);
+
     return { success: true, user: { id: user.user_id, name: user.name, role: user.role, store: user.store.name } };
   } catch (error) {
     console.error("Login error:", error);
     return { error: "Something went wrong during login" };
   }
+}
+
+export async function logout() {
+  const { cookies } = await import("next/headers");
+  (await cookies()).delete("session");
+  const { redirect } = await import("next/navigation");
+  redirect("/");
 }

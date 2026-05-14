@@ -13,6 +13,26 @@ datasource db {
 model Store {
   id        String   @id @default(uuid())
   name      String
+  onboarded Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  users               User[]
+// prisma/schema.prisma
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  onboarded Boolean  @default(false)
   createdAt DateTime @default(now())
 
   users               User[]
@@ -23,12 +43,16 @@ model Store {
   forecastResults     ForecastResult[]
   reorderSuggestions  ReorderSuggestion[]
   insights            Insight[]
+  invitations         Invitation[]
+  restockAlerts       RestockAlert[]
+  systemLogs          SystemLog[]
 }
 
 model User {
   user_id       String   @id @default(uuid())
   name          String
   email         String   @unique
+  phone         String   @unique
   password_hash String
   role          String   // 'owner' or 'attendant'
   created_at    DateTime @default(now())
@@ -65,6 +89,7 @@ model Product {
   transactions   Transaction[]
   inventoryLogs  InventoryLog[]
   forecastResults ForecastResult[]
+  restockAlerts   RestockAlert[]
 }
 
 model Transaction {
@@ -127,4 +152,40 @@ model Insight {
   response    String
   created_at  DateTime @default(now())
   store       Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+}
+
+model Invitation {
+  id         String   @id @default(uuid())
+  store_id   String
+  email      String?
+  phone      String?
+  role       String   @default("attendant")
+  token      String   @unique
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+  store      Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+}
+
+model RestockAlert {
+  id                  String   @id @default(uuid())
+  store_id            String
+  product_id          String
+  recommended_quantity Int
+  urgency             String   // 'NORMAL', 'HIGH', 'CRITICAL'
+  status              String   @default("PENDING_APPROVAL") // 'PENDING_APPROVAL', 'APPROVED', 'DISMISSED'
+  created_at          DateTime @default(now())
+
+  store               Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  product             Product  @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+}
+
+model SystemLog {
+  id         String   @id @default(uuid())
+  store_id   String
+  type       String   // e.g., 'AI_INVENTORY_REPORT', 'SECURITY_ALERT', 'SYSTEM_INFO'
+  content    String   // The text report or JSON
+  created_at DateTime @default(now())
+
+  store      Store    @relation(fields: [store_id], references: [id], onDelete: Cascade)
 }

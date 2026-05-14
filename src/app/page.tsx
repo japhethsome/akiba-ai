@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  return <HomeClient />;
+import { getSession } from "@/lib/session";
+
+export default async function Home() {
+  const session = await getSession();
+  const isLoggedIn = !!session;
+  
+  return <HomeClient isLoggedIn={isLoggedIn} />;
 }

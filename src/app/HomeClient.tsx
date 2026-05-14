@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { logout } from "@/lib/actions/auth";
 
 type Language = "en" | "sw";
 
@@ -84,7 +85,7 @@ const translations = {
   }
 };
 
-export default function LandingPage() {
+export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [lang, setLang] = useState<Language>("en");
   const [langMenuOpen, setLangMenuOpen] = useState(false);
@@ -103,6 +104,10 @@ export default function LandingPage() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const t = translations[lang];
 
@@ -132,36 +137,49 @@ export default function LandingPage() {
             <Link href="#features" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">{t.nav.features}</Link>
             <Link href="#pricing" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">{t.nav.pricing}</Link>
           </nav>
-          <div className="relative">
-            <button onClick={() => setLangMenuOpen(!langMenuOpen)} className="flex items-center gap-1 rounded-lg hover:bg-[#eaefea] px-2 py-1 cursor-pointer transition-colors">
-              <span className="material-symbols-outlined text-[#3d4943] text-[20px]">globe</span>
-              <span className="text-xs text-[#3d4943] font-bold uppercase">{lang === 'en' ? 'English' : 'Kiswahili'}</span>
-              <motion.span 
-                animate={{ rotate: langMenuOpen ? 180 : 0 }}
-                className="material-symbols-outlined text-[#3d4943] text-[20px]"
-              >
-                expand_more
-              </motion.span>
-            </button>
-            <AnimatePresence>
-              {langMenuOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-40 bg-white border border-[#bccac1] rounded-xl shadow-xl p-1.5 flex flex-col gap-1 z-[110]"
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button onClick={() => setLangMenuOpen(!langMenuOpen)} className="flex items-center gap-1 rounded-lg hover:bg-[#eaefea] px-2 py-1 cursor-pointer transition-colors">
+                <span className="material-symbols-outlined text-[#3d4943] text-[20px]">globe</span>
+                <span className="text-xs text-[#3d4943] font-bold uppercase">{lang === 'en' ? 'English' : 'Kiswahili'}</span>
+                <motion.span 
+                  animate={{ rotate: langMenuOpen ? 180 : 0 }}
+                  className="material-symbols-outlined text-[#3d4943] text-[20px]"
                 >
-                  <button onClick={() => { setLang('en'); setLangMenuOpen(false); }} className={`px-3 py-2 text-xs rounded-lg text-left font-bold transition-colors ${lang === 'en' ? 'bg-[#eaefea] text-[#00694c]' : 'text-[#3d4943] hover:bg-[#f5fbf5]'}`}>English</button>
-                  <button onClick={() => { setLang('sw'); setLangMenuOpen(false); }} className={`px-3 py-2 text-xs rounded-lg text-left font-bold transition-colors ${lang === 'sw' ? 'bg-[#eaefea] text-[#00694c]' : 'text-[#3d4943] hover:bg-[#f5fbf5]'}`}>Kiswahili</button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  expand_more
+                </motion.span>
+              </button>
+              <AnimatePresence>
+                {langMenuOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-40 bg-white border border-[#bccac1] rounded-xl shadow-xl p-1.5 flex flex-col gap-1 z-[110]"
+                  >
+                    <button onClick={() => { setLang('en'); setLangMenuOpen(false); }} className={`px-3 py-2 text-xs rounded-lg text-left font-bold transition-colors ${lang === 'en' ? 'bg-[#eaefea] text-[#00694c]' : 'text-[#3d4943] hover:bg-[#f5fbf5]'}`}>English</button>
+                    <button onClick={() => { setLang('sw'); setLangMenuOpen(false); }} className={`px-3 py-2 text-xs rounded-lg text-left font-bold transition-colors ${lang === 'sw' ? 'bg-[#eaefea] text-[#00694c]' : 'text-[#3d4943] hover:bg-[#f5fbf5]'}`}>Kiswahili</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {isLoggedIn ? (
+               <div className="flex items-center gap-3">
+                  <Link href="/dashboard" className="bg-[#00694c] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Dashboard</Link>
+                  <button onClick={handleLogout} className="text-[#6d7a73] hover:text-[#ba1a1a] transition-colors">
+                     <span className="material-symbols-outlined text-[20px]">logout</span>
+                  </button>
+               </div>
+            ) : (
+               <Link href="/auth" className="bg-[#00694c] text-white px-6 py-2 rounded-xl text-xs font-black shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Login</Link>
+            )}
           </div>
         </div>
       </header>
 
       {/* HERO */}
-      <section ref={heroRef} className="relative pt-4 pb-16 px-6 overflow-hidden">
+      <section ref={heroRef} className="relative pt-32 pb-16 px-6 overflow-hidden">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center relative z-10">
           <motion.div 
             initial={{ opacity: 1, y: 0 }}
@@ -188,8 +206,8 @@ export default function LandingPage() {
               {t.hero.desc}
             </p>
             <div className="flex flex-col sm:flex-row gap-5">
-              <Link href="/auth" className="bg-[#00694c] text-white h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:bg-[#005a40] transition-all shadow-2xl shadow-[#00694c]/20 group">
-                {t.hero.cta}
+              <Link href={isLoggedIn ? "/dashboard" : "/auth"} className="bg-[#00694c] text-white h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:bg-[#005a40] transition-all shadow-2xl shadow-[#00694c]/20 group">
+                {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
                 <span className="material-symbols-outlined text-[24px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
               <button className="bg-white text-[#171d1a] h-16 px-10 rounded-2xl font-black active:scale-[0.95] hover:bg-[#f8fff9] transition-all border border-[#00694c]/10">
@@ -409,8 +427,8 @@ export default function LandingPage() {
               <h2 className="text-3xl md:text-4xl font-black leading-[1.1] mb-6 tracking-tight">Ready to grow <br/> smarter?</h2>
               <p className="text-base md:text-lg mb-10 text-white/70 leading-relaxed font-medium max-w-lg">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their profits.</p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/auth" className="bg-[#00694c] text-white h-14 px-10 rounded-2xl font-black text-base flex items-center justify-center active:scale-[0.95] hover:bg-[#005a40] transition-all">
-                  {t.hero.cta}
+                <Link href={isLoggedIn ? "/dashboard" : "/auth"} className="bg-[#00694c] text-white h-14 px-10 rounded-2xl font-black text-base flex items-center justify-center active:scale-[0.95] hover:bg-[#005a40] transition-all">
+                  {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
                 </Link>
                 <button className="bg-white/5 backdrop-blur-md border border-white/10 text-white h-14 px-10 rounded-2xl font-black text-base hover:bg-white/10 transition-all active:scale-[0.95]">
                   Contact Sales
