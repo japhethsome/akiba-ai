@@ -107,17 +107,25 @@ export default function LandingPage() {
   const t = translations[lang];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f5fbf5] overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-[#f8fff9] overflow-x-hidden selection:bg-[#00694c] selection:text-white">
+      {/* Dynamic Background Elements */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#00694c]/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[20%] right-[-5%] w-[30%] h-[30%] bg-[#584fbc]/5 rounded-full blur-[100px]" />
+      </div>
 
       {/* TOP APP BAR */}
-      <header className={`fixed top-0 left-0 right-0 h-16 z-[100] transition-all duration-300 border-b border-[#bccac1] bg-[#f5fbf5]/80 backdrop-blur-md ${scrolled ? "shadow-md" : ""}`}>
-        <div className="max-w-6xl mx-auto h-full flex items-center justify-between px-4 md:px-6">
+      <header className={`fixed top-0 left-0 right-0 h-16 z-[100] transition-all duration-500 ${scrolled ? "bg-white/80 backdrop-blur-xl shadow-sm border-b border-[#00694c]/10" : "bg-transparent"}`}>
+        <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-6 md:px-10">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-black text-[#00694c]"
+            className="text-xl font-black tracking-tighter flex items-center gap-2"
           >
-            Akiba <span className="text-[#584fbc]">AI</span>
+            <div className="w-7 h-7 bg-[#00694c] rounded-lg flex items-center justify-center">
+              <span className="text-white text-lg">A</span>
+            </div>
+            <span className="text-[#171d1a]">Akiba<span className="text-[#00694c]">AI</span></span>
           </motion.div>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-[#00694c] font-bold text-sm">{t.nav.home}</Link>
@@ -153,76 +161,86 @@ export default function LandingPage() {
       </header>
 
       {/* HERO */}
-      <section ref={heroRef} className="relative pt-32 pb-20 px-4 md:px-6 overflow-hidden">
-        <motion.div 
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="absolute top-20 right-0 w-96 h-96 bg-[#68dbae]/10 rounded-full blur-[100px] pointer-events-none"
-        />
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-center relative z-10">
+      <section ref={heroRef} className="relative pt-4 pb-16 px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center relative z-10">
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="inline-block bg-[#958dff] text-[#2b1c8f] text-[10px] px-4 py-1.5 rounded-full mb-6 font-black uppercase tracking-widest"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 bg-[#00694c]/10 text-[#00694c] text-[10px] px-3 py-1.5 rounded-full mb-6 font-black uppercase tracking-[0.2em] border border-[#00694c]/10"
             >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00694c] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00694c]"></span>
+              </span>
               {t.hero.badge}
             </motion.div>
-            <h1 className="text-5xl md:text-6xl font-black leading-tight mb-6 text-[#171d1a]">
-              {t.hero.title1} <span className="text-[#00694c]">{t.hero.title2}</span> {t.hero.title3}
+            <h1 className="text-4xl lg:text-6xl font-black leading-[1] mb-6 text-[#171d1a] tracking-tight">
+              {t.hero.title1} <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00694c] to-[#00a87a]">{t.hero.title2}</span> <br/>
+              {t.hero.title3}
             </h1>
-            <p className="text-lg text-[#3d4943] mb-10 leading-relaxed max-w-xl">
+            <p className="text-base text-[#3d4943] mb-8 leading-relaxed max-w-sm font-medium opacity-70">
               {t.hero.desc}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/auth" className="bg-[#00694c] text-white h-14 px-8 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:scale-[1.02] transition-all shadow-lg hover:shadow-[#00694c]/20">
+            <div className="flex flex-col sm:flex-row gap-5">
+              <Link href="/auth" className="bg-[#00694c] text-white h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:bg-[#005a40] transition-all shadow-2xl shadow-[#00694c]/20 group">
                 {t.hero.cta}
-                <span className="material-symbols-outlined text-[24px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[24px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
-              <button className="bg-white border-2 border-[#bccac1] text-[#171d1a] h-14 px-8 rounded-2xl font-black active:scale-[0.95] hover:bg-[#eff5ef] transition-all">
+              <button className="bg-white text-[#171d1a] h-16 px-10 rounded-2xl font-black active:scale-[0.95] hover:bg-[#f8fff9] transition-all border border-[#00694c]/10">
                 {t.hero.demo}
               </button>
             </div>
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, rotateY: -10 }}
-            whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, type: "spring" }}
-            className="relative mt-12 md:mt-0 group perspective-1000"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+            className="relative"
           >
-            <div className="absolute -top-12 -right-12 w-80 h-80 bg-[#584fbc]/5 rounded-full blur-[80px] group-hover:bg-[#584fbc]/10 transition-colors" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-[#00694c]/20 to-[#584fbc]/10 rounded-[40px] blur-2xl opacity-50" />
             
             <motion.div 
-              whileHover={{ rotateX: 5, rotateY: -5, scale: 1.02 }}
-              className="relative rounded-[32px] overflow-hidden shadow-2xl border border-[#bccac1] aspect-square bg-white"
+              animate={{ 
+                y: [0, -20, 0],
+              }}
+              transition={{ 
+                duration: 6, 
+                repeat: Infinity,
+                ease: "easeInOut" 
+              }}
+              className="relative rounded-[40px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,105,76,0.25)] border border-white/50 aspect-square bg-white"
             >
               <Image 
                 src="/hero.png" 
                 alt="Kenyan Shop Owner" 
                 fill 
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                className="object-cover"
+                priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#000]/40 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#00694c]/20 via-transparent to-transparent" />
             </motion.div>
 
             <motion.div 
-              initial={{ x: -20, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="absolute -bottom-8 -left-8 bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[#bccac1] flex items-center gap-5"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 1, type: "spring" }}
+              className="absolute -bottom-6 -left-6 bg-white/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white flex items-center gap-5 z-20"
             >
-              <div className="w-14 h-14 rounded-full bg-[#008560] flex items-center justify-center shadow-lg">
-                <span className="material-symbols-outlined text-white text-[32px] fill-1">trending_up</span>
+              <div className="w-14 h-14 rounded-2xl bg-[#00694c] flex items-center justify-center shadow-lg shadow-[#00694c]/30">
+                <span className="material-symbols-outlined text-white text-[32px] fill-1">insights</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-[#3d4943] font-black uppercase tracking-widest opacity-60">{t.hero.salesLabel}</span>
-                <span className="text-3xl font-black text-[#171d1a]"><span className="text-sm text-[#3d4943] font-bold mr-1">KES</span>42,500</span>
+                <span className="text-[10px] text-[#00694c] font-black uppercase tracking-[0.2em]">{t.hero.salesLabel}</span>
+                <span className="text-3xl font-black text-[#171d1a] tracking-tight">
+                  <span className="text-sm text-[#3d4943] font-bold mr-1 opacity-50">KES</span>42,500
+                </span>
               </div>
             </motion.div>
           </motion.div>
@@ -230,35 +248,36 @@ export default function LandingPage() {
       </section>
 
       {/* CHALLENGE SECTION */}
-      <section className="py-24 px-4 md:px-6 bg-[#eff5ef]/40 relative">
+      <section className="py-32 px-6 bg-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#00694c]/[0.02] pointer-events-none" />
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
             <motion.span 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              className="text-[10px] text-[#584fbc] font-black mb-4 block uppercase tracking-[0.3em]"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              className="text-[10px] text-[#00694c] font-black mb-4 block uppercase tracking-[0.3em]"
             >
               {t.challenge.badge}
             </motion.span>
-            <h2 className="text-4xl font-black text-[#171d1a] mb-6">{t.challenge.title}</h2>
-            <p className="text-base text-[#3d4943] leading-relaxed opacity-80">{t.challenge.desc}</p>
+            <h2 className="text-3xl lg:text-4xl font-black text-[#171d1a] mb-5 tracking-tight">{t.challenge.title}</h2>
+            <p className="text-base text-[#3d4943] leading-relaxed opacity-70 font-medium">{t.challenge.desc}</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {t.challenge.cards.map((c, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -10 }}
-                className="bg-white p-8 rounded-[24px] border border-[#bccac1] shadow-sm hover:border-[#00694c] hover:shadow-xl transition-all group"
+                whileHover={{ y: -12, scale: 1.02 }}
+                className="bg-white p-10 rounded-[32px] border border-[#00694c]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#00694c] hover:shadow-[0_20px_50px_rgba(0,105,76,0.1)] transition-all group relative overflow-hidden"
               >
-                <div className={`w-12 h-12 ${i === 0 ? 'bg-[#ba1a1a]/10 text-[#ba1a1a]' : i === 1 ? 'bg-[#805200]/10 text-[#805200]' : 'bg-[#584fbc]/10 text-[#584fbc]'} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
-                  <span className="material-symbols-outlined text-[28px]">{i === 0 ? 'inventory' : i === 1 ? 'remove_shopping_cart' : 'visibility_off'}</span>
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#00694c]/5 rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className={`w-14 h-14 ${i === 0 ? 'bg-[#ba1a1a]/10 text-[#ba1a1a]' : i === 1 ? 'bg-[#805200]/10 text-[#805200]' : 'bg-[#00694c]/10 text-[#00694c]'} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
+                  <span className="material-symbols-outlined text-[32px]">{i === 0 ? 'inventory' : i === 1 ? 'remove_shopping_cart' : 'visibility_off'}</span>
                 </div>
-                <h3 className="text-lg font-black text-[#171d1a] mb-3">{c.title}</h3>
-                <p className="text-sm text-[#3d4943] leading-relaxed opacity-70">{c.desc}</p>
+                <h3 className="text-xl font-black text-[#171d1a] mb-4 tracking-tight">{c.title}</h3>
+                <p className="text-base text-[#3d4943] leading-relaxed opacity-60 font-medium">{c.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -266,46 +285,40 @@ export default function LandingPage() {
       </section>
 
       {/* BENTO GRID FEATURES */}
-      <section id="features" className="py-24 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto">
+      <section id="features" className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
           <motion.h2 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className="text-4xl font-black text-[#171d1a] mb-12"
+            initial={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-4xl font-black text-[#171d1a] mb-12 tracking-tight"
           >
             {t.features.title}
           </motion.h2>
-          <div className="grid md:grid-cols-12 gap-6">
+          <div className="grid md:grid-cols-12 gap-8">
             {/* Bento 1 */}
             <motion.div 
-              whileHover={{ scale: 0.99 }}
-              className="md:col-span-8 bg-[#eff5ef] p-8 rounded-[32px] border border-[#bccac1] hover:border-[#00694c] transition-all group relative overflow-hidden min-h-[300px]"
+              whileHover={{ y: -5 }}
+              className="md:col-span-8 bg-[#f0f9f3] p-10 rounded-[40px] border border-[#00694c]/10 hover:border-[#00694c] transition-all group relative overflow-hidden min-h-[350px]"
             >
-              <div className="w-12 h-12 bg-[#00694c]/10 rounded-xl flex items-center justify-center text-[#00694c] mb-6 group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[28px]">inventory_2</span>
+              <div className="w-14 h-14 bg-[#00694c] rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-[#00694c]/20">
+                <span className="material-symbols-outlined text-[32px]">inventory_2</span>
               </div>
-              <h3 className="text-xl font-black text-[#171d1a] mb-3">{t.features.bento1.title}</h3>
-              <p className="text-base text-[#3d4943] leading-relaxed max-w-sm opacity-80">{t.features.bento1.desc}</p>
+              <h3 className="text-2xl font-black text-[#171d1a] mb-4 tracking-tight">{t.features.bento1.title}</h3>
+              <p className="text-lg text-[#3d4943] leading-relaxed max-w-sm opacity-70 font-medium">{t.features.bento1.desc}</p>
               
-              <div className="hidden sm:flex absolute top-8 right-8 flex-col gap-3">
-                <motion.div 
-                  initial={{ x: 50, opacity: 0 }}
-                  whileInView={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="bg-white p-3 rounded-xl border border-[#bccac1] flex items-center gap-3 shadow-lg"
-                >
-                  <div className="w-3 h-3 rounded-full bg-[#ba1a1a] animate-pulse" />
-                  <span className="text-[11px] text-[#3d4943] font-black uppercase tracking-wider">{t.features.bento1.alert1}</span>
-                </motion.div>
-                <motion.div 
-                  initial={{ x: 50, opacity: 0 }}
-                  whileInView={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                  className="bg-white p-3 rounded-xl border border-[#bccac1] flex items-center gap-3 shadow-lg"
-                >
-                  <div className="w-3 h-3 rounded-full bg-[#00694c]" />
-                  <span className="text-[11px] text-[#3d4943] font-black uppercase tracking-wider">{t.features.bento1.alert2}</span>
-                </motion.div>
+              <div className="hidden lg:flex absolute bottom-[-20%] right-[-5%] w-[60%] aspect-video bg-white rounded-t-3xl shadow-[0_-20px_50px_rgba(0,0,0,0.1)] border-t border-x border-[#00694c]/10 p-6 flex-col gap-4 group-hover:bottom-0 transition-all duration-500">
+                <div className="flex items-center justify-between border-b border-[#00694c]/5 pb-4">
+                   <div className="flex gap-2">
+                     <div className="w-3 h-3 rounded-full bg-[#ba1a1a]" />
+                     <div className="w-3 h-3 rounded-full bg-[#805200]" />
+                     <div className="w-3 h-3 rounded-full bg-[#00694c]" />
+                   </div>
+                   <div className="text-[10px] font-black text-[#00694c] uppercase tracking-widest">Live Inventory</div>
+                </div>
+                <div className="space-y-3">
+                   <div className="h-10 bg-[#f8fff9] rounded-xl border border-[#00694c]/5 w-full animate-pulse" />
+                   <div className="h-10 bg-[#f8fff9] rounded-xl border border-[#00694c]/5 w-[80%] animate-pulse" />
+                </div>
               </div>
             </motion.div>
 
@@ -377,32 +390,83 @@ export default function LandingPage() {
       </section>
 
       {/* CTA BANNER */}
-      <section className="py-24 px-4 md:px-6">
+      <section className="py-24 px-6">
         <motion.div 
-          whileHover={{ scale: 0.995 }}
-          className="max-w-6xl mx-auto bg-[#008560] text-[#f5fff7] p-12 md:p-20 rounded-[48px] relative overflow-hidden shadow-2xl"
+          whileHover={{ scale: 0.998 }}
+          className="max-w-7xl mx-auto bg-[#171d1a] text-white p-10 md:p-16 rounded-[48px] relative overflow-hidden shadow-[0_40px_100px_rgba(0,105,76,0.2)]"
         >
-          <motion.span 
-            animate={{ 
-              rotate: [12, 15, 12],
-              y: [0, -10, 0]
-            }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="material-symbols-outlined absolute -top-10 -right-10 text-[240px] opacity-10"
-          >
-            rocket_launch
-          </motion.span>
-          <div className="relative z-10 max-w-2xl text-center md:text-left mx-auto md:mx-0">
-            <h2 className="text-5xl md:text-6xl font-black leading-tight mb-8">Ready to grow your SME smarter?</h2>
-            <p className="text-xl mb-12 opacity-90 leading-relaxed font-medium">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their finances.</p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start">
-              <Link href="/auth" className="bg-[#f5fff7] text-[#00694c] h-16 px-12 rounded-2xl font-black text-lg flex items-center justify-center active:scale-[0.95] hover:scale-[1.05] transition-all shadow-2xl">
-                {t.hero.cta}
-              </Link>
-              <button className="border-2 border-white/40 text-white h-16 px-12 rounded-2xl font-black text-lg hover:bg-white/10 transition-all active:scale-[0.95]">
-                Contact Sales
-              </button>
+          <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-[#00694c]/10 to-transparent pointer-events-none" />
+          
+          <div className="relative z-10 grid lg:grid-cols-2 items-center gap-12">
+            <div>
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                className="w-12 h-12 bg-[#00694c] rounded-xl flex items-center justify-center mb-8 shadow-xl shadow-[#00694c]/20"
+              >
+                <span className="material-symbols-outlined text-white text-2xl">rocket_launch</span>
+              </motion.div>
+              <h2 className="text-3xl md:text-4xl font-black leading-[1.1] mb-6 tracking-tight">Ready to grow <br/> smarter?</h2>
+              <p className="text-base md:text-lg mb-10 text-white/70 leading-relaxed font-medium max-w-lg">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their profits.</p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/auth" className="bg-[#00694c] text-white h-14 px-10 rounded-2xl font-black text-base flex items-center justify-center active:scale-[0.95] hover:bg-[#005a40] transition-all">
+                  {t.hero.cta}
+                </Link>
+                <button className="bg-white/5 backdrop-blur-md border border-white/10 text-white h-14 px-10 rounded-2xl font-black text-base hover:bg-white/10 transition-all active:scale-[0.95]">
+                  Contact Sales
+                </button>
+              </div>
             </div>
+
+            {/* Floating Visuals beside the text */}
+            <div className="hidden lg:flex relative h-[300px] items-center justify-center">
+              <div className="absolute inset-0 bg-[#00694c]/20 blur-[100px] rounded-full" />
+              
+              <motion.div 
+                animate={{ y: [0, -15, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl relative z-10 flex flex-col gap-4"
+              >
+                 <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-[#00694c] flex items-center justify-center">
+                       <span className="material-symbols-outlined text-white">trending_up</span>
+                    </div>
+                    <div>
+                       <div className="text-[9px] text-white/50 font-black uppercase tracking-widest">Revenue Growth</div>
+                       <div className="text-xl font-black text-white">+32.4%</div>
+                    </div>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      whileInView={{ width: "75%" }}
+                      className="h-full bg-[#00694c]" 
+                    />
+                 </div>
+              </motion.div>
+
+              <motion.div 
+                animate={{ y: [0, 15, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute top-4 -right-4 bg-white/5 backdrop-blur-lg border border-white/10 p-4 rounded-2xl shadow-xl z-20"
+              >
+                 <div className="text-[9px] text-white/50 font-black uppercase tracking-widest mb-1">Active Shops</div>
+                 <div className="text-lg font-black text-white">500+</div>
+              </motion.div>
+
+              <motion.div 
+                animate={{ x: [0, 10, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="absolute bottom-4 -left-4 bg-[#00694c]/20 backdrop-blur-lg border border-[#00694c]/20 p-4 rounded-2xl shadow-xl z-0"
+              >
+                 <div className="text-[9px] text-[#00694c] font-black uppercase tracking-widest mb-1">AI Accuracy</div>
+                 <div className="text-lg font-black text-white">99%</div>
+              </motion.div>
+            </div>
+          </div>
+          
+          <div className="absolute bottom-[-10%] right-[-5%] opacity-10 pointer-events-none">
+             <span className="material-symbols-outlined text-[400px] text-white rotate-[-12deg]">auto_awesome</span>
           </div>
         </motion.div>
       </section>

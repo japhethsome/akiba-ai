@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   // This helps with ngrok "Invalid Host Header" issues
   experimental: {
     serverActions: {
-      allowedOrigins: ["*.ngrok-free.app", "localhost:3000"]
+      allowedOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev", "localhost:3000"]
     }
   }
 };

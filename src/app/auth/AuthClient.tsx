@@ -103,7 +103,7 @@ export default function AuthClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const t = (translations as any)[lang];
+  const t = translations[lang];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -140,7 +140,7 @@ export default function AuthClient() {
           { size: 96, top: -24, left: -24, color: "#86f8c9", delay: 0 },
           { size: 80, bottom: 0, right: 0, color: "#958dff", delay: 1 },
           { size: 64, top: "50%", right: -16, color: "#68dbae", delay: 2 },
-        ].map((circle, i) => (
+        ].map((circle: { size: number | string, top?: number | string, bottom?: number | string, left?: number | string, right?: number | string, color: string, delay: number }, i: number) => (
           <motion.div
             key={i}
             animate={{ 
@@ -172,14 +172,12 @@ export default function AuthClient() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 mb-auto"
+            className="flex items-center gap-1.5 mb-4"
           >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[22px]">account_balance_wallet</span>
+            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-[20px]">wallet</span>
             </div>
-            <span className="text-white text-xl font-black tracking-tight">
-              Akiba <span style={{ color: "#86f8c9" }}>AI</span>
-            </span>
+            <span className="text-white font-black tracking-tight">Akiba<span style={{ color: "#86f8c9" }}>AI</span></span>
           </motion.div>
 
           {/* Main copy */}
@@ -211,7 +209,7 @@ export default function AuthClient() {
             </motion.p>
 
             <div className="flex flex-col gap-4">
-              {t.branding.features.map((f, i) => (
+              {t.branding.features.map((f: { icon: string; text: string }, i: number) => (
                 <motion.div 
                   key={f.text} 
                   initial={{ opacity: 0, x: -10 }}
