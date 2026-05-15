@@ -87,6 +87,14 @@ const translations = {
 
 export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    // Auto-logout when reaching landing page as requested
+    const performLogout = async () => {
+      await logout();
+    };
+    performLogout();
+  }, []);
+
   const [lang, setLang] = useState<Language>("en");
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   

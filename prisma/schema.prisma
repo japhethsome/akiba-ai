@@ -10,24 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Store {
-  id        String   @id @default(uuid())
-  name      String
-  onboarded Boolean  @default(false)
-  createdAt DateTime @default(now())
 
-  users               User[]
-// prisma/schema.prisma
-
-generator client {
-  provider   = "prisma-client-js"
-  engineType = "library"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
 
 model Store {
   id        String   @id @default(uuid())

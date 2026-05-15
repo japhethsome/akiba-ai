@@ -4,6 +4,37 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 export function DashboardClientUI({ userName, kpis }: any) {
+  React.useEffect(() => {
+    // Single-tab session lock handling
+    const tabId = Math.random().toString(36).substring(7);
+    const sessionKey = "akiba_active_session";
+    
+    const checkSession = () => {
+      const activeTab = localStorage.getItem(sessionKey);
+      if (activeTab && activeTab !== tabId) {
+        alert("Akiba AI is already open in another tab. Please use that tab or close it to continue here.");
+        window.location.href = "/";
+      } else {
+        localStorage.setItem(sessionKey, tabId);
+      }
+    };
+
+    checkSession();
+    
+    // Cleanup on close
+    const handleUnload = () => {
+      if (localStorage.getItem(sessionKey) === tabId) {
+        localStorage.removeItem(sessionKey);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      handleUnload();
+    };
+  }, []);
+
   const container = {
     hidden: { opacity: 0 },
     show: {

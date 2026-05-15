@@ -7,10 +7,11 @@ import { setSession } from "@/lib/session";
 export async function registerOwner(formData: FormData) {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
   const password = formData.get("password") as string;
   const storeName = formData.get("storeName") as string;
 
-  if (!name || !email || !password || !storeName) {
+  if (!name || !email || !phone || !password || !storeName) {
     return { error: "All fields are required" };
   }
 
@@ -39,6 +40,7 @@ export async function registerOwner(formData: FormData) {
         data: {
           name,
           email,
+          phone,
           password_hash: hashedPassword,
           role: "owner",
           store_id: newStore.id,

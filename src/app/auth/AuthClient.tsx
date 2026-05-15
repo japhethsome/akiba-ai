@@ -123,6 +123,15 @@ export default function AuthClient() {
     
     let result;
     if (mode === "register") {
+      const password = formData.get("password") as string;
+      const confirmPassword = formData.get("confirmPassword") as string;
+      
+      if (password !== confirmPassword) {
+        setLoading(false);
+        setError("Passwords do not match");
+        return;
+      }
+
       if (inviteToken) {
         formData.append("inviteToken", inviteToken);
         result = await registerAttendant(formData);
@@ -345,6 +354,41 @@ export default function AuthClient() {
                         className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                     </div>
                   </div>
+                  <div className="group">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.email}</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
+                      <input type="email" placeholder="wanjiku@gmail.com" name="email" required
+                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                    </div>
+                  </div>
+                  <div className="group">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Phone Number</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">call</span>
+                      <input type="tel" placeholder="0712345678" name="phone" required
+                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                    </div>
+                  </div>
+                  <div className="group">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.password}</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
+                      <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="password" required
+                        className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="group">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Confirm Password</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock_reset</span>
+                      <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="confirmPassword" required
+                        className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                    </div>
+                  </div>
                   {!inviteToken && (
                     <div className="group">
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.storeName}</label>
@@ -355,55 +399,37 @@ export default function AuthClient() {
                       </div>
                     </div>
                   )}
+
+                </motion.div>
+              )}
+
+              {mode === "login" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                   <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943]">{t.form.langLabel}</label>
-                    <div className="flex gap-2 p-1 bg-[#f0f4f0] rounded-xl border border-[#bccac1]">
-                      {(["en", "sw"] as const).map((l) => (
-                        <button key={l} type="button" onClick={() => setLang(l as Language)}
-                          className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${lang === l ? "bg-[#584fbc] text-white shadow-md" : "text-[#6d7a73]"}`}
-                        >
-                          {l}
-                        </button>
-                      ))}
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.emailLabel}</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
+                      <input type="email" placeholder="owner@business.com" name="email" required
+                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
+                      <button type="button" className="text-[10px] font-black uppercase tracking-widest text-[#584fbc] hover:underline">{t.form.forgotPin}</button>
+                    </div>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
+                      <input type={showPassword ? "text" : "password"} placeholder="••••" name="password" required
+                        className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-xl font-black outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm tracking-[0.4em]" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                      </button>
                     </div>
                   </div>
                 </motion.div>
               )}
-              
-              <div className="group">
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.emailLabel}</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
-                  <input type="email" placeholder="owner@business.com" name="email" required
-                    className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
-                </div>
-              </div>
-
-              {mode === "register" && (
-                <div className="group">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.phoneLabel}</label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">phone_iphone</span>
-                    <input type="tel" placeholder="07XX XXX XXX" name="phone"
-                      className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
-                  </div>
-                </div>
-              )}
-
-              <div className="group">
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
-                  {mode === "login" && <button className="text-[10px] font-black uppercase tracking-widest text-[#584fbc] hover:underline">{t.form.forgotPin}</button>}
-                </div>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
-                  <input type={showPassword ? "text" : "password"} placeholder="····" name="password" required
-                    className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-xl font-black outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm tracking-[0.4em]" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
-                  </button>
-                </div>
-              </div>
 
               <button type="submit" disabled={loading} className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-[#00694c] to-[#008560] shadow-xl shadow-[#00694c]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100">
                 {loading ? "..." : (mode === "login" ? t.form.signInBtn : t.form.createAccountBtn)}
