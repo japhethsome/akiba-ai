@@ -136,10 +136,18 @@ export async function loginUser(formData: FormData) {
 
     await setSession(user.user_id, user.role, user.store_id);
 
-    return { success: true, user: { id: user.user_id, name: user.name, role: user.role, store: user.store.name } };
-  } catch (error) {
-    console.error("Login error:", error);
-    return { error: "Something went wrong during login" };
+    return { 
+      success: true, 
+      user: { 
+        id: user.user_id, 
+        name: user.name, 
+        role: user.role, 
+        store: user.store?.name || "My Store" 
+      } 
+    };
+  } catch (error: any) {
+    console.error("Login error details:", error);
+    return { error: error.message || "An unexpected error occurred during login" };
   }
 }
 

@@ -7,7 +7,12 @@ export async function setSession(userId: string, role: string, storeId: string) 
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   const session = JSON.stringify({ userId, role, storeId, expires });
   
-  (await cookies()).set("session", session, { expires, httpOnly: true, secure: true });
+  (await cookies()).set("session", session, { 
+    expires, 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax"
+  });
 }
 
 export async function getSession() {
