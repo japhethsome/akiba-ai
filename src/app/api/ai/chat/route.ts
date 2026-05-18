@@ -1,76 +1,108 @@
-import { streamText, tool } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { z } from 'zod';
-import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/session';
-import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
+import { NextResponse } from "next/server";
+import { getSession } from "@/lib/session";
+import prisma from "@/lib/prisma";
 
-const deepseek = createOpenAI({
-  baseURL: 'https://api.deepseek.com/v1',
-  apiKey: process.env.DEEPSEEK_API_KEY!,
-});
-
+// This route acts as a secure proxy to the DeepSeek API
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session || !session.storeId) return new Response('Unauthorized', { status: 401 });
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const { messages } = await req.json();
+    const body = await req.json();
+    const { messages } = body;
 
-  const result = await streamText({
-    model: deepseek('deepseek-chat'),
-    system: SYSTEM_PROMPT + `\n\nYou are currently managing the store with ID: ${session.storeId}. ONLY query data for this specific store.`,
-    messages,
-    maxSteps: 5,
-    tools: {
-      check_inventory: tool({
-        description: 'Search for current stock levels of products by name, category, or find low stock items.',
-        parameters: z.object({
-          searchTerm: z.string().optional().describe('Product name or category to search for. Leave empty to find low-stock items.'),
-        }),
-        execute: async ({ searchTerm }) => {
-          const products = await prisma.product.findMany({
-            where: {
-              store_id: session.storeId,
-              AND: [
-                searchTerm ? {
-                  OR: [
-                    { name: { contains: searchTerm, mode: 'insensitive' } },
-                    { category: { contains: searchTerm, mode: 'insensitive' } },
-                  ]
-                } : {
-                  stock_quantity: { lte: 10 } // Simplified low stock check
-                }
-              ]
-            },
-            select: { product_id: true, name: true, stock_quantity: true, reorder_level: true, unit_price: true, category: true },
-            take: 10,
-          });
-          return products;
-        },
-      }),
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "DeepSeek API key (DEEPSEEK_API_KEY) is missing from environment variables." },
+        { status: 500 }
+      );
+    }
 
-      flag_for_reorder: tool({
-        description: 'Flag an item for immediate reorder if stock is critically low.',
-        parameters: z.object({
-          productId: z.string(),
-          recommendedQuantity: z.number(),
-          urgency: z.enum(['NORMAL', 'HIGH', 'CRITICAL']),
-        }),
-        execute: async ({ productId, recommendedQuantity, urgency }) => {
-          const alert = await prisma.restockAlert.create({
-            data: {
-              store_id: session.storeId,
-              product_id: productId,
-              recommended_quantity: recommendedQuantity,
-              urgency,
-              status: 'PENDING_APPROVAL', 
-            },
-          });
-          return { success: true, alertId: alert.id, message: `Alert created with ${urgency} priority.` };
-        },
-      }),
-    },
-  });
+    // Fetch store context to inject into the system prompt
+    const store = await prisma.store.findFirst({
+      where: { users: { some: { user_id: session.userId } } },
+      include: { 
+        products: { 
+          take: 20,
+          orderBy: { stock_quantity: "asc" } // Show low-stock items first for relevance
+        } 
+      }
+    });
 
-  return result.toDataStreamResponse();
+    const lowStockProducts = store?.products
+      .filter(p => p.stock_quantity <= 10)
+      .map(p => `${p.name} (${p.stock_quantity} units left)`)
+      .join(", ") || "none";
+
+    const systemPrompt = `You are Akiba AI, a smart and friendly inventory management assistant for a Kenyan SME store named "${store?.name || "this store"}" (Category: ${store?.category || "Retail"}).
+
+Context:
+- Total products: ${store?.products?.length || 0}
+- Low-stock items: ${lowStockProducts}
+
+You help the owner and staff with:
+- Inventory analysis and stock-level advice
+- Pricing strategies and profit margin tips
+- Restock recommendations based on current stock levels
+- General business advice for Kenyan SMEs
+
+Keep your responses concise, practical, and relevant to small business operations in Kenya. Use KES (Kenyan Shillings) for currency. Respond in English unless asked to use Kiswahili.`;
+
+    const payload = {
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages
+      ],
+      temperature: 0.7,
+      max_tokens: 800,
+      stream: false,
+    };
+
+    const deepseekResponse = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // Read the response body regardless of status
+    const responseText = await deepseekResponse.text();
+    
+    if (!deepseekResponse.ok) {
+      console.error(`DeepSeek API returned ${deepseekResponse.status}:`, responseText);
+      try {
+        const errorJson = JSON.parse(responseText);
+        const msg = errorJson?.error?.message || `DeepSeek API error (HTTP ${deepseekResponse.status})`;
+        
+        // Detect insufficient balance specifically
+        if (msg.toLowerCase().includes("insufficient balance") || msg.toLowerCase().includes("balance")) {
+          return NextResponse.json(
+            { error: "Your DeepSeek account has run out of credits. Please top up your balance at platform.deepseek.com to continue using AI features." },
+            { status: 402 }
+          );
+        }
+        
+        return NextResponse.json({ error: msg }, { status: 502 });
+      } catch {
+        return NextResponse.json({ error: `DeepSeek API error: HTTP ${deepseekResponse.status}` }, { status: 502 });
+      }
+    }
+
+    // Parse successful response
+    const data = JSON.parse(responseText);
+    return NextResponse.json(data);
+
+  } catch (error: any) {
+    console.error("AI Chat Route Error:", error);
+    return NextResponse.json(
+      { error: error.message || "An unexpected error occurred in the AI route." },
+      { status: 500 }
+    );
+  }
 }

@@ -1,10 +1,10 @@
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { InventoryClient } from "./InventoryClient";
 import { DashboardLayoutWrapper } from "@/components/ui/DashboardLayoutWrapper";
 import prisma from "@/lib/prisma";
+import { PosClientUI } from "./PosClientUI";
 
-export default async function InventoryPage() {
+export default async function PosPage() {
   const session = await getSession();
   if (!session) redirect("/auth");
 
@@ -13,23 +13,11 @@ export default async function InventoryPage() {
     include: { store: true },
   });
 
-  if (!user) redirect("/auth");
+  if (!user || !user.store.onboarded) redirect("/dashboard/onboarding");
 
-  // Owner must complete onboarding first
-  if (user.role === "owner" && !user.store.onboarded) {
-    redirect("/dashboard/onboarding");
-  }
-
-  // Fetch real products from the database
   const products = await prisma.product.findMany({
     where: { store_id: user.store_id },
-    orderBy: { created_at: 'desc' },
-  });
-
-  // Fetch suppliers for the dropdown
-  const suppliers = await prisma.supplier.findMany({
-    where: { store_id: user.store_id },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
   });
 
   const plainProducts = products.map(p => ({
@@ -37,15 +25,12 @@ export default async function InventoryPage() {
     name: p.name,
     category: p.category,
     price: Number(p.selling_price),
-    buyingPrice: Number(p.buying_price),
     stock: p.stock_quantity,
-    reorderLevel: p.reorder_level,
-    lastUpdated: p.created_at.toISOString(),
   }));
 
   return (
     <DashboardLayoutWrapper>
-      <InventoryClient userRole={session.role} initialProducts={plainProducts} suppliers={suppliers} />
+      <PosClientUI initialProducts={plainProducts} />
     </DashboardLayoutWrapper>
   );
 }

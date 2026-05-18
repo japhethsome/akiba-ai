@@ -5,15 +5,17 @@ import { usePathname } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 
 const navItems = [
-  { label: "Home", href: "/dashboard" },
-  { label: "Inventory", href: "/dashboard/inventory" },
-  { label: "Transactions", href: "/transactions" },
-  { label: "Staff", href: "/dashboard/staff" },
-  { label: "Forecasts", href: "/forecasts" },
-  { label: "Reports", href: "/reports" },
+  { label: "Home", href: "/dashboard", roles: ["owner"] },
+  { label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk"] },
+  { label: "Inventory", href: "/dashboard/inventory", roles: ["owner", "clerk"] },
+  { label: "Suppliers", href: "/dashboard/suppliers", roles: ["owner"] },
+  { label: "Transactions", href: "/transactions", roles: ["owner"] },
+  { label: "Staff", href: "/dashboard/staff", roles: ["owner"] },
+  { label: "Forecasts", href: "/forecasts", roles: ["owner"] },
+  { label: "Reports", href: "/reports", roles: ["owner"] },
 ];
 
-export function TopNav() {
+export function TopNav({ userRole = "owner" }: { userRole?: string }) {
   const pathname = usePathname();
 
   const handleLogout = async () => {
@@ -33,7 +35,7 @@ export function TopNav() {
 
         {/* Links */}
         <div className="hidden lg:flex items-center gap-2">
-          {navItems.map((item) => {
+          {navItems.filter(item => item.roles.includes(userRole)).map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link

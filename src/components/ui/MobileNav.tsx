@@ -2,20 +2,20 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
 const mobileItems = [
-  { icon: "home", label: "Home", href: "/dashboard" },
-  { icon: "inventory_2", label: "Products", href: "/dashboard/inventory" },
-  { icon: "group", label: "Staff", href: "/dashboard/staff" },
-  { icon: "bar_chart", label: "Reports", href: "/reports" },
+  { icon: "home", label: "Home", href: "/dashboard", roles: ["owner"] },
+  { icon: "point_of_sale", label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk"] },
+  { icon: "inventory_2", label: "Products", href: "/dashboard/inventory", roles: ["owner", "clerk"] },
+  { icon: "local_shipping", label: "Suppliers", href: "/dashboard/suppliers", roles: ["owner"] },
+  { icon: "group", label: "Staff", href: "/dashboard/staff", roles: ["owner"] },
 ];
 
-export function MobileNav() {
+export function MobileNav({ userRole = "owner" }: { userRole?: string }) {
   const pathname = usePathname();
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-[#e4eae4] flex justify-around items-center z-[100] px-4 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] rounded-t-[32px]">
-      {mobileItems.map((item) => {
+      {mobileItems.filter(item => item.roles.includes(userRole)).map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link

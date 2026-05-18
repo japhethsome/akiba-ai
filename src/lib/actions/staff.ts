@@ -2,6 +2,7 @@
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 
 export async function inviteStaff(storeId: string, method: "email" | "phone", value: string) {
    try {
@@ -41,5 +42,47 @@ export async function inviteStaff(storeId: string, method: "email" | "phone", va
       return { success: true, inviteLink };
    } catch (error: any) {
       return { success: false, error: error.message || "Failed to create invitation." };
+   }
+}
+
+export async function createStaffDirectly(data: {
+   name: string;
+   email: string;
+   phone: string;
+   password_plain: string;
+}) {
+   try {
+      const session = await getSession();
+      if (!session) return { success: false, error: "Unauthorized" };
+
+      const ownerUser = await prisma.user.findUnique({ where: { user_id: session.userId }});
+      if (!ownerUser || ownerUser.role !== "owner") {
+         return { success: false, error: "Forbidden: Only owners can create staff." };
+      }
+
+      // Check if user already exists
+      const existingUser = await prisma.user.findFirst({
+         where: { OR: [{ email: data.email }, { phone: data.phone }] }
+      });
+      if (existingUser) return { success: false, error: "User with this email or phone already exists." };
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(data.password_plain, 10);
+
+      // Create the Clerk directly linked to the owner's store
+      const newStaff = await prisma.user.create({
+         data: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            password_hash: hashedPassword,
+            role: "clerk",
+            store_id: ownerUser.store_id
+         }
+      });
+
+      return { success: true, staff: { name: newStaff.name, email: newStaff.email, role: newStaff.role } };
+   } catch (error: any) {
+      return { success: false, error: error.message || "Failed to create staff member." };
    }
 }

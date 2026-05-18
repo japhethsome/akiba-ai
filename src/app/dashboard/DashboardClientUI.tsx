@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-export function DashboardClientUI({ userName, kpis }: any) {
+export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount, priorityActions }: any) {
   React.useEffect(() => {
     // Single-tab session lock handling
     const tabId = Math.random().toString(36).substring(7);
@@ -48,6 +48,11 @@ export function DashboardClientUI({ userName, kpis }: any) {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
+  // Format the category string nicely
+  const formattedCategory = storeCategory === "other" || !storeCategory 
+    ? "shop" 
+    : storeCategory.toLowerCase();
+
   return (
     <motion.div 
       variants={container} 
@@ -62,16 +67,18 @@ export function DashboardClientUI({ userName, kpis }: any) {
         
         <div className="relative z-10">
            <h2 className="text-[56px] font-black mb-6 tracking-tighter leading-[0.95]">
-              Hello, <span className="text-[#00a87a]">{userName}</span>.<br/>Your shop is thriving.
+              Hello, <span className="text-[#00a87a]">{userName}</span>.<br/>Your {formattedCategory} is thriving.
            </h2>
            <p className="text-[#bccac1] text-lg max-w-md font-medium leading-relaxed">
-              DeepSeek AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">3 critical restock actions</span> needed before the weekend rush.
+              DeepSeek AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
            </p>
         </div>
         <div className="relative z-10 flex flex-wrap gap-4 mt-10">
-           <button className="bg-[#00a87a] text-[#171d1a] px-8 py-4 rounded-2xl font-black text-sm hover:scale-[1.03] active:scale-[0.98] transition-all shadow-xl shadow-[#00a87a]/20">
-              Review Restocks
-           </button>
+           <Link href="/dashboard/inventory">
+             <button className="bg-[#00a87a] text-[#171d1a] px-8 py-4 rounded-2xl font-black text-sm hover:scale-[1.03] active:scale-[0.98] transition-all shadow-xl shadow-[#00a87a]/20">
+                Review Restocks
+             </button>
+           </Link>
            <button className="bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-black text-sm hover:bg-white/20 transition-colors border border-white/10">
               View Full Analytics
            </button>
@@ -146,23 +153,26 @@ export function DashboardClientUI({ userName, kpis }: any) {
       <motion.div variants={item} className="lg:col-span-4 bg-white rounded-[40px] p-10 border border-[#e4eae4] flex flex-col shadow-sm">
          <h3 className="text-2xl font-black text-[#171d1a] mb-8 tracking-tight">Priority Actions</h3>
          <div className="space-y-4 flex-1">
-            {[
-               { item: "Unga 2kg", status: "Critical", bg: "#fff1f2", color: "#ba1a1a", icon: "warning" },
-               { item: "Sugar 1kg", status: "Low Stock", bg: "#fef3c7", color: "#b45309", icon: "info" },
-               { item: "Cooking Oil", status: "Out", bg: "#f3f4f6", color: "#171d1a", icon: "error" }
-            ].map((t, i) => (
+            {priorityActions.length > 0 ? priorityActions.map((t: any, i: number) => (
                <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-[#e4eae4] bg-[#f8faf9] hover:bg-white hover:border-[#bccac1] hover:shadow-lg transition-all cursor-pointer group">
                   <div className="flex items-center gap-3">
                      <span className="material-symbols-outlined text-[18px]" style={{ color: t.color }}>{t.icon}</span>
-                     <span className="text-sm font-black text-[#171d1a] group-hover:translate-x-1 transition-transform">{t.item}</span>
+                     <span className="text-sm font-black text-[#171d1a] group-hover:translate-x-1 transition-transform max-w-[140px] truncate">{t.item}</span>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg" style={{ background: t.bg, color: t.color }}>{t.status}</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg whitespace-nowrap" style={{ background: t.bg, color: t.color }}>{t.status}</span>
                </div>
-            ))}
+            )) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-[#e4eae4] rounded-2xl">
+                <span className="material-symbols-outlined text-[40px] text-[#00a87a] mb-4">check_circle</span>
+                <p className="text-[#6d7a73] font-medium text-sm">All stock levels are healthy! No critical actions needed.</p>
+              </div>
+            )}
          </div>
-         <button className="w-full py-5 mt-6 bg-white border-2 border-dashed border-[#bccac1] rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-[#6d7a73] hover:border-[#00694c] hover:text-[#00694c] transition-all hover:bg-[#00694c]/5">
-            View All Inventory
-         </button>
+         <Link href="/dashboard/inventory">
+            <button className="w-full py-5 mt-6 bg-white border-2 border-dashed border-[#bccac1] rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-[#6d7a73] hover:border-[#00694c] hover:text-[#00694c] transition-all hover:bg-[#00694c]/5">
+               View All Inventory
+            </button>
+         </Link>
       </motion.div>
 
     </motion.div>
