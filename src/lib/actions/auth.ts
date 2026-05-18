@@ -16,13 +16,20 @@ export async function registerOwner(formData: FormData) {
   }
 
   try {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({
       where: { email },
     });
+    if (existingEmail) {
+      return { error: "This email address is already registered. Please log in or use a different email." };
+    }
 
-    if (existingUser) {
-      return { error: "User with this email already exists" };
+    // Check if phone number already exists
+    const existingPhone = await prisma.user.findUnique({
+      where: { phone },
+    });
+    if (existingPhone) {
+      return { error: "This phone number is already registered. Please use a different phone number." };
     }
 
     // Hash password
@@ -125,13 +132,13 @@ export async function loginUser(formData: FormData) {
     });
 
     if (!user) {
-      return { error: "Invalid email or password" };
+      return { error: "No account found with this email address. Please register first." };
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
-      return { error: "Invalid email or password" };
+      return { error: "Incorrect password. Please try again." };
     }
 
     await setSession(user.user_id, user.role, user.store_id);

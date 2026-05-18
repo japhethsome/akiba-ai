@@ -60,11 +60,17 @@ export async function createStaffDirectly(data: {
          return { success: false, error: "Forbidden: Only owners can create staff." };
       }
 
-      // Check if user already exists
-      const existingUser = await prisma.user.findFirst({
-         where: { OR: [{ email: data.email }, { phone: data.phone }] }
+      // Check if email already exists
+      const existingEmail = await prisma.user.findUnique({
+         where: { email: data.email }
       });
-      if (existingUser) return { success: false, error: "User with this email or phone already exists." };
+      if (existingEmail) return { success: false, error: "This email address is already registered to a staff member." };
+
+      // Check if phone already exists
+      const existingPhone = await prisma.user.findUnique({
+         where: { phone: data.phone }
+      });
+      if (existingPhone) return { success: false, error: "This phone number is already registered to a staff member." };
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(data.password_plain, 10);
