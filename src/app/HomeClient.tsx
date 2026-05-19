@@ -90,10 +90,12 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
   useEffect(() => {
     // Auto-logout when reaching landing page as requested
     const performLogout = async () => {
-      await logout();
+      if (isLoggedIn) {
+        await logout();
+      }
     };
     performLogout();
-  }, []);
+  }, [isLoggedIn]);
 
   const [lang, setLang] = useState<Language>("en");
   const [langMenuOpen, setLangMenuOpen] = useState(false);
