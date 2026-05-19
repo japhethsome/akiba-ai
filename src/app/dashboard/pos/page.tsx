@@ -20,7 +20,7 @@ export default async function PosPage() {
     orderBy: { name: "asc" },
   });
 
-  const plainProducts = products.map(p => ({
+  const plainProducts = products.map((p: any) => ({
     id: p.product_id,
     name: p.name,
     category: p.category,
@@ -30,7 +30,10 @@ export default async function PosPage() {
 
   return (
     <DashboardLayoutWrapper>
-      <PosClientUI initialProducts={plainProducts} />
+      <PosClientUI 
+        initialProducts={plainProducts} 
+        currentUser={{ name: user.name, role: user.role }} 
+      />
     </DashboardLayoutWrapper>
   );
 }

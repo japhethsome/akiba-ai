@@ -16,13 +16,23 @@ export async function registerOwner(formData: FormData) {
   }
 
   try {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Check if user already exists with this email or phone
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { phone }
+        ]
+      },
     });
 
     if (existingUser) {
-      return { error: "User with this email already exists" };
+      if (existingUser.email === email) {
+        return { error: "User with this email already exists" };
+      }
+      if (existingUser.phone === phone) {
+        return { error: "User with this phone number already exists" };
+      }
     }
 
     // Hash password
