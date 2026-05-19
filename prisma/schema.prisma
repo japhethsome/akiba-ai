@@ -74,13 +74,17 @@ model Product {
 
 model Transaction {
   transaction_id   String        @id @default(uuid())
+  receipt_id       String?       @default(cuid())
   product_id       String
   user_id          String
   quantity         Int
   total_price      Decimal
   total_profit     Decimal       @default(0)
+  payment_method   String        @default("CASH")
+  status           String        @default("COMPLETED")
   transaction_type String
   store_id         String
+  voided_at        DateTime?
   created_at       DateTime      @default(now())
   inventoryLog     InventoryLog?
   product          Product       @relation(fields: [product_id], references: [product_id])

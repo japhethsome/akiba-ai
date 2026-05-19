@@ -6,10 +6,10 @@ import { logout } from "@/lib/actions/auth";
 
 const navItems = [
   { label: "Home", href: "/dashboard", roles: ["owner"] },
-  { label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk"] },
-  { label: "Inventory", href: "/dashboard/inventory", roles: ["owner", "clerk"] },
+  { label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk", "attendant"] },
+  { label: "Inventory", href: "/dashboard/inventory", roles: ["owner", "clerk", "attendant"] },
   { label: "Suppliers", href: "/dashboard/suppliers", roles: ["owner"] },
-  { label: "Transactions", href: "/transactions", roles: ["owner"] },
+  { label: "Transactions", href: "/transactions", roles: ["owner", "clerk", "attendant"] },
   { label: "Staff", href: "/dashboard/staff", roles: ["owner"] },
   { label: "Forecasts", href: "/forecasts", roles: ["owner"] },
   { label: "Reports", href: "/reports", roles: ["owner"] },

@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 const mobileItems = [
   { icon: "home", label: "Home", href: "/dashboard", roles: ["owner"] },
-  { icon: "point_of_sale", label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk"] },
-  { icon: "inventory_2", label: "Products", href: "/dashboard/inventory", roles: ["owner", "clerk"] },
+  { icon: "point_of_sale", label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk", "attendant"] },
+  { icon: "inventory_2", label: "Products", href: "/dashboard/inventory", roles: ["owner", "clerk", "attendant"] },
+  { icon: "receipt_long", label: "Sales", href: "/transactions", roles: ["owner", "clerk", "attendant"] },
   { icon: "local_shipping", label: "Suppliers", href: "/dashboard/suppliers", roles: ["owner"] },
   { icon: "group", label: "Staff", href: "/dashboard/staff", roles: ["owner"] },
 ];

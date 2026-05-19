@@ -16,15 +16,33 @@ interface CartItem extends Product {
   cartQuantity: number;
 }
 
+interface ReceiptItem {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+interface Receipt {
+  id: string;
+  storeName: string;
+  paymentMethod: "CASH" | "MPESA";
+  servedBy: string;
+  createdAt: string;
+  items: ReceiptItem[];
+  total: number;
+}
+
 export function PosClientUI({ initialProducts }: { initialProducts: Product[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isPending, startTransition] = useTransition();
   const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
   const [discount, setDiscount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "MPESA">("CASH");
   const [showReceipt, setShowReceipt] = useState(false);
-  const [lastOrder, setLastOrder] = useState<CartItem[]>([]);
-  const [lastTotal, setLastTotal] = useState(0);
+  const [lastReceipt, setLastReceipt] = useState<Receipt | null>(null);
 
   const filteredProducts = useMemo(() => {
     return initialProducts.filter(p => 
@@ -78,10 +96,9 @@ export function PosClientUI({ initialProducts }: { initialProducts: Product[] })
         quantity: item.cartQuantity,
       }));
       
-      const res = await processCheckout(payload); // We pass payload, currently discounts aren't recorded in backend DB (TODO for future)
-      if (res.success) {
-        setLastOrder([...cart]);
-        setLastTotal(finalTotal);
+      const res = await processCheckout(payload, paymentMethod); // Discounts are UI-only until order-level totals are modeled.
+      if (res.success && res.receipt) {
+        setLastReceipt(res.receipt);
         setShowReceipt(true);
         setCart([]);
         setDiscount(0);
@@ -247,6 +264,20 @@ export function PosClientUI({ initialProducts }: { initialProducts: Product[] })
              <button onClick={() => setDiscount(0.05)} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${discount === 0.05 ? "bg-[#00a87a] text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}>5% Off</button>
              <button onClick={() => setDiscount(0.10)} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${discount === 0.10 ? "bg-[#00a87a] text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}>10% Off</button>
           </div>
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            <button
+              onClick={() => setPaymentMethod("CASH")}
+              className={`h-12 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${paymentMethod === "CASH" ? "bg-white text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}
+            >
+              Cash
+            </button>
+            <button
+              onClick={() => setPaymentMethod("MPESA")}
+              className={`h-12 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${paymentMethod === "MPESA" ? "bg-white text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}
+            >
+              M-Pesa
+            </button>
+          </div>
           
           <div className="flex justify-between items-center mb-6">
             <span className="text-sm font-bold text-[#bccac1] uppercase tracking-widest">Total Due</span>
@@ -278,7 +309,7 @@ export function PosClientUI({ initialProducts }: { initialProducts: Product[] })
       </AnimatePresence>
       {/* Success Receipt Modal */}
       <AnimatePresence>
-        {showReceipt && (
+        {showReceipt && lastReceipt && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
@@ -292,7 +323,7 @@ export function PosClientUI({ initialProducts }: { initialProducts: Product[] })
                 <span className="material-symbols-outlined text-[40px]">check_circle</span>
               </div>
               <h2 className="text-2xl font-black text-[#171d1a] mb-2">Payment Successful</h2>
-              <p className="text-[#6d7a73] text-sm font-medium mb-8">Transaction completed and inventory updated.</p>
+              <p className="text-[#6d7a73] text-sm font-medium mb-8">Receipt {lastReceipt.id} was completed by {lastReceipt.servedBy}.</p>
               
               <div className="w-full bg-[#f8faf9] border border-[#e4eae4] border-dashed rounded-2xl p-6 mb-8 text-left">
                  <div className="flex justify-between text-xs font-bold text-[#bccac1] uppercase tracking-widest mb-4">
@@ -300,24 +331,37 @@ export function PosClientUI({ initialProducts }: { initialProducts: Product[] })
                     <span>Amt</span>
                  </div>
                  <div className="space-y-3 mb-4 max-h-[150px] overflow-y-auto no-scrollbar">
-                    {lastOrder.map((item, i) => (
+                    {lastReceipt.items.map((item, i) => (
                        <div key={i} className="flex justify-between text-sm font-black text-[#171d1a]">
-                          <span className="truncate pr-4">{item.cartQuantity}x {item.name}</span>
-                          <span className="shrink-0">{(item.price * item.cartQuantity).toLocaleString()}</span>
+                          <span className="truncate pr-4">{item.quantity}x {item.name}</span>
+                          <span className="shrink-0">{item.totalPrice.toLocaleString()}</span>
                        </div>
                     ))}
                  </div>
+                 <div className="border-t border-[#e4eae4] border-dashed pt-4 pb-3 flex justify-between items-center">
+                    <span className="text-xs font-bold text-[#171d1a] uppercase tracking-widest">Payment</span>
+                    <span className="text-sm font-black text-[#171d1a]">{lastReceipt.paymentMethod === "MPESA" ? "M-Pesa" : "Cash"}</span>
+                 </div>
                  <div className="border-t border-[#e4eae4] border-dashed pt-4 flex justify-between items-center">
                     <span className="text-xs font-bold text-[#171d1a] uppercase tracking-widest">Total Paid</span>
-                    <span className="text-xl font-black text-[#00694c]">KES {lastTotal.toLocaleString()}</span>
+                    <span className="text-xl font-black text-[#00694c]">KES {lastReceipt.total.toLocaleString()}</span>
                  </div>
               </div>
 
               <div className="w-full space-y-3">
-                 <button className="w-full h-14 bg-[#171d1a] hover:bg-black text-white rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-colors">
+                 <button onClick={() => window.print()} className="w-full h-14 bg-[#171d1a] hover:bg-black text-white rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-colors">
                     <span className="material-symbols-outlined text-[20px]">print</span>
                     Print Receipt
                  </button>
+                 <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Hello, here is your digital receipt for transaction ${lastReceipt.id} at ${lastReceipt.storeName}. Total: KES ${lastReceipt.total.toLocaleString()}.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full h-14 bg-[#f0fdf4] hover:bg-[#dcfce7] text-[#00694c] rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-colors"
+                 >
+                    <span className="material-symbols-outlined text-[20px]">share</span>
+                    Share via WhatsApp
+                 </a>
                  <button onClick={() => setShowReceipt(false)} className="w-full h-14 bg-[#f8faf9] hover:bg-[#e4eae4] text-[#171d1a] rounded-xl font-black text-sm transition-colors">
                     Start New Order
                  </button>

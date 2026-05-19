@@ -40,6 +40,7 @@ export default async function DashboardPage() {
   const transactions = await prisma.transaction.findMany({
     where: { 
       store_id: user.store_id,
+      status: { not: "VOIDED" },
       created_at: {
         gte: new Date(new Date().setHours(0, 0, 0, 0))
       }
