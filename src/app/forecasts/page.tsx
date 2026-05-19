@@ -16,7 +16,7 @@ export default async function ForecastsPage() {
         </div>
         <h1 className="text-3xl font-black text-[#171d1a] mb-2">AI Inventory Forecaster</h1>
         <p className="text-[#6d7a73] font-medium max-w-md mb-8">
-          The DeepSeek intelligence layer is currently training on your initial inventory and sales velocity data. Predictive ordering will unlock shortly.
+          The Akiba AI intelligence layer is currently training on your initial inventory and sales velocity data. Predictive ordering will unlock shortly.
         </p>
         <Link href="/dashboard">
           <button className="bg-[#171d1a] text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl hover:bg-black transition-colors">

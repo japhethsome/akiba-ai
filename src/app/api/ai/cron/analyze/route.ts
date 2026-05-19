@@ -2,9 +2,8 @@ import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import prisma from '@/lib/prisma';
 
-const deepseek = createOpenAI({
-  baseURL: 'https://api.deepseek.com/v1',
-  apiKey: process.env.DEEPSEEK_API_KEY!,
+const openaiClient = createOpenAI({
+  apiKey: process.env.OPEN_AI_API_KEY || process.env.OPENAI_API_KEY || "",
 });
 
 export async function GET(req: Request) {
@@ -35,7 +34,7 @@ export async function GET(req: Request) {
     try {
       // 4. Autonomous AI Analysis
       const { text: analysis } = await generateText({
-        model: deepseek('deepseek-chat'),
+        model: openaiClient('gpt-4o-mini'),
         system: `You are Akiba AI's autonomous logistics agent. Analyze the inventory snapshot for "${store.name}". 
                  Identify critical stockouts and provide a 3-sentence briefing. 
                  Format: [ENGLISH REPORT] followed by [KISWAHILI REPORT].`,

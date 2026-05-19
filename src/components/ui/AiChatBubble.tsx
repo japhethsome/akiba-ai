@@ -118,7 +118,7 @@ export function AiChatBubble() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-black text-sm text-white flex items-center gap-2">
                   Akiba AI
-                  <span className="bg-[#00a87a]/20 border border-[#00a87a]/40 text-[#00a87a] text-[9px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded">DeepSeek</span>
+                  <span className="bg-[#00a87a]/20 border border-[#00a87a]/40 text-[#00a87a] text-[9px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded">Smart AI</span>
                 </h3>
                 <p className="text-[10px] text-[#bccac1] font-bold">Your inventory intelligence assistant</p>
               </div>

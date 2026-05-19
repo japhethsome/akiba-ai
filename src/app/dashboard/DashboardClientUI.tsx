@@ -70,7 +70,7 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
               Hello, <span className="text-[#00a87a]">{userName}</span>.<br/>Your {formattedCategory} is thriving.
            </h2>
            <p className="text-[#bccac1] text-lg max-w-md font-medium leading-relaxed">
-              DeepSeek AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
+              Akiba AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
            </p>
         </div>
         <div className="relative z-10 flex flex-wrap gap-4 mt-10">
@@ -95,7 +95,7 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
          
          <h3 className="text-3xl font-black mb-3 tracking-tight">Intelligence Layer</h3>
          <p className="text-white/70 text-sm font-medium mb-8 leading-relaxed flex-1">
-            Your DeepSeek AI requires full shop context. Complete the onboarding survey to unlock predictive ordering and automated insights.
+            Your Akiba AI requires full shop context. Complete the onboarding survey to unlock predictive ordering and automated insights.
          </p>
          
          <Link href="/dashboard/ai-survey" className="flex items-center justify-between bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 p-5 rounded-2xl transition-colors mt-auto">

@@ -16,7 +16,7 @@ export default async function ReportsPage() {
         </div>
         <h1 className="text-3xl font-black text-[#171d1a] mb-2">Financial Reports</h1>
         <p className="text-[#6d7a73] font-medium max-w-md mb-8">
-          DeepSeek AI is analyzing your historical data. Detailed P&L statements, tax summaries, and staff performance metrics are unlocking soon.
+          Akiba AI is analyzing your historical data. Detailed P&L statements, tax summaries, and staff performance metrics are unlocking soon.
         </p>
         <Link href="/dashboard">
           <button className="bg-[#171d1a] text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl hover:bg-black transition-colors">

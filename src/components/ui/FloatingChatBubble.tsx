@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function FloatingChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([{ role: "ai", content: "Hi! I'm your DeepSeek Akiba Assistant. How can I help you manage your store today?" }]);
+  const [messages, setMessages] = useState([{ role: "ai", content: "Hi! I'm your OpenAI Akiba Assistant. How can I help you manage your store today?" }]);
   const [input, setInput] = useState("");
 
   const handleSend = async () => {
@@ -25,7 +25,7 @@ export function FloatingChatBubble() {
         if (data.reply) {
            setMessages([...newMessages, { role: "ai", content: data.reply }]);
         } else {
-           setMessages([...newMessages, { role: "ai", content: "Sorry, I encountered an error connecting to DeepSeek." }]);
+           setMessages([...newMessages, { role: "ai", content: "Sorry, I encountered an error connecting to OpenAI." }]);
         }
      } catch (err) {
         setMessages([...newMessages, { role: "ai", content: "Network error. Please try again." }]);
@@ -50,7 +50,7 @@ export function FloatingChatBubble() {
                          <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
                       </div>
                       <div>
-                         <h3 className="font-black text-sm tracking-tight">DeepSeek Intelligence</h3>
+                         <h3 className="font-black text-sm tracking-tight">OpenAI Intelligence</h3>
                          <p className="text-[10px] text-[#bccac1] uppercase tracking-wider font-bold">Store Expert</p>
                       </div>
                    </div>
