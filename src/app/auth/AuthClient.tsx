@@ -106,6 +106,24 @@ export default function AuthClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [password, setPassword] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    number: false,
+    special: false,
+    case: false
+  });
+
+  const validatePassword = (pass: string) => {
+    setPassword(pass);
+    setPasswordStrength({
+      length: pass.length >= 8,
+      number: /[0-9]/.test(pass),
+      special: /[^A-Za-z0-9]/.test(pass),
+      case: /[A-Z]/.test(pass) && /[a-z]/.test(pass),
+    });
+  };
+
   useEffect(() => {
     if (inviteToken) {
       setMode("register");
@@ -123,10 +141,49 @@ export default function AuthClient() {
     
     let result;
     if (mode === "register") {
-      const password = formData.get("password") as string;
+      const name = formData.get("name") as string;
+      const email = formData.get("email") as string;
+      const phone = formData.get("phone") as string;
+      const passwordVal = formData.get("password") as string;
       const confirmPassword = formData.get("confirmPassword") as string;
-      
-      if (password !== confirmPassword) {
+
+      if (!name || name.trim().length < 3) {
+        setLoading(false);
+        setError("Name must be at least 3 characters long");
+        return;
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setLoading(false);
+        setError("Please enter a valid email address");
+        return;
+      }
+
+      // Phone validation (Kenyan formats: 07..., 01..., 254...)
+      const cleanPhone = phone.trim().replace(/\s/g, "");
+      const phoneRegex = /^(07|01|2547|2541)\d{8}$/;
+      if (!phoneRegex.test(cleanPhone)) {
+        setLoading(false);
+        setError("Please enter a valid Kenyan phone number (e.g., 0712345678)");
+        return;
+      }
+
+      // Password strength validation
+      const isPassStrong = passwordVal.length >= 8 &&
+                           /[0-9]/.test(passwordVal) &&
+                           /[^A-Za-z0-9]/.test(passwordVal) &&
+                           /[A-Z]/.test(passwordVal) &&
+                           /[a-z]/.test(passwordVal);
+
+      if (!isPassStrong) {
+        setLoading(false);
+        setError("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, a number, and a special character.");
+        return;
+      }
+
+      if (passwordVal !== confirmPassword) {
         setLoading(false);
         setError("Passwords do not match");
         return;
@@ -163,7 +220,7 @@ export default function AuthClient() {
           { size: 96, top: -24, left: -24, color: "#86f8c9", delay: 0 },
           { size: 80, bottom: 0, right: 0, color: "#958dff", delay: 1 },
           { size: 64, top: "50%", right: -16, color: "#68dbae", delay: 2 },
-        ].map((circle: { size: number | string, top?: number | string, bottom?: number | string, left?: number | string, right?: number | string, color: string, delay: number }, i: number) => (
+        ].map((circle: { size: number, top?: number | string, bottom?: number | string, left?: number | string, right?: number | string, color: string, delay: number }, i: number) => (
           <motion.div
             key={i}
             animate={{ 
@@ -355,7 +412,7 @@ export default function AuthClient() {
                     </div>
                   </div>
                   <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.email}</label>
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.emailLabel}</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
                       <input type="email" placeholder="wanjiku@gmail.com" name="email" required
@@ -371,15 +428,47 @@ export default function AuthClient() {
                     </div>
                   </div>
                   <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.password}</label>
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
                       <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="password" required
+                        value={password}
+                        onChange={(e) => validatePassword(e.target.value)}
                         className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
                         <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
                       </button>
                     </div>
+                    {/* Password Strength Indicators */}
+                    {password.length > 0 && (
+                      <div className="mt-2.5 p-3.5 bg-[#f8faf9] border border-[#e4eae4] rounded-2xl space-y-1.5 text-[11px] font-bold text-[#6d7a73] transition-all">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-[#3d4943] mb-1">Password Requirements:</p>
+                        <div className="flex items-center gap-2">
+                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.length ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                            {passwordStrength.length ? "check_circle" : "cancel"}
+                          </span>
+                          <span className={passwordStrength.length ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least 8 characters</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.case ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                            {passwordStrength.case ? "check_circle" : "cancel"}
+                          </span>
+                          <span className={passwordStrength.case ? "text-[#171d1a]" : "text-[#6d7a73]"}>Uppercase & lowercase letters</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.number ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                            {passwordStrength.number ? "check_circle" : "cancel"}
+                          </span>
+                          <span className={passwordStrength.number ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one number</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.special ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                            {passwordStrength.special ? "check_circle" : "cancel"}
+                          </span>
+                          <span className={passwordStrength.special ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one special character</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="group">
                     <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Confirm Password</label>

@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { crypto } from "node:crypto";
 
 const ENCRYPTION_KEY = process.env.SESSION_SECRET || "akiba_ai_secret_key_32_chars_long!!"; 
 

@@ -41,12 +41,12 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
       opacity: 1,
       transition: { staggerChildren: 0.1 }
     }
-  };
+  } as const;
 
   const item = {
     hidden: { opacity: 0, y: 30 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-  };
+  } as const;
 
   // Format the category string nicely
   const formattedCategory = storeCategory === "other" || !storeCategory 
@@ -98,10 +98,10 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
             Your Akiba AI requires full shop context. Complete the onboarding survey to unlock predictive ordering and automated insights.
          </p>
          
-         <Link href="/dashboard/ai-survey" className="flex items-center justify-between bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 p-5 rounded-2xl transition-colors mt-auto">
-            <span className="text-sm font-black uppercase tracking-wider text-white">Train AI Now</span>
+         <button onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))} className="flex items-center justify-between bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 p-5 rounded-2xl transition-colors mt-auto text-left w-full">
+            <span className="text-sm font-black uppercase tracking-wider text-white">Ask Akiba AI</span>
             <span className="material-symbols-outlined text-white group-hover:translate-x-2 transition-transform">arrow_forward</span>
-         </Link>
+         </button>
       </motion.div>
 
       {/* KPI GRID - 4 blocks spanning 3 cols each */}

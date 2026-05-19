@@ -42,6 +42,7 @@ export async function addProduct(data: {
       data: {
         product_id: newProduct.product_id,
         user_id: user.user_id,
+        store_id: user.store_id,
         change_type: "addition",
         quantity_changed: data.stock,
         reason: "Initial stock addition",
@@ -89,6 +90,7 @@ export async function restockProduct(productId: string, additionalStock: number)
       data: {
         product_id: productId,
         user_id: user.user_id,
+        store_id: user.store_id,
         change_type: "restock",
         quantity_changed: additionalStock,
         reason: "Quick restock via dashboard",

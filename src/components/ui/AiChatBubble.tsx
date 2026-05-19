@@ -25,6 +25,16 @@ export function AiChatBubble() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen, isTyping]);
 
+  useEffect(() => {
+    const handleOpenChat = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener("open-ai-chat", handleOpenChat);
+    return () => {
+      window.removeEventListener("open-ai-chat", handleOpenChat);
+    };
+  }, []);
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isTyping) return;
 
