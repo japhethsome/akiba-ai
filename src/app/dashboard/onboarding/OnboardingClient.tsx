@@ -8,7 +8,18 @@ import { completeOnboarding, OnboardingProduct } from "@/lib/actions/onboarding"
 // ─── AI Inventory Templates ───────────────────────────────────────────────────
 const TEMPLATES: Record<string, { label: string; sw: string; icon: string; products: OnboardingProduct[] }> = {
   grocery: {
-    label: "Grocery / Retail", sw: "Mboga & Duka", icon: "local_grocery_store",
+    label: "Grocery / Mama Mboga", sw: "Mboga & Matunda", icon: "local_grocery_store",
+    products: [
+      { name: "Sukuma Wiki (Bunch)", category: "Vegetables", unit_price: 20, stock_quantity: 100, reorder_level: 20 },
+      { name: "Spinach (Bunch)", category: "Vegetables", unit_price: 25, stock_quantity: 80, reorder_level: 15 },
+      { name: "Tomatoes 1kg", category: "Vegetables", unit_price: 120, stock_quantity: 30, reorder_level: 8 },
+      { name: "Onions 1kg", category: "Vegetables", unit_price: 130, stock_quantity: 25, reorder_level: 5 },
+      { name: "Ripe Bananas (Bunch)", category: "Fruits", unit_price: 150, stock_quantity: 15, reorder_level: 3 },
+      { name: "Avocado (Medium)", category: "Fruits", unit_price: 30, stock_quantity: 40, reorder_level: 10 },
+    ],
+  },
+  duka: {
+    label: "Small Duka / Kiosk", sw: "Duka la Rejareja", icon: "storefront",
     products: [
       { name: "Jogoo Unga 2kg", category: "Flour", unit_price: 165, stock_quantity: 50, reorder_level: 15 },
       { name: "Sugar 1kg (Mumias)", category: "Sugar", unit_price: 145, stock_quantity: 40, reorder_level: 10 },
@@ -18,19 +29,39 @@ const TEMPLATES: Record<string, { label: string; sw: string; icon: string; produ
       { name: "Blue Band 250g", category: "Spreads", unit_price: 115, stock_quantity: 20, reorder_level: 5 },
     ],
   },
-  hardware: {
-    label: "Hardware / Mijengo", sw: "Vifaa vya Ujenzi", icon: "construction",
+  supermarket: {
+    label: "Mini Supermarket", sw: "Supermarket Ndogo", icon: "shopping_cart",
     products: [
-      { name: "Cement 50kg (Bamburi)", category: "Cement", unit_price: 900, stock_quantity: 100, reorder_level: 20 },
-      { name: "Steel Nails 2-inch (1kg)", category: "Nails", unit_price: 120, stock_quantity: 60, reorder_level: 15 },
-      { name: "Gloss Paint 4L", category: "Paint", unit_price: 1100, stock_quantity: 20, reorder_level: 5 },
-      { name: "G-Clamp 6-inch", category: "Clamps", unit_price: 350, stock_quantity: 15, reorder_level: 3 },
-      { name: "Key Lock (Standard)", category: "Locks", unit_price: 280, stock_quantity: 25, reorder_level: 5 },
-      { name: "Hammer (Steel Head)", category: "Tools", unit_price: 450, stock_quantity: 12, reorder_level: 3 },
+      { name: "Unga wa Dola 2kg", category: "Flour", unit_price: 170, stock_quantity: 50, reorder_level: 15 },
+      { name: "Sugar 2kg (Kabras)", category: "Sugar", unit_price: 280, stock_quantity: 40, reorder_level: 10 },
+      { name: "Cooking Oil 2L (Salit)", category: "Oil", unit_price: 450, stock_quantity: 30, reorder_level: 8 },
+      { name: "Detergent Powder 1kg", category: "Cleaning", unit_price: 220, stock_quantity: 20, reorder_level: 5 },
+      { name: "Bar Soap (White Star)", category: "Cleaning", unit_price: 150, stock_quantity: 25, reorder_level: 5 },
+      { name: "Long Life Milk 1L", category: "Dairy", unit_price: 110, stock_quantity: 35, reorder_level: 10 },
+    ],
+  },
+  wholesale: {
+    label: "Wholesale & Distributor", sw: "Duka la Jumla", icon: "inventory",
+    products: [
+      { name: "Bale of Unga 2kg (12pcs)", category: "Bulk Flour", unit_price: 1900, stock_quantity: 20, reorder_level: 5 },
+      { name: "Carton of Cooking Oil 1L (12pcs)", category: "Bulk Oil", unit_price: 2500, stock_quantity: 15, reorder_level: 4 },
+      { name: "Bag of Sugar 50kg", category: "Bulk Sugar", unit_price: 6500, stock_quantity: 10, reorder_level: 3 },
+      { name: "Box of Bar Soap (10pcs)", category: "Bulk Cleaning", unit_price: 1300, stock_quantity: 15, reorder_level: 4 },
+      { name: "Sack of Rice 25kg", category: "Bulk Rice", unit_price: 320, stock_quantity: 25, reorder_level: 5 },
+    ],
+  },
+  market_stall: {
+    label: "Market Stall / Vendor", sw: "Kibanda cha Soko", icon: "store",
+    products: [
+      { name: "Onions (1 Net)", category: "Vegetables", unit_price: 180, stock_quantity: 10, reorder_level: 3 },
+      { name: "Tomatoes (Crate half)", category: "Vegetables", unit_price: 500, stock_quantity: 12, reorder_level: 3 },
+      { name: "Potatoes (Sack half)", category: "Vegetables", unit_price: 1200, stock_quantity: 8, reorder_level: 2 },
+      { name: "Garlic 1kg", category: "Vegetables", unit_price: 250, stock_quantity: 15, reorder_level: 4 },
+      { name: "Cabbage (Medium)", category: "Vegetables", unit_price: 50, stock_quantity: 30, reorder_level: 10 },
     ],
   },
   chemist: {
-    label: "Chemist / Dawa", sw: "Duka la Dawa", icon: "medication",
+    label: "Chemist / Pharmacy", sw: "Duka la Dawa", icon: "medication",
     products: [
       { name: "Panadol Actifast 24s", category: "Painkillers", unit_price: 95, stock_quantity: 60, reorder_level: 15 },
       { name: "Band-Aid Box 20s", category: "First Aid", unit_price: 85, stock_quantity: 40, reorder_level: 10 },
@@ -40,19 +71,8 @@ const TEMPLATES: Record<string, { label: string; sw: string; icon: string; produ
       { name: "ORS Sachet (Lemon)", category: "Rehydration", unit_price: 30, stock_quantity: 80, reorder_level: 20 },
     ],
   },
-  boutique: {
-    label: "Boutique / Nguo", sw: "Duka la Nguo", icon: "checkroom",
-    products: [
-      { name: "Men's T-Shirt (S-XL)", category: "Tops", unit_price: 650, stock_quantity: 30, reorder_level: 5 },
-      { name: "Ladies Blouse", category: "Tops", unit_price: 850, stock_quantity: 20, reorder_level: 5 },
-      { name: "Denim Jeans (Unisex)", category: "Bottoms", unit_price: 1500, stock_quantity: 15, reorder_level: 3 },
-      { name: "Kitenge Dress", category: "Dresses", unit_price: 1200, stock_quantity: 10, reorder_level: 3 },
-      { name: "Sandals (Size 36-44)", category: "Footwear", unit_price: 950, stock_quantity: 20, reorder_level: 5 },
-      { name: "Ankara Head Wrap", category: "Accessories", unit_price: 250, stock_quantity: 25, reorder_level: 5 },
-    ],
-  },
   agrovet: {
-    label: "Agro-vet / Shamba", sw: "Duka la Shamba", icon: "grass",
+    label: "Agro-vet Shop", sw: "Duka la Shamba", icon: "grass",
     products: [
       { name: "DAP Fertilizer 10kg", category: "Fertilizer", unit_price: 2800, stock_quantity: 20, reorder_level: 5 },
       { name: "Maize Seeds 2kg (H614D)", category: "Seeds", unit_price: 450, stock_quantity: 30, reorder_level: 8 },
@@ -62,12 +82,193 @@ const TEMPLATES: Record<string, { label: string; sw: string; icon: string; produ
       { name: "Urea Fertilizer 10kg", category: "Fertilizer", unit_price: 2200, stock_quantity: 20, reorder_level: 5 },
     ],
   },
-  other: {
-    label: "Other", sw: "Nyingine", icon: "storefront",
+  hardware: {
+    label: "Hardware Store", sw: "Vifaa vya Ujenzi", icon: "construction",
     products: [
-      { name: "Product 1", category: "General", unit_price: 100, stock_quantity: 20, reorder_level: 5 },
-      { name: "Product 2", category: "General", unit_price: 200, stock_quantity: 20, reorder_level: 5 },
-      { name: "Product 3", category: "General", unit_price: 300, stock_quantity: 20, reorder_level: 5 },
+      { name: "Cement 50kg (Bamburi)", category: "Cement", unit_price: 900, stock_quantity: 100, reorder_level: 20 },
+      { name: "Steel Nails 2-inch (1kg)", category: "Nails", unit_price: 120, stock_quantity: 60, reorder_level: 15 },
+      { name: "Gloss Paint 4L", category: "Paint", unit_price: 1100, stock_quantity: 20, reorder_level: 5 },
+      { name: "G-Clamp 6-inch", category: "Clamps", unit_price: 350, stock_quantity: 15, reorder_level: 3 },
+      { name: "Key Lock (Standard)", category: "Locks", unit_price: 280, stock_quantity: 25, reorder_level: 5 },
+      { name: "Hammer (Steel Head)", category: "Tools", unit_price: 450, stock_quantity: 12, reorder_level: 3 },
+    ],
+  },
+  restaurant: {
+    label: "Restaurant / Cafe", sw: "Hoteli & Kahawa", icon: "restaurant",
+    products: [
+      { name: "Beef Stew Portion", category: "Meals", unit_price: 250, stock_quantity: 50, reorder_level: 5 },
+      { name: "Chicken Biryani", category: "Meals", unit_price: 350, stock_quantity: 40, reorder_level: 5 },
+      { name: "Ugali Saucer", category: "Meals", unit_price: 50, stock_quantity: 100, reorder_level: 10 },
+      { name: "Soft Drink 500ml", category: "Beverages", unit_price: 70, stock_quantity: 60, reorder_level: 10 },
+      { name: "Chapati (Single)", category: "Meals", unit_price: 30, stock_quantity: 80, reorder_level: 15 },
+    ],
+  },
+  food_kiosk: {
+    label: "Food Kiosk / Chapati", sw: "Kibanda cha Chapati", icon: "soup_kitchen",
+    products: [
+      { name: "Plain Chapati", category: "Meals", unit_price: 30, stock_quantity: 100, reorder_level: 15 },
+      { name: "Beef Stew Portion", category: "Meals", unit_price: 120, stock_quantity: 30, reorder_level: 5 },
+      { name: "Madondo (Beans)", category: "Meals", unit_price: 50, stock_quantity: 40, reorder_level: 8 },
+      { name: "Ndengu (Greengrams)", category: "Meals", unit_price: 60, stock_quantity: 45, reorder_level: 8 },
+      { name: "Hot Tea (Cup)", category: "Beverages", unit_price: 20, stock_quantity: 200, reorder_level: 10 },
+    ],
+  },
+  bakery: {
+    label: "Bakery", sw: "Duka la Mikate", icon: "bakery_dining",
+    products: [
+      { name: "Sliced White Bread", category: "Bakery", unit_price: 60, stock_quantity: 30, reorder_level: 5 },
+      { name: "Sliced Brown Bread", category: "Bakery", unit_price: 70, stock_quantity: 20, reorder_level: 5 },
+      { name: "Queen Cakes (6pcs)", category: "Pastries", unit_price: 150, stock_quantity: 15, reorder_level: 3 },
+      { name: "Chocolate Cake Slice", category: "Pastries", unit_price: 120, stock_quantity: 25, reorder_level: 5 },
+      { name: "Birthday Cake 1kg", category: "Cakes", unit_price: 1500, stock_quantity: 5, reorder_level: 1 },
+    ],
+  },
+  bar: {
+    label: "Bar & Liquor Store", sw: "Baa & Vileo", icon: "local_bar",
+    products: [
+      { name: "Tusker Lager 500ml", category: "Beers", unit_price: 220, stock_quantity: 120, reorder_level: 24 },
+      { name: "Guinness Stout 500ml", category: "Beers", unit_price: 250, stock_quantity: 60, reorder_level: 12 },
+      { name: "White Cap Lager 500ml", category: "Beers", unit_price: 220, stock_quantity: 80, reorder_level: 24 },
+      { name: "Local Gin 750ml", category: "Spirits", unit_price: 800, stock_quantity: 15, reorder_level: 3 },
+      { name: "Scotch Whiskey 750ml", category: "Spirits", unit_price: 1800, stock_quantity: 10, reorder_level: 2 },
+    ],
+  },
+  salon: {
+    label: "Salon & Barbershop", sw: "Kinyozi & Saluni", icon: "content_cut",
+    products: [
+      { name: "Standard Hair Cut", category: "Services", unit_price: 150, stock_quantity: 999, reorder_level: 0 },
+      { name: "Hair Braiding Service", category: "Services", unit_price: 1200, stock_quantity: 999, reorder_level: 0 },
+      { name: "Shaving Blades (Box)", category: "Tools", unit_price: 120, stock_quantity: 40, reorder_level: 10 },
+      { name: "Hair Pomade 150g", category: "Haircare", unit_price: 180, stock_quantity: 20, reorder_level: 4 },
+      { name: "Hair Gel 250g", category: "Haircare", unit_price: 200, stock_quantity: 30, reorder_level: 8 },
+    ],
+  },
+  cosmetics: {
+    label: "Cosmetics & Beauty", sw: "Vipodozi", icon: "brush",
+    products: [
+      { name: "Face Foundation Cream", category: "Makeup", unit_price: 450, stock_quantity: 15, reorder_level: 3 },
+      { name: "Matte Lipstick", category: "Makeup", unit_price: 300, stock_quantity: 25, reorder_level: 5 },
+      { name: "Coconut Body Lotion 400ml", category: "Skincare", unit_price: 350, stock_quantity: 20, reorder_level: 5 },
+      { name: "Nail Polish Remover", category: "Nails", unit_price: 120, stock_quantity: 30, reorder_level: 5 },
+      { name: "Makeup Sponge Set", category: "Accessories", unit_price: 150, stock_quantity: 20, reorder_level: 4 },
+    ],
+  },
+  boutique: {
+    label: "Boutique / Clothing", sw: "Duka la Nguo", icon: "checkroom",
+    products: [
+      { name: "Men's T-Shirt (S-XL)", category: "Tops", unit_price: 650, stock_quantity: 30, reorder_level: 5 },
+      { name: "Ladies Blouse", category: "Tops", unit_price: 850, stock_quantity: 20, reorder_level: 5 },
+      { name: "Denim Jeans (Unisex)", category: "Bottoms", unit_price: 1500, stock_quantity: 15, reorder_level: 3 },
+      { name: "Kitenge Dress", category: "Dresses", unit_price: 1200, stock_quantity: 10, reorder_level: 3 },
+      { name: "Sandals (Size 36-44)", category: "Footwear", unit_price: 950, stock_quantity: 20, reorder_level: 5 },
+    ],
+  },
+  tailoring: {
+    label: "Tailoring Shop", sw: "Duka la Kushona", icon: "content_cut",
+    products: [
+      { name: "Custom Kitenge Stitching", category: "Services", unit_price: 1500, stock_quantity: 999, reorder_level: 0 },
+      { name: "Dress Repair / Hemming", category: "Services", unit_price: 150, stock_quantity: 999, reorder_level: 0 },
+      { name: "Polyester Thread Roll", category: "Materials", unit_price: 50, stock_quantity: 60, reorder_level: 10 },
+      { name: "Buttons Pack (50pcs)", category: "Materials", unit_price: 100, stock_quantity: 25, reorder_level: 5 },
+      { name: "Tailoring Scissors 9-inch", category: "Tools", unit_price: 450, stock_quantity: 5, reorder_level: 1 },
+    ],
+  },
+  electronics: {
+    label: "Mobile & Electronics", sw: "Simu & Elektroni", icon: "smartphone",
+    products: [
+      { name: "USB Type-C Cable", category: "Accessories", unit_price: 200, stock_quantity: 40, reorder_level: 8 },
+      { name: "Smart Earphones (Wired)", category: "Audio", unit_price: 350, stock_quantity: 25, reorder_level: 5 },
+      { name: "Power Bank 10,000mAh", category: "Power", unit_price: 1200, stock_quantity: 15, reorder_level: 3 },
+      { name: "Tempered Glass Protector", category: "Screens", unit_price: 150, stock_quantity: 50, reorder_level: 10 },
+      { name: "Smartphone Charger 18W", category: "Power", unit_price: 600, stock_quantity: 20, reorder_level: 4 },
+    ],
+  },
+  spare_parts: {
+    label: "Spare Parts Shop", sw: "Vipuri vya Magari", icon: "settings_suggest",
+    products: [
+      { name: "Engine Oil 1L (Shell)", category: "Lubricants", unit_price: 850, stock_quantity: 20, reorder_level: 5 },
+      { name: "Motorcycle Spark Plug", category: "Spares", unit_price: 180, stock_quantity: 30, reorder_level: 8 },
+      { name: "Brake Pads Set", category: "Spares", unit_price: 450, stock_quantity: 15, reorder_level: 3 },
+      { name: "Tube Size 18", category: "Tires", unit_price: 350, stock_quantity: 25, reorder_level: 5 },
+      { name: "Side Mirror Pair", category: "Spares", unit_price: 500, stock_quantity: 10, reorder_level: 2 },
+    ],
+  },
+  logistics: {
+    label: "Logistics & Courier", sw: "Uwasilishaji", icon: "local_shipping",
+    products: [
+      { name: "Envelope A4 (10pcs)", category: "Stationery", unit_price: 100, stock_quantity: 50, reorder_level: 10 },
+      { name: "Packaging Tape Roll", category: "Packaging", unit_price: 150, stock_quantity: 30, reorder_level: 5 },
+      { name: "Bubble Wrap 5m", category: "Packaging", unit_price: 300, stock_quantity: 10, reorder_level: 2 },
+      { name: "Cardboard Box Medium", category: "Packaging", unit_price: 120, stock_quantity: 25, reorder_level: 5 },
+      { name: "Delivery Receipt Book", category: "Stationery", unit_price: 150, stock_quantity: 15, reorder_level: 3 },
+    ],
+  },
+  boda: {
+    label: "Boda Boda Dispatch", sw: "Boda Boda Courier", icon: "two_wheeler",
+    products: [
+      { name: "Rider Safety Helmet", category: "Safety", unit_price: 1500, stock_quantity: 10, reorder_level: 2 },
+      { name: "Reflective Safety Vest", category: "Safety", unit_price: 250, stock_quantity: 20, reorder_level: 5 },
+      { name: "Phone Handle Mount", category: "Accessories", unit_price: 400, stock_quantity: 15, reorder_level: 3 },
+      { name: "Key Ring Strap", category: "Accessories", unit_price: 50, stock_quantity: 50, reorder_level: 10 },
+      { name: "Raincoat Suit", category: "Safety", unit_price: 800, stock_quantity: 8, reorder_level: 2 },
+    ],
+  },
+  construction_materials: {
+    label: "Construction Material", sw: "Vifaa vya Mijengo", icon: "foundation",
+    products: [
+      { name: "Ballast (per Wheelbarrow)", category: "Materials", unit_price: 200, stock_quantity: 50, reorder_level: 10 },
+      { name: "Sand (per Wheelbarrow)", category: "Materials", unit_price: 150, stock_quantity: 50, reorder_level: 10 },
+      { name: "Iron Sheet 10ft", category: "Roofing", unit_price: 1200, stock_quantity: 30, reorder_level: 5 },
+      { name: "Timber 2x2 (per foot)", category: "Timber", unit_price: 45, stock_quantity: 200, reorder_level: 50 },
+      { name: "Wire Mesh Roll", category: "Fencing", unit_price: 3500, stock_quantity: 5, reorder_level: 1 },
+    ],
+  },
+  cyber_cafe: {
+    label: "Cyber Café & Printing", sw: "Cyber & Uchapishaji", icon: "computer",
+    products: [
+      { name: "A4 Black/White Printing", category: "Services", unit_price: 10, stock_quantity: 999, reorder_level: 0 },
+      { name: "A4 Color Printing", category: "Services", unit_price: 30, stock_quantity: 999, reorder_level: 0 },
+      { name: "A4 Photocopying", category: "Services", unit_price: 5, stock_quantity: 999, reorder_level: 0 },
+      { name: "Lamination A4", category: "Services", unit_price: 100, stock_quantity: 999, reorder_level: 0 },
+      { name: "Cyber Internet Session 1hr", category: "Services", unit_price: 50, stock_quantity: 999, reorder_level: 0 },
+    ],
+  },
+  guesthouse: {
+    label: "Guesthouse & Lodging", sw: "Guesthouse & Lodging", icon: "bed",
+    products: [
+      { name: "Single Room (Per Night)", category: "Rooms", unit_price: 1500, stock_quantity: 15, reorder_level: 2 },
+      { name: "Double Room (Per Night)", category: "Rooms", unit_price: 2500, stock_quantity: 10, reorder_level: 2 },
+      { name: "Basic Toiletries Kit", category: "Toiletries", unit_price: 100, stock_quantity: 50, reorder_level: 10 },
+      { name: "Laundry Service (Per Load)", category: "Services", unit_price: 300, stock_quantity: 999, reorder_level: 0 },
+      { name: "Room Slippers Pair", category: "Accessories", unit_price: 150, stock_quantity: 30, reorder_level: 5 },
+    ],
+  },
+  dairy: {
+    label: "Dairy Shop & Milk Vendor", sw: "Duka la Maziwa", icon: "water_drop",
+    products: [
+      { name: "Fresh Milk 1L (Dispensed)", category: "Dairy", unit_price: 70, stock_quantity: 150, reorder_level: 30 },
+      { name: "Mala (Sour Milk) 500ml", category: "Dairy", unit_price: 60, stock_quantity: 40, reorder_level: 10 },
+      { name: "Yogurt Strawberry 250ml", category: "Dairy", unit_price: 80, stock_quantity: 50, reorder_level: 10 },
+      { name: "Cheese Block 250g", category: "Dairy", unit_price: 350, stock_quantity: 15, reorder_level: 3 },
+      { name: "Dispensed Milk Jug 1L", category: "Containers", unit_price: 150, stock_quantity: 20, reorder_level: 5 },
+    ],
+  },
+  manufacturer: {
+    label: "Small Manufacturer", sw: "Kiwanda Kidogo", icon: "build",
+    products: [
+      { name: "Raw Soap Base 1kg", category: "Raw Materials", unit_price: 250, stock_quantity: 40, reorder_level: 10 },
+      { name: "Liquid Detergent 5L", category: "Finished Goods", unit_price: 600, stock_quantity: 20, reorder_level: 5 },
+      { name: "Wooden Chair (Finished)", category: "Finished Goods", unit_price: 1800, stock_quantity: 10, reorder_level: 2 },
+      { name: "Bar Soap Mould", category: "Equipment", unit_price: 450, stock_quantity: 5, reorder_level: 1 },
+      { name: "Packaging Bottle 1L", category: "Packaging", unit_price: 15, stock_quantity: 200, reorder_level: 30 },
+    ],
+  },
+  other: {
+    label: "Other Business / Custom", sw: "Biashara Nyingine", icon: "storefront",
+    products: [
+      { name: "Custom Item 1", category: "General", unit_price: 100, stock_quantity: 20, reorder_level: 5 },
+      { name: "Custom Item 2", category: "General", unit_price: 200, stock_quantity: 20, reorder_level: 5 },
+      { name: "Custom Item 3", category: "General", unit_price: 300, stock_quantity: 20, reorder_level: 5 },
     ],
   },
 };
@@ -91,6 +292,8 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
   const [lang, setLang] = useState<Lang>("en");
   const [step, setStep] = useState(1);
   const [category, setCategory] = useState<CategoryKey | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [products, setProducts] = useState<OnboardingProduct[]>([]);
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [aiMsgIdx, setAiMsgIdx] = useState(0);
@@ -101,7 +304,56 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
 
   // Load template products
   const loadTemplate = (key: CategoryKey) => {
-    setProducts(TEMPLATES[key].products.map(p => ({ ...p })));
+    if (key === "other" && customCategory.trim()) {
+      const query = customCategory.toLowerCase();
+      let customProducts: OnboardingProduct[] = [];
+      
+      if (query.includes("bake") || query.includes("cake") || query.includes("bread") || query.includes("pastry") || query.includes("baker")) {
+        customProducts = [
+          { name: "White Bread Loaf", category: "Bakery", unit_price: 60, stock_quantity: 30, reorder_level: 5 },
+          { name: "Wheat Bread Loaf", category: "Bakery", unit_price: 70, stock_quantity: 20, reorder_level: 5 },
+          { name: "Queen Cakes (6s)", category: "Pastries", unit_price: 150, stock_quantity: 15, reorder_level: 3 },
+          { name: "Baking Flour 2kg", category: "Ingredients", unit_price: 180, stock_quantity: 25, reorder_level: 5 },
+        ];
+      } else if (query.includes("salon") || query.includes("barber") || query.includes("hair") || query.includes("beauty") || query.includes("cosmetic")) {
+        customProducts = [
+          { name: "Hair Shampoo 500ml", category: "Hair Care", unit_price: 250, stock_quantity: 20, reorder_level: 5 },
+          { name: "Hair Conditioner 500ml", category: "Hair Care", unit_price: 300, stock_quantity: 15, reorder_level: 3 },
+          { name: "Styling Gel 250g", category: "Hair Care", unit_price: 150, stock_quantity: 30, reorder_level: 8 },
+          { name: "Hair Spray 400ml", category: "Cosmetics", unit_price: 450, stock_quantity: 20, reorder_level: 5 },
+        ];
+      } else if (query.includes("cyber") || query.includes("cafe") || query.includes("print") || query.includes("stationery") || query.includes("book")) {
+        customProducts = [
+          { name: "A4 Printing Paper (Ream)", category: "Stationery", unit_price: 750, stock_quantity: 15, reorder_level: 3 },
+          { name: "Black Pen (Bic)", category: "Pens", unit_price: 15, stock_quantity: 100, reorder_level: 20 },
+          { name: "Exercise Book A5", category: "Books", unit_price: 45, stock_quantity: 50, reorder_level: 10 },
+          { name: "Clear Folder", category: "Stationery", unit_price: 30, stock_quantity: 80, reorder_level: 15 },
+        ];
+      } else if (query.includes("electron") || query.includes("phone") || query.includes("repair") || query.includes("cable") || query.includes("charge") || query.includes("comp")) {
+        customProducts = [
+          { name: "USB Type-C Cable", category: "Accessories", unit_price: 200, stock_quantity: 40, reorder_level: 8 },
+          { name: "Micro USB Cable", category: "Accessories", unit_price: 150, stock_quantity: 30, reorder_level: 6 },
+          { name: "Smart Earphones (wired)", category: "Audio", unit_price: 350, stock_quantity: 25, reorder_level: 5 },
+          { name: "Tempered Glass Protector", category: "Screens", unit_price: 150, stock_quantity: 50, reorder_level: 10 },
+        ];
+      } else if (query.includes("boda") || query.includes("bike") || query.includes("spare") || query.includes("car") || query.includes("auto") || query.includes("mechanic")) {
+        customProducts = [
+          { name: "Engine Oil 1L (Shell)", category: "Lubricants", unit_price: 850, stock_quantity: 20, reorder_level: 5 },
+          { name: "Spark Plug (Standard)", category: "Spares", unit_price: 180, stock_quantity: 30, reorder_level: 8 },
+          { name: "Brake Pads (Set)", category: "Spares", unit_price: 450, stock_quantity: 15, reorder_level: 3 },
+          { name: "Tube (Size 18)", category: "Tires", unit_price: 350, stock_quantity: 25, reorder_level: 5 },
+        ];
+      } else {
+        customProducts = [
+          { name: "Custom Item 1", category: "General", unit_price: 100, stock_quantity: 20, reorder_level: 5 },
+          { name: "Custom Item 2", category: "General", unit_price: 200, stock_quantity: 20, reorder_level: 5 },
+          { name: "Custom Item 3", category: "General", unit_price: 300, stock_quantity: 20, reorder_level: 5 },
+        ];
+      }
+      setProducts(customProducts);
+    } else {
+      setProducts(TEMPLATES[key].products.map(p => ({ ...p })));
+    }
     setTemplateLoaded(true);
   };
 
@@ -132,7 +384,8 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
       setAiMsgIdx(idx);
     }, 900);
 
-    const result = await completeOnboarding(category, products);
+    const storeCategoryStr = category === "other" ? (customCategory.trim() || "Other") : TEMPLATES[category].label;
+    const result = await completeOnboarding(storeCategoryStr, products);
     clearInterval(interval);
     setSubmitting(false);
 
@@ -186,26 +439,64 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  {(Object.keys(TEMPLATES) as CategoryKey[]).map(key => {
-                    const t = TEMPLATES[key];
-                    const selected = category === key;
-                    return (
-                      <button key={key} onClick={() => setCategory(key)}
-                        className={`p-4 rounded-2xl border text-left transition-all active:scale-95 ${selected ? "border-[#00a87a] bg-[#00a87a]/10" : "border-white/10 bg-white/5 hover:border-white/30"}`}>
-                        <span className={`material-symbols-outlined text-2xl mb-2 block ${selected ? "text-[#4ade80]" : "text-white/40"}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-                          {t.icon}
-                        </span>
-                        <p className={`text-sm font-black ${selected ? "text-white" : "text-white/70"}`}>{lang === "sw" ? t.sw : t.label}</p>
-                      </button>
-                    );
-                  })}
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">search</span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={sw ? "Tafuta aina ya biashara (k.v. Duka, Kinyozi, Cyber)..." : "Search business type (e.g. Duka, Barber, Cyber)..."}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl h-12 pl-11 pr-4 text-white text-xs font-bold outline-none focus:border-[#00a87a] transition-all"
+                  />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1">
+                  {(() => {
+                    const filtered = (Object.keys(TEMPLATES) as CategoryKey[]).filter(key => {
+                      if (key === "other") return true; // Always show "Other"
+                      const t = TEMPLATES[key];
+                      const q = searchQuery.toLowerCase();
+                      return t.label.toLowerCase().includes(q) || t.sw.toLowerCase().includes(q);
+                    });
+
+                    // Put "other" at the very end
+                    const sorted = [...filtered.filter(k => k !== "other"), ...filtered.filter(k => k === "other")];
+
+                    return sorted.map(key => {
+                      const t = TEMPLATES[key];
+                      const selected = category === key;
+                      return (
+                        <button key={key} onClick={() => setCategory(key)}
+                          className={`p-4 rounded-2xl border text-left transition-all active:scale-95 ${selected ? "border-[#00a87a] bg-[#00a87a]/10" : "border-white/10 bg-white/5 hover:border-white/30"}`}>
+                          <span className={`material-symbols-outlined text-2xl mb-2 block ${selected ? "text-[#4ade80]" : "text-white/40"}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                            {t.icon}
+                          </span>
+                          <p className={`text-xs font-black ${selected ? "text-white" : "text-white/70"}`}>{lang === "sw" ? t.sw : t.label}</p>
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+                
+                {category === "other" && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                    <label className="text-white/40 text-[10px] font-black uppercase tracking-wider block">
+                      {sw ? "Taja Aina ya Biashara Yako" : "Specify Your Business Type"}
+                    </label>
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder={sw ? "Mfano: Kibanda, Salon, Cyber Cafe" : "e.g. Kibanda, Salon, Cyber Cafe"}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl h-14 px-4 text-white text-sm font-bold outline-none focus:border-[#00a87a] transition-all"
+                    />
+                  </motion.div>
+                )}
+
                 <button onClick={() => { if (category) { loadTemplate(category); setStep(2); } }}
-                  disabled={!category}
+                  disabled={!category || (category === "other" && !customCategory.trim())}
                   className="w-full h-14 rounded-2xl font-black text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: category ? "linear-gradient(135deg,#00694c,#00a87a)" : "#1a1a1a", color: "white" }}>
+                  style={{ background: (category && (category !== "other" || customCategory.trim())) ? "linear-gradient(135deg,#00694c,#00a87a)" : "#1a1a1a", color: "white" }}>
                   {sw ? "Endelea" : "Continue"} →
                 </button>
               </motion.div>
