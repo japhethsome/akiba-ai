@@ -70,12 +70,15 @@ export function TopNav({ userRole = "owner" }: { userRole?: string }) {
                 <span className="material-symbols-outlined text-[22px]">notifications</span>
                 <div className="absolute top-3 right-3 w-2 h-2 bg-[#ba1a1a] rounded-full border-2 border-white" />
              </button>
-             <button onClick={handleLogout} className="w-11 h-11 rounded-[16px] border border-[#e4eae4] flex items-center justify-center text-[#6d7a73] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/5 transition-all">
-                <span className="material-symbols-outlined text-[22px]">logout</span>
+             <button onClick={handleLogout} className="h-11 px-4 rounded-[16px] border border-[#ba1a1a]/15 bg-[#ba1a1a]/5 flex items-center gap-2 text-xs font-black text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-sm">
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                <span>Sign Out</span>
              </button>
-             <div className="w-11 h-11 rounded-[16px] bg-[#171d1a] flex items-center justify-center text-white font-black text-xs shadow-lg shadow-black/10 cursor-pointer hover:scale-105 transition-transform">
-                A
-             </div>
+             <Link href="/dashboard/settings" className="block shrink-0">
+                <div className="w-11 h-11 rounded-[16px] bg-[#171d1a] flex items-center justify-center text-white font-black text-xs shadow-lg shadow-black/10 cursor-pointer hover:scale-105 transition-transform">
+                   A
+                </div>
+             </Link>
           </div>
       </div>
     </nav>

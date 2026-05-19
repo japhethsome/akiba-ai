@@ -103,13 +103,7 @@ export async function registerAttendant(formData: FormData) {
       data: { used: true },
     });
 
-    const token = await signToken({ userId: user.user_id, role: user.role });
-    (await cookies()).set("session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setSession(user.user_id, user.role, user.store_id);
 
     return { success: true };
   } catch (error: any) {

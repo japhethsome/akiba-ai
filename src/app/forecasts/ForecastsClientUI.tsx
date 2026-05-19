@@ -125,12 +125,12 @@ export function ForecastsClientUI({
       opacity: 1,
       transition: { staggerChildren: 0.08 }
     }
-  };
+  } as const;
 
   const item = {
     hidden: { opacity: 0, y: 25 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 20 } }
-  };
+  } as const;
 
   return (
     <motion.div 
