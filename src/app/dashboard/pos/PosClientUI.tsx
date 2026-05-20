@@ -56,6 +56,7 @@ export function PosClientUI({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<"register" | "dashboard" | "cash-drawer" | "ai-insights">("register");
+  const [showMobileCart, setShowMobileCart] = useState(false);
 
   // Network & Sync States
   const [isOnline, setIsOnline] = useState(true);
@@ -508,7 +509,7 @@ export function PosClientUI({
     if (sendDigitalReceipt && digitalPhone.trim()) {
       setReceiptStatus("Sending digital receipt...");
       setTimeout(() => {
-        setReceiptStatus(`Digital receipt successfully delivered to ${digitalPhone} via WhatsApp & SMS! ✅`);
+        setReceiptStatus(`Digital receipt successfully delivered to ${digitalPhone} via WhatsApp & SMS.`);
       }, 1500);
     } else {
       setReceiptStatus("");
@@ -519,6 +520,7 @@ export function PosClientUI({
     setDiscount(0);
     setSelectedCustomer(null);
     setRedeemPoints(false);
+    setShowMobileCart(false);
   };
 
   // Sync Offline Queue to backend
@@ -539,7 +541,7 @@ export function PosClientUI({
       const res = await processBulkCheckouts(payload);
       if (res.success) {
         saveOfflineQueue([]);
-        alert("All offline checkouts successfully synchronized with server database! 🎉");
+        alert("All offline checkouts successfully synchronized with server database.");
       } else {
         alert(`Offline Sync Failed: ${res.error}`);
       }
@@ -727,7 +729,7 @@ export function PosClientUI({
     });
     message += `-----------------------------\n`;
     message += `*Total Paid: KES ${lastTotal.toLocaleString()}*\n\n`;
-    message += `Thank you for shopping with us! Powered by Akiba AI 🚀`;
+    message += `Thank you for shopping with us! Powered by Akiba AI.`;
 
     const encoded = encodeURIComponent(message);
     const phoneClean = digitalPhone.replace(/\+/g, "");
@@ -752,89 +754,91 @@ export function PosClientUI({
 
   // Send Restock alerts simulation
   const triggerRestockSMS = (productName: string) => {
-    alert(`Restock alert triggered successfully!\nSMS notice sent to the primary distributor for ${productName} 📦`);
+    alert(`Restock alert triggered successfully. SMS notice sent to the primary distributor for ${productName}.`);
   };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#f5fbf5]">
       
       {/* Dynamic Header */}
-      <header className="bg-white border-b border-[#e4eae4] px-6 py-4 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm z-30">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#00694c] text-[32px] font-black animate-pulse">point_of_sale</span>
-            <div>
-              <h1 className="text-xl font-black text-[#171d1a] tracking-tight">Akiba POS</h1>
-              <div className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-emerald-500 animate-ping" : "bg-rose-500 animate-pulse"}`}></span>
-                <span className="text-[10px] font-bold text-[#6d7a73] uppercase tracking-wider">
-                  {isOnline ? "Online" : "Offline Register"}
-                </span>
+      <header className="bg-white border-b border-[#e4eae4] px-4 sm:px-6 py-3 shrink-0 shadow-sm z-30">
+        {/* Row 1: Brand + drawer + user */}
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="material-symbols-outlined text-[#00694c] text-[24px] sm:text-[28px] shrink-0">point_of_sale</span>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-black text-[#171d1a] tracking-tight leading-tight">Akiba POS</h1>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isOnline ? "bg-emerald-500 animate-ping" : "bg-rose-500"}`}></span>
+                <span className="text-[9px] font-bold text-[#6d7a73] uppercase tracking-wider">{isOnline ? "Online" : "Offline"}</span>
               </div>
             </div>
           </div>
 
-          {/* Sync badge */}
-          {offlineQueue.length > 0 && (
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              onClick={handleSyncQueue}
-              disabled={isSyncing}
-              className="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-800 text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
-            >
-              <span className="material-symbols-outlined text-[14px] animate-spin">sync</span>
-              Sync Queue ({offlineQueue.length})
-            </motion.button>
-          )}
-
-          {/* Cash Drawer float pill */}
-          <div className="bg-[#f0fdf4] border border-[#d1ebd7] text-[#00694c] text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-            <span className="material-symbols-outlined text-[14px]">local_atm</span>
-            Drawer: {isDrawerOpenSession ? `Open (Float KES ${expectedCash.toLocaleString()})` : "Closed"}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Cash Drawer float pill */}
+            <div className="bg-[#f0fdf4] border border-[#d1ebd7] text-[#00694c] text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1.5 rounded-full flex items-center gap-1 shadow-sm">
+              <span className="material-symbols-outlined text-[13px]">local_atm</span>
+              <span className="hidden xs:inline">{isDrawerOpenSession ? `KES ${expectedCash.toLocaleString()}` : "Closed"}</span>
+              <span className="xs:hidden">{isDrawerOpenSession ? "Open" : "Closed"}</span>
+            </div>
+            {/* Sync badge */}
+            {offlineQueue.length > 0 && (
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                onClick={handleSyncQueue}
+                disabled={isSyncing}
+                className="bg-amber-100 border border-amber-300 text-amber-800 text-[9px] font-black px-2 py-1.5 rounded-full flex items-center gap-1 active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-[13px] animate-spin">sync</span>
+                <span className="hidden sm:inline">Sync ({offlineQueue.length})</span>
+                <span className="sm:hidden">{offlineQueue.length}</span>
+              </motion.button>
+            )}
+            {/* User role — hidden on small mobile */}
+            <div className="hidden sm:flex items-center gap-2 border-l border-[#e4eae4] pl-3">
+              <div className="text-right">
+                <div className="text-xs font-black text-[#171d1a] leading-tight">{currentUser.name}</div>
+                <div className="text-[9px] font-bold text-[#6d7a73] uppercase tracking-widest">{currentUser.role}</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Tab Controls */}
-        <div className="flex items-center gap-1.5 bg-[#f8faf9] p-1 border border-[#e4eae4] rounded-xl self-start md:self-auto overflow-x-auto no-scrollbar max-w-full">
+        {/* Row 2: Tab Controls */}
+        <div className="flex items-center gap-1 bg-[#f8faf9] p-1 border border-[#e4eae4] rounded-xl overflow-x-auto no-scrollbar">
           <button 
             onClick={() => setActiveTab("register")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-2 transition-all ${activeTab === "register" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
+            className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-all whitespace-nowrap ${activeTab === "register" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
           >
-            <span className="material-symbols-outlined text-[16px]">shopping_basket</span>
-            Register
+            <span className="material-symbols-outlined text-[15px]">shopping_basket</span>
+            <span className="hidden sm:inline">Register</span>
+            <span className="sm:hidden">Reg</span>
           </button>
           <button 
             onClick={() => setActiveTab("dashboard")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-2 transition-all ${activeTab === "dashboard" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
+            className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-all whitespace-nowrap ${activeTab === "dashboard" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
           >
-            <span className="material-symbols-outlined text-[16px]">monitoring</span>
-            POS Dashboard
+            <span className="material-symbols-outlined text-[15px]">monitoring</span>
+            <span className="hidden sm:inline">POS Dashboard</span>
+            <span className="sm:hidden">Stats</span>
           </button>
           <button 
             onClick={() => setActiveTab("cash-drawer")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-2 transition-all ${activeTab === "cash-drawer" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
+            className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-all whitespace-nowrap ${activeTab === "cash-drawer" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
           >
-            <span className="material-symbols-outlined text-[16px]">account_balance_wallet</span>
-            Cash Drawer
+            <span className="material-symbols-outlined text-[15px]">account_balance_wallet</span>
+            <span className="hidden sm:inline">Cash Drawer</span>
+            <span className="sm:hidden">Cash</span>
           </button>
           <button 
             onClick={() => setActiveTab("ai-insights")}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-2 transition-all ${activeTab === "ai-insights" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
+            className={`px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg flex items-center gap-1.5 transition-all whitespace-nowrap ${activeTab === "ai-insights" ? "bg-[#00694c] text-white shadow-md" : "text-[#6d7a73] hover:bg-white"}`}
           >
-            <span className="material-symbols-outlined text-[16px] text-purple-600">psychology</span>
-            AI Insights
+            <span className="material-symbols-outlined text-[15px] text-purple-600">psychology</span>
+            <span className="hidden sm:inline">AI Insights</span>
+            <span className="sm:hidden">AI</span>
           </button>
-        </div>
-
-        {/* User Role Profile */}
-        <div className="flex items-center gap-3 self-end md:self-auto border-t md:border-t-0 md:border-l border-[#e4eae4] pt-3 md:pt-0 md:pl-5">
-          <div className="text-right">
-            <div className="text-sm font-black text-[#171d1a] leading-tight">{currentUser.name}</div>
-            <div className="text-[10px] font-bold text-[#6d7a73] flex items-center justify-end gap-1 uppercase tracking-widest">
-              <span className="material-symbols-outlined text-[12px]">account_circle</span>
-              {currentUser.role}
-            </div>
-          </div>
         </div>
       </header>
 
@@ -850,49 +854,49 @@ export function PosClientUI({
               className="h-full flex flex-col lg:flex-row overflow-hidden relative"
             >
               {/* Left Catalog Pane */}
-              <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden relative">
+              <div className="flex-1 flex flex-col p-3 sm:p-4 lg:p-6 overflow-hidden relative">
                 
-                {/* Search & Scanners Control */}
-                <div className="mb-4 flex flex-col sm:flex-row gap-3">
+                {/* Search & Scanner — single row on mobile */}
+                <div className="mb-3 flex gap-2">
                   <div className="relative flex-1">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#bccac1]">search</span>
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#bccac1] text-[18px]">search</span>
                     <input 
                       type="text" 
-                      placeholder="Search by name, category or barcode..." 
+                      placeholder="Search products..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-12 pl-12 pr-4 bg-white border border-[#e4eae4] rounded-2xl text-xs font-bold focus:border-[#00694c] focus:ring-4 focus:ring-[#00694c]/5 outline-none transition-all shadow-sm"
+                      className="w-full h-10 pl-9 pr-3 bg-white border border-[#e4eae4] rounded-xl text-xs font-bold focus:border-[#00694c] focus:ring-4 focus:ring-[#00694c]/5 outline-none transition-all shadow-sm"
                     />
                   </div>
 
-                  <div className="flex gap-2">
-                    <div className="relative flex-1 sm:w-48">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#bccac1]">barcode_scanner</span>
-                      <input 
-                        type="text" 
-                        placeholder="Scan or Enter Code..." 
-                        value={barcodeSearch}
-                        onChange={(e) => setBarcodeSearch(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleBarcodeScanned(barcodeSearch)}
-                        className="w-full h-12 pl-11 pr-4 bg-white border border-[#e4eae4] rounded-2xl text-xs font-black text-[#00694c] tracking-widest focus:border-[#00694c] focus:ring-4 focus:ring-[#00694c]/5 outline-none shadow-sm placeholder:tracking-normal placeholder:font-bold"
-                      />
-                    </div>
-                    
-                    <button 
-                      onClick={startCameraScan}
-                      className="h-12 w-12 shrink-0 bg-[#00694c] text-white rounded-2xl flex items-center justify-center hover:bg-[#00523b] transition-all shadow-md active:scale-95 group"
-                      title="Simulate Camera QR Barcode Scan"
-                    >
-                      <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">photo_camera</span>
-                    </button>
+                  {/* Barcode input - hidden on mobile, visible on sm+ */}
+                  <div className="hidden sm:flex relative w-44">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#bccac1] text-[16px]">barcode_scanner</span>
+                    <input 
+                      type="text" 
+                      placeholder="Scan code..." 
+                      value={barcodeSearch}
+                      onChange={(e) => setBarcodeSearch(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleBarcodeScanned(barcodeSearch)}
+                      className="w-full h-10 pl-9 pr-3 bg-white border border-[#e4eae4] rounded-xl text-xs font-black text-[#00694c] focus:border-[#00694c] outline-none shadow-sm"
+                    />
                   </div>
+                  
+                  {/* Camera scan button */}
+                  <button 
+                    onClick={startCameraScan}
+                    className="h-10 w-10 shrink-0 bg-[#00694c] text-white rounded-xl flex items-center justify-center hover:bg-[#00523b] transition-all shadow-sm active:scale-95"
+                    title="Camera QR Scan"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                  </button>
                 </div>
 
-                {/* Scanned Floating Alert */}
+                {/* Scanned Alert */}
                 {scannedMessage && (
                   <motion.div 
                     initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                    className={`mb-4 p-3 rounded-xl border text-center text-xs font-black shadow-lg ${
+                    className={`mb-3 p-2.5 rounded-xl border text-center text-xs font-black shadow-sm ${
                       scannedMessage.includes("recognized") 
                         ? "bg-rose-50 border-rose-200 text-rose-700" 
                         : "bg-emerald-50 border-emerald-200 text-emerald-700"
@@ -903,8 +907,8 @@ export function PosClientUI({
                 )}
 
                 {/* Catalog Grid */}
-                <div className="flex-1 overflow-y-auto pr-1 no-scrollbar pb-24 lg:pb-0">
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4 pb-12">
+                <div className="flex-1 overflow-y-auto no-scrollbar pb-28 lg:pb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
                     {filteredProducts.map(product => {
                       const barcode = getProductBarcode(product.id);
                       return (
@@ -914,22 +918,26 @@ export function PosClientUI({
                           whileTap={product.stock > 0 ? { scale: 0.98 } : {}}
                           onClick={() => addToCart(product)}
                           disabled={product.stock <= 0}
-                          className={`flex flex-col text-left p-4 rounded-2xl border transition-all ${
+                          className={`flex flex-col text-left p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all ${
                             product.stock > 0 
-                              ? "bg-white border-[#e4eae4] hover:border-[#00a87a] shadow-sm hover:shadow-lg" 
-                              : "bg-[#f8faf9] border-[#e4eae4] opacity-50 cursor-not-allowed"
+                              ? "bg-white border-[#e4eae4] hover:border-[#00a87a] shadow-sm hover:shadow-md" 
+                              : "bg-[#f8faf9] border-[#e4eae4] opacity-40 cursor-not-allowed"
                           }`}
                         >
-                          <div className="text-[9px] font-black uppercase tracking-widest text-[#6d7a73] mb-1">{product.category}</div>
-                          <div className="font-black text-[#171d1a] text-xs leading-tight mb-1 flex-1">{product.name}</div>
-                          <div className="text-[10px] text-[#bccac1] font-mono tracking-widest mb-3 select-all">Code: {barcode}</div>
-                          <div className="flex flex-col justify-between w-full mt-auto gap-2">
-                            <div className="font-black text-[#00694c] text-xs">KES {product.price.toLocaleString()}</div>
-                            <div className={`text-[9px] font-bold px-2 py-0.5 rounded-md self-start ${
+                          {/* Category */}
+                          <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-[#6d7a73] mb-1 truncate">{product.category}</div>
+                          {/* Name */}
+                          <div className="font-black text-[#171d1a] text-[10px] sm:text-xs leading-tight mb-1 line-clamp-2 flex-1">{product.name}</div>
+                          {/* Barcode - hidden on mobile */}
+                          <div className="hidden sm:block text-[9px] text-[#bccac1] font-mono mb-2 truncate">#{barcode}</div>
+                          {/* Price + stock */}
+                          <div className="flex items-center justify-between gap-1 mt-auto">
+                            <div className="font-black text-[#00694c] text-[10px] sm:text-xs">KES {product.price.toLocaleString()}</div>
+                            <div className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
                               product.stock > 10 ? "bg-[#f0fdf4] text-[#166534]" : 
                               product.stock > 0 ? "bg-[#fff1f2] text-[#e11d48]" : "bg-[#f3f4f6] text-[#6d7a73]"
                             }`}>
-                              {product.stock > 0 ? `${product.stock} in stock` : "Out of Stock"}
+                              {product.stock > 0 ? `${product.stock}` : "Out"}
                             </div>
                           </div>
                         </motion.button>
@@ -937,25 +945,69 @@ export function PosClientUI({
                     })}
                   </div>
                 </div>
+
+                {/* Floating Cart FAB for Mobile - only shown when items exist, pinned above nav */}
+                {cart.length > 0 && (
+                  <div className="fixed bottom-[76px] right-4 z-[120] lg:hidden">
+                    <button 
+                      onClick={() => setShowMobileCart(true)}
+                      className="flex items-center gap-2 bg-[#00694c] text-white pl-4 pr-3 py-3 rounded-full font-black text-sm shadow-2xl shadow-[#00694c]/40 active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+                      <span className="text-xs font-black">View Cart</span>
+                      <span className="bg-white text-[#00694c] text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ml-0.5">
+                        {cart.reduce((s, i) => s + i.cartQuantity, 0)}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Right Side Register Checkout Cart */}
-              <div className="w-full lg:w-[380px] xl:w-[420px] bg-white border-t lg:border-t-0 lg:border-l border-[#e4eae4] flex flex-col shadow-xl z-10">
+              {/* Mobile Backdrop Overlay */}
+              {showMobileCart && (
+                <div 
+                  className="fixed inset-0 z-30 bg-[#171d1a]/60 backdrop-blur-sm lg:hidden"
+                  onClick={() => setShowMobileCart(false)}
+                />
+              )}
+
+              {/* Right Side Checkout Cart Drawer */}
+              <div className={`fixed inset-y-0 right-0 z-[130] w-full sm:w-[420px] lg:w-[380px] xl:w-[420px] bg-white border-l border-[#e4eae4] flex flex-col shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none lg:z-auto ${
+                showMobileCart ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+              }`}>
                 
-                {/* Cart Customer Manager Header */}
-                <div className="p-4 border-b border-[#e4eae4] bg-[#f8faf9] space-y-3">
-                  <div className="flex items-center justify-between">
+                {/* Cart Drawer Header — thumb-friendly 'Back' button on the left */}
+                <div className="shrink-0 bg-white border-b border-[#e4eae4] shadow-sm">
+                  {/* Back button row — mobile only */}
+                  <div className="lg:hidden flex items-center justify-between px-3 pt-3 pb-2">
+                    <button 
+                      onClick={() => setShowMobileCart(false)}
+                      className="flex items-center gap-2 text-[#00694c] font-black text-sm py-2 px-3 rounded-xl hover:bg-[#f5fbf5] active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">arrow_back_ios</span>
+                      Back to Products
+                    </button>
+                    <button 
+                      onClick={() => setCart([])}
+                      className="text-[10px] font-black text-rose-400 hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+
+                  {/* Order title row */}
+                  <div className="flex items-center justify-between px-4 pb-3 pt-1 lg:pt-4">
                     <h3 className="font-black text-sm text-[#171d1a] flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">shopping_basket</span>
+                      <span className="material-symbols-outlined text-[18px] text-[#00694c]">shopping_basket</span>
                       Current Order
                     </h3>
-                    <span className="bg-[#00694c] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                      {cart.reduce((s, i) => s + i.cartQuantity, 0)} items
+                    <span className="bg-[#00694c] text-white text-[10px] font-black px-2.5 py-1 rounded-full">
+                      {cart.reduce((s, i) => s + i.cartQuantity, 0)} {cart.reduce((s, i) => s + i.cartQuantity, 0) === 1 ? "item" : "items"}
                     </span>
                   </div>
 
                   {/* Customer Select / Add Row */}
-                  <div className="relative">
+                  <div className="relative px-4 pb-3">
                     {selectedCustomer ? (
                       <div className="bg-[#f0fdf4] border border-[#d1ebd7] rounded-xl p-2.5 flex items-center justify-between">
                         <div>
@@ -1063,11 +1115,13 @@ export function PosClientUI({
                   </AnimatePresence>
                 </div>
 
-                {/* POS Totals & Discounts Section */}
-                <div className="p-4 bg-[#171d1a] text-white rounded-t-[24px] shadow-2xl relative z-10 space-y-4">
+                {/* POS Totals & Discounts Section - only shown when cart has items */}
+                {cart.length > 0 && (
+                <div className="p-4 bg-[#171d1a] text-white rounded-t-[24px] shadow-2xl relative z-10 space-y-3">
                   
-                  {/* Preset Loyalty / Discount Controls */}
-                  <div className="flex flex-wrap gap-1.5 overflow-x-auto no-scrollbar">
+                  {/* Preset Discount Controls */}
+                  <div className="flex flex-wrap gap-1.5">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-white/40 w-full mb-1">Discount</div>
                      <button onClick={() => setDiscount(0)} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${discount === 0 ? "bg-[#00a87a] text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}>No Off</button>
                      <button onClick={() => setDiscount(0.05)} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${discount === 0.05 ? "bg-[#00a87a] text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}>5% Off</button>
                      <button onClick={() => setDiscount(0.10)} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${discount === 0.10 ? "bg-[#00a87a] text-[#171d1a]" : "bg-white/10 text-[#bccac1] hover:bg-white/20"}`}>10% Off</button>
@@ -1136,12 +1190,21 @@ export function PosClientUI({
                     disabled={cart.length === 0 || isPending}
                     whileHover={cart.length > 0 ? { scale: 1.01 } : {}}
                     whileTap={cart.length > 0 ? { scale: 0.99 } : {}}
-                    className="w-full bg-[#00a87a] hover:bg-[#008560] disabled:bg-gray-700 disabled:text-gray-400 text-[#171d1a] h-12 rounded-xl font-black text-xs transition-colors flex items-center justify-center gap-2 shadow-xl shadow-[#00a87a]/10 cursor-pointer"
+                    className="w-full bg-[#00a87a] hover:bg-[#008560] text-[#171d1a] h-12 rounded-xl font-black text-xs transition-colors flex items-center justify-center gap-2 shadow-xl shadow-[#00a87a]/10 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">payment</span>
-                    Proceed to Payment (Ctrl+Enter)
+                    Proceed to Payment
                   </motion.button>
                 </div>
+                )}
+
+                {/* Empty cart footer prompt */}
+                {cart.length === 0 && (
+                  <div className="p-4 border-t border-[#e4eae4] bg-[#f8faf9] text-center">
+                    <span className="material-symbols-outlined text-[28px] text-[#bccac1] mb-1 block">add_shopping_cart</span>
+                    <p className="text-xs font-bold text-[#bccac1]">Tap a product above to add it to the cart</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

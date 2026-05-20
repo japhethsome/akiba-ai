@@ -5,10 +5,10 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { TopBar } from "@/components/ui/topbar";
 
 const quickPrompts = [
-  "📊 Show my P&L", "⚠️ What's low on stock?",
-  "🏆 Best seller this month", "💀 Show dead stock",
-  "📦 What should I reorder?", "💰 Am I making profit?",
-  "📈 Sales trend this week", "🛒 Slow-moving products",
+  "Show my P&L", "What's low on stock?",
+  "Best seller this month", "Show dead stock",
+  "What should I reorder?", "Am I making profit?",
+  "Sales trend this week", "Slow-moving products",
 ];
 
 const topSellers = [
@@ -29,7 +29,7 @@ interface Message {
 
 export default function AIInsightsPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "ai", text: "Habari! 👋 Mimi ni Akiba AI. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!", time: "Just now" },
+    { role: "ai", text: "Habari! Mimi ni Akiba AI. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!", time: "Just now" },
     { role: "user", text: "What was my best-selling item this week?", time: "2 min ago" },
     { role: "ai", type: "analysis", text: "Your top performer this week was Sugar 1kg with 96 units sold, generating KES 12,480 in revenue. This is 23% higher than last week — consider ordering an extra 50 units before the weekend rush.", time: "2 min ago", data: { label: "Sugar 1kg", progress: 85 } },
     { role: "user", text: "Je, kuna bidhaa zinazoisha hivi sasa?", time: "1 min ago" },
@@ -65,7 +65,7 @@ export default function AIInsightsPage() {
       <div className="flex-1 md:ml-[240px] flex flex-col min-w-0">
         <TopBar title="AI Insights" />
 
-        <main className="flex-1 p-4 md:p-5 grid md:grid-cols-[300px_1fr] gap-4 max-w-7xl mx-auto w-full overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
+        <main className="flex-1 p-4 md:p-5 grid md:grid-cols-[300px_1fr] gap-4 max-w-7xl mx-auto w-full overflow-hidden h-[calc(100vh-132px)] md:h-[calc(100vh-64px)]">
 
           {/* LEFT PANEL */}
           <div className="hidden md:flex bg-white rounded-xl border border-[#bccac1] h-full flex-col p-4 overflow-y-auto shadow-sm gap-4">

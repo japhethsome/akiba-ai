@@ -29,8 +29,8 @@ export function SuppliersClientUI({ initialSuppliers, userRole }: { initialSuppl
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center">
+    <div className="p-4 md:p-6 lg:p-10 space-y-6 md:space-y-8 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-[#171d1a]">Suppliers</h1>
           <p className="text-[#6d7a73] font-medium mt-1">Manage your vendors and restock channels.</p>
@@ -41,7 +41,7 @@ export function SuppliersClientUI({ initialSuppliers, userRole }: { initialSuppl
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-[#171d1a] text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-all"
+            className="flex items-center justify-center gap-2 bg-[#171d1a] text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-all w-full md:w-auto"
           >
             <span className="material-symbols-outlined text-[20px]">person_add</span>
             Add Supplier

@@ -16,14 +16,14 @@ const team = [
 
 export default function AboutClient() {
   return (
-    <div className="min-h-screen bg-[#f5fbf5] flex flex-col items-center py-20 px-6">
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-[#bccac1] z-50 flex items-center justify-between px-6 md:px-12">
-        <Link href="/" className="text-2xl font-black text-[#00694c]">
+    <div className="min-h-screen bg-[#f5fbf5] flex flex-col items-center py-20 px-4 sm:px-6">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-[#bccac1] z-50 flex items-center justify-between px-4 sm:px-6 md:px-12">
+        <Link href="/" className="text-xl sm:text-2xl font-black text-[#00694c]">
           Akiba <span className="text-[#584fbc]">AI</span>
         </Link>
-        <div className="flex gap-6 items-center">
-            <Link href="/" className="text-sm font-bold text-[#3d4943] hover:text-[#00694c]">Home</Link>
-            <Link href="/auth" className="bg-[#00694c] text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">
+        <div className="flex gap-3 sm:gap-6 items-center">
+            <Link href="/" className="text-xs sm:text-sm font-bold text-[#3d4943] hover:text-[#00694c]">Home</Link>
+            <Link href="/auth" className="bg-[#00694c] text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold hover:scale-105 transition-transform">
             Get Started
             </Link>
         </div>
@@ -34,17 +34,17 @@ export default function AboutClient() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-5xl md:text-6xl font-black text-[#171d1a] mb-8 leading-tight text-center">
-            The Brains Behind <br/> <span className="text-[#00694c]">Akiba AI</span>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#171d1a] mb-6 sm:mb-8 leading-tight text-center">
+            The Brains Behind <br className="hidden sm:inline"/> <span className="text-[#00694c]">Akiba AI</span>
           </h1>
-          <p className="text-xl text-[#3d4943] leading-relaxed text-center mb-16 opacity-80">
+          <p className="text-base sm:text-xl text-[#3d4943] leading-relaxed text-center mb-10 sm:mb-16 opacity-80">
             We are a group of developers, designers, and thinkers dedicated to digitizing the Kenyan SME landscape through high-fidelity AI solutions.
           </p>
         </motion.header>
         
-        <div className="space-y-12 text-lg text-[#3d4943] leading-relaxed mb-20">
+        <div className="space-y-8 sm:space-y-12 text-sm sm:text-lg text-[#3d4943] leading-relaxed mb-20">
           <section>
-            <h2 className="text-3xl font-black text-[#171d1a] mb-6">Our Mission</h2>
+            <h2 className="text-xl sm:text-3xl font-black text-[#171d1a] mb-4 sm:mb-6">Our Mission</h2>
             <p>
               Akiba AI was born from a simple observation: running a shop in Kenya shouldn't be a game of guesswork. 
               Millions of small business owners lose revenue every day because they either run out of their best-selling stock 
@@ -53,8 +53,8 @@ export default function AboutClient() {
           </section>
 
           {/* TEAM SECTION */}
-          <section className="py-10">
-            <h2 className="text-3xl font-black text-[#171d1a] mb-10 text-center">Meet the Team</h2>
+          <section className="py-6 sm:py-10">
+            <h2 className="text-xl sm:text-3xl font-black text-[#171d1a] mb-6 sm:mb-10 text-center">Meet the Team</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {team.map((member, i) => (
                 <motion.div 
@@ -63,20 +63,20 @@ export default function AboutClient() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
                   whileHover={{ y: -5 }}
-                  className="bg-white p-6 rounded-[24px] border border-[#bccac1] shadow-sm hover:border-[#00694c] hover:shadow-xl transition-all group"
+                  className="bg-white p-5 sm:p-6 rounded-[20px] sm:rounded-[24px] border border-[#bccac1] shadow-sm hover:border-[#00694c] hover:shadow-xl transition-all group"
                 >
                   <div className="w-12 h-12 bg-[#eff5ef] rounded-xl flex items-center justify-center text-[#00694c] mb-4 group-hover:bg-[#00694c] group-hover:text-white transition-colors">
                     <span className="material-symbols-outlined">{member.icon}</span>
                   </div>
-                  <h3 className="font-black text-[#171d1a] text-lg">{member.name}</h3>
-                  <p className="text-sm opacity-60 font-bold">{member.role}</p>
+                  <h3 className="font-black text-[#171d1a] text-base sm:text-lg">{member.name}</h3>
+                  <p className="text-xs sm:text-sm opacity-60 font-bold">{member.role}</p>
                 </motion.div>
               ))}
             </div>
           </section>
 
           <section>
-            <h2 className="text-3xl font-black text-[#171d1a] mb-6">Our Vision</h2>
+            <h2 className="text-xl sm:text-3xl font-black text-[#171d1a] mb-4 sm:mb-6">Our Vision</h2>
             <p>
               We envision a future where every SME in Africa has the digital tools to thrive, scale, and contribute 
               meaningfully to their local economies. Akiba AI is just the beginning of that journey.

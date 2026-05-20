@@ -83,7 +83,7 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
   ];
 
   return (
-    <div className="p-6 lg:p-10 max-w-4xl mx-auto w-full">
+    <div className="p-4 md:p-6 lg:p-10 max-w-4xl mx-auto w-full">
       <div className="mb-8">
         <span className="text-[11px] font-black text-[#00694c] uppercase tracking-[0.25em] bg-[#f0fdf4] px-4 py-2 rounded-full border border-[#00694c]/10">
           Control Panel
@@ -96,12 +96,12 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
         {/* Profile Card Summary */}
-        <div className="md:col-span-4 bg-white border border-[#e4eae4] rounded-[32px] p-6 flex flex-col items-center justify-between text-center h-fit shadow-sm relative overflow-hidden">
+        <div className="md:col-span-4 bg-white border border-[#e4eae4] rounded-[24px] md:rounded-[32px] p-6 flex flex-col items-center justify-between text-center h-fit shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#00a87a]/5 to-transparent rounded-bl-[100px] pointer-events-none" />
           
-          <div className="w-24 h-24 rounded-[32px] bg-[#171d1a] text-white font-black text-3xl flex items-center justify-center shadow-lg shadow-black/10 mb-4 mt-2">
+          <div className="w-24 h-24 rounded-[24px] md:rounded-[32px] bg-[#171d1a] text-white font-black text-3xl flex items-center justify-center shadow-lg shadow-black/10 mb-4 mt-2">
             {userName ? userName.charAt(0).toUpperCase() : "A"}
           </div>
 
@@ -125,7 +125,7 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
         </div>
 
         {/* Settings Forms */}
-        <div className="md:col-span-8 bg-white border border-[#e4eae4] rounded-[32px] p-8 shadow-sm">
+        <div className="md:col-span-8 bg-white border border-[#e4eae4] rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-2">

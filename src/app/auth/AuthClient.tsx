@@ -25,7 +25,7 @@ const translations = {
       location: "Mini-Mart Owner · Eldoret"
     },
     form: {
-      loginGreeting: "Welcome back 👋",
+      loginGreeting: "Welcome back",
       registerGreeting: "Create your account",
       loginDesc: "Sign in to manage your inventory with AI.",
       registerDesc: "Join 500+ Kenyan businesses on Akiba AI.",
@@ -67,7 +67,7 @@ const translations = {
       location: "Mmiliki wa Mini-Mart · Eldoret"
     },
     form: {
-      loginGreeting: "Karibu tena 👋",
+      loginGreeting: "Karibu tena",
       registerGreeting: "Fungua akaunti yako",
       loginDesc: "Ingia ili usimamie bidhaa zako kwa AI.",
       registerDesc: "Jiunge na biashara 500+ za Kenya kwenye Akiba AI kama mmiliki.",
@@ -99,6 +99,7 @@ export default function AuthClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite");
+  const modeParam = searchParams.get("mode");
   
   const [mode, setMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -127,8 +128,10 @@ export default function AuthClient() {
   useEffect(() => {
     if (inviteToken) {
       setMode("register");
+    } else if (modeParam === "register") {
+      setMode("register");
     }
-  }, [inviteToken]);
+  }, [inviteToken, modeParam]);
 
   const t = translations[lang];
 
@@ -563,7 +566,7 @@ export default function AuthClient() {
         </div>
 
         <div className="py-8 text-center text-[10px] font-black uppercase tracking-[0.3em] text-[#bccac1]">
-          &copy; 2025 Akiba AI &nbsp;·&nbsp; Secure &amp; Encrypted
+          &copy; 2026 Akiba AI &nbsp;·&nbsp; Secure &amp; Encrypted
         </div>
       </div>
     </div>

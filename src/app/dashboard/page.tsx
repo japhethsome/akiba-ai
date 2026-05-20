@@ -67,7 +67,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardLayoutWrapper>
-      <main className="flex-1 p-10 max-w-[1500px] mx-auto w-full">
+      <main className="flex-1 p-4 md:p-10 max-w-[1500px] mx-auto w-full">
         <DashboardClientUI 
           userName={user.name} 
           storeCategory={user.store.category || "shop"}

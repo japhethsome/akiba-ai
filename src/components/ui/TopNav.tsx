@@ -23,16 +23,16 @@ export function TopNav({ userRole = "owner" }: { userRole?: string }) {
   };
 
   return (
-    <nav className="h-20 bg-white border-b border-[#e4eae4] px-10 flex items-center justify-between sticky top-0 z-[100] shadow-sm">
-      <div className="flex items-center gap-12">
+    <nav className="h-20 bg-white border-b border-[#e4eae4] px-4 md:px-10 flex items-center justify-between sticky top-0 z-[100] shadow-sm">
+      <div className="flex items-center gap-4 md:gap-12">
         {/* Brand */}
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[12px] bg-gradient-to-tr from-[#171d1a] to-[#3d4943] flex items-center justify-center shadow-lg shadow-black/10">
+        <Link href="/dashboard" className="flex items-center gap-2 sm:gap-3">
+          <div className="w-9 h-9 rounded-[12px] bg-gradient-to-tr from-[#171d1a] to-[#3d4943] flex items-center justify-center shadow-lg shadow-black/10 shrink-0">
             <span className="material-symbols-outlined text-[20px] text-white">account_balance_wallet</span>
           </div>
-          <span className="font-black text-2xl text-[#171d1a] tracking-tighter">Akiba<span className="text-[#00a87a]">AI</span></span>
+          <span className="font-black text-xl sm:text-2xl text-[#171d1a] tracking-tighter">Akiba<span className="text-[#00a87a]">AI</span></span>
         </Link>
-
+ 
         {/* Links */}
         <div className="hidden lg:flex items-center gap-2">
           {navItems.filter(item => item.roles.includes(userRole)).map((item) => {
@@ -53,9 +53,9 @@ export function TopNav({ userRole = "owner" }: { userRole?: string }) {
           })}
         </div>
       </div>
-
+ 
       {/* Right Side */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-6">
           <div className="hidden md:flex items-center bg-[#f8faf9] border border-[#e4eae4] rounded-[18px] px-4 h-12 w-72 group focus-within:border-[#00a87a] transition-all focus-within:bg-white focus-within:shadow-lg focus-within:shadow-[#00a87a]/5">
              <span className="material-symbols-outlined text-[#bccac1] text-[20px] group-focus-within:text-[#00a87a] transition-colors">search</span>
              <input 
@@ -65,14 +65,14 @@ export function TopNav({ userRole = "owner" }: { userRole?: string }) {
              />
           </div>
           
-          <div className="flex items-center gap-3">
-             <button className="w-11 h-11 rounded-[16px] border border-[#e4eae4] flex items-center justify-center text-[#6d7a73] hover:text-[#171d1a] hover:bg-[#f8faf9] transition-all relative">
+          <div className="flex items-center gap-1.5 sm:gap-3">
+             <button className="w-11 h-11 rounded-[16px] border border-[#e4eae4] flex items-center justify-center text-[#6d7a73] hover:text-[#171d1a] hover:bg-[#f8faf9] transition-all relative shrink-0">
                 <span className="material-symbols-outlined text-[22px]">notifications</span>
                 <div className="absolute top-3 right-3 w-2 h-2 bg-[#ba1a1a] rounded-full border-2 border-white" />
              </button>
-             <button onClick={handleLogout} className="h-11 px-4 rounded-[16px] border border-[#ba1a1a]/15 bg-[#ba1a1a]/5 flex items-center gap-2 text-xs font-black text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-sm">
+             <button onClick={handleLogout} className="h-11 px-3 sm:px-4 rounded-[16px] border border-[#ba1a1a]/15 bg-[#ba1a1a]/5 flex items-center gap-1.5 sm:gap-2 text-xs font-black text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-sm shrink-0">
                 <span className="material-symbols-outlined text-[18px]">logout</span>
-                <span>Sign Out</span>
+                <span className="hidden sm:inline">Sign Out</span>
              </button>
              <Link href="/dashboard/settings" className="block shrink-0">
                 <div className="w-11 h-11 rounded-[16px] bg-[#171d1a] flex items-center justify-center text-white font-black text-xs shadow-lg shadow-black/10 cursor-pointer hover:scale-105 transition-transform">

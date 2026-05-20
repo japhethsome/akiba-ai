@@ -216,7 +216,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               {t.hero.desc}
             </p>
             <div className="flex flex-col sm:flex-row gap-5">
-              <Link href={isLoggedIn ? "/dashboard" : "/auth"} className="bg-[#00694c] text-white h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:bg-[#005a40] transition-all shadow-2xl shadow-[#00694c]/20 group">
+              <Link href={isLoggedIn ? "/dashboard" : "/auth?mode=register"} className="bg-[#00694c] text-white h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:bg-[#005a40] transition-all shadow-2xl shadow-[#00694c]/20 group">
                 {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
                 <span className="material-symbols-outlined text-[24px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
@@ -298,7 +298,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -12, scale: 1.02 }}
-                className="bg-white p-10 rounded-[32px] border border-[#00694c]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#00694c] hover:shadow-[0_20px_50px_rgba(0,105,76,0.1)] transition-all group relative overflow-hidden"
+                className="bg-white p-6 sm:p-10 rounded-[24px] sm:rounded-[32px] border border-[#00694c]/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#00694c] hover:shadow-[0_20px_50px_rgba(0,105,76,0.1)] transition-all group relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#00694c]/5 rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className={`w-14 h-14 ${i === 0 ? 'bg-[#ba1a1a]/10 text-[#ba1a1a]' : i === 1 ? 'bg-[#805200]/10 text-[#805200]' : 'bg-[#00694c]/10 text-[#00694c]'} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
@@ -326,7 +326,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             {/* Bento 1 */}
             <motion.div 
               whileHover={{ y: -5 }}
-              className="md:col-span-8 bg-[#f0f9f3] p-10 rounded-[40px] border border-[#00694c]/10 hover:border-[#00694c] transition-all group relative overflow-hidden min-h-[350px]"
+              className="md:col-span-8 bg-[#f0f9f3] p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] border border-[#00694c]/10 hover:border-[#00694c] transition-all group relative overflow-hidden min-h-[350px]"
             >
               <div className="w-14 h-14 bg-[#00694c] rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-[#00694c]/20">
                 <span className="material-symbols-outlined text-[32px]">inventory_2</span>
@@ -353,7 +353,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             {/* Bento 2 */}
             <motion.div 
               whileHover={{ rotateY: 10, scale: 1.02 }}
-              className="md:col-span-4 bg-[#eff5ef] p-8 rounded-[32px] border border-[#bccac1] hover:border-[#584fbc] transition-all group flex flex-col justify-center perspective-1000"
+              className="md:col-span-4 bg-[#eff5ef] p-6 sm:p-8 rounded-[24px] sm:rounded-[32px] border border-[#bccac1] hover:border-[#584fbc] transition-all group flex flex-col justify-center perspective-1000"
             >
               <div className="w-12 h-12 bg-[#584fbc]/10 rounded-xl flex items-center justify-center text-[#584fbc] mb-6 group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-[28px]">qr_code_scanner</span>
@@ -366,7 +366,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              className="md:col-span-12 ai-purple-tint p-10 rounded-[40px] relative overflow-hidden flex flex-col md:flex-row gap-12"
+              className="md:col-span-12 ai-purple-tint p-6 sm:p-10 rounded-[28px] sm:rounded-[40px] relative overflow-hidden flex flex-col md:flex-row gap-12"
             >
               <div className="flex-1 relative z-10">
                 <div className="flex items-center gap-3 mb-6">
@@ -385,7 +385,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
               <motion.div 
                 whileHover={{ y: -10, rotate: -1 }}
-                className="w-full md:w-96 bg-white/90 backdrop-blur-sm p-8 rounded-[32px] shadow-2xl border border-[#bccac1] space-y-6 relative z-10"
+                className="w-full md:w-96 bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-[24px] sm:rounded-[32px] shadow-2xl border border-[#bccac1] space-y-6 relative z-10"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-[#3d4943] font-black uppercase tracking-widest opacity-60">{t.features.ai.rec}</span>
@@ -421,7 +421,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <section className="py-24 px-6">
         <motion.div 
           whileHover={{ scale: 0.998 }}
-          className="max-w-7xl mx-auto bg-[#171d1a] text-white p-10 md:p-16 rounded-[48px] relative overflow-hidden shadow-[0_40px_100px_rgba(0,105,76,0.2)]"
+          className="max-w-7xl mx-auto bg-[#171d1a] text-white p-6 sm:p-10 md:p-16 rounded-[28px] sm:rounded-[48px] relative overflow-hidden shadow-[0_40px_100px_rgba(0,105,76,0.25)]"
         >
           <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-[#00694c]/10 to-transparent pointer-events-none" />
           
@@ -437,7 +437,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <h2 className="text-3xl md:text-4xl font-black leading-[1.1] mb-6 tracking-tight">Ready to grow <br/> smarter?</h2>
               <p className="text-base md:text-lg mb-10 text-white/70 leading-relaxed font-medium max-w-lg">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their profits.</p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href={isLoggedIn ? "/dashboard" : "/auth"} className="bg-[#00694c] text-white h-14 px-10 rounded-2xl font-black text-base flex items-center justify-center active:scale-[0.95] hover:bg-[#005a40] transition-all">
+                <Link href={isLoggedIn ? "/dashboard" : "/auth?mode=register"} className="bg-[#00694c] text-white h-14 px-10 rounded-2xl font-black text-base flex items-center justify-center active:scale-[0.95] hover:bg-[#005a40] transition-all">
                   {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
                 </Link>
                 <button className="bg-white/5 backdrop-blur-md border border-white/10 text-white h-14 px-10 rounded-2xl font-black text-base hover:bg-white/10 transition-all active:scale-[0.95]">
@@ -544,7 +544,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             ))}
           </div>
           <div className="pt-10 border-t border-white/5 text-center">
-            <p className="text-[10px] opacity-30 uppercase tracking-[0.4em] font-black">&copy; 2025 Akiba AI. Secure &amp; Encrypted.</p>
+            <p className="text-[10px] opacity-30 uppercase tracking-[0.4em] font-black">&copy; 2026 Akiba AI. Secure &amp; Encrypted.</p>
           </div>
         </div>
       </footer>

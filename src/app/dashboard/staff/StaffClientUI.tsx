@@ -28,11 +28,11 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
   const [error, setError] = useState("");
 
   return (
-    <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto space-y-5 md:space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-[#171d1a]">Staff Management</h1>
-          <p className="text-[#6d7a73] font-medium mt-1">Manage your team and control access permissions.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#171d1a]">Staff Management</h1>
+          <p className="text-[#6d7a73] font-medium mt-1 text-sm">Manage your team and control access permissions.</p>
         </div>
         {userRole === "owner" && (
           <button
@@ -41,7 +41,7 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
               setError("");
               setIsInviteModalOpen(true);
             }}
-            className="bg-[#171d1a] hover:bg-black text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto bg-[#171d1a] hover:bg-black text-white px-5 py-3 rounded-2xl font-black text-sm shadow-xl transition-colors flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-[20px]">person_add</span>
             Add Attendant
@@ -50,18 +50,50 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
       </div>
 
       {/* Staff Access Summary Banner */}
-      <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-[24px] p-6 flex gap-4">
-        <span className="material-symbols-outlined text-[#00694c] text-[28px] shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>shield_person</span>
+      <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-[20px] p-4 sm:p-5 flex gap-3">
+        <span className="material-symbols-outlined text-[#00694c] text-[24px] shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>shield_person</span>
         <div>
-          <h3 className="font-black text-[#166534] mb-1">Role-Based Access Control</h3>
-          <p className="text-sm text-[#166534] font-medium">
-            <strong>Owners</strong> have full access to all tabs including Reports, Suppliers, and financial KPIs.{" "}
-            <strong>Clerks</strong> are restricted to the <strong>POS</strong> and <strong>Inventory</strong> view only — they cannot see profit data or store settings.
+          <h3 className="font-black text-[#166534] mb-1 text-sm">Role-Based Access Control</h3>
+          <p className="text-xs text-[#166534] font-medium leading-relaxed">
+            <strong>Owners</strong> have full access to all tabs including Reports and financial KPIs.{" "}
+            <strong>Clerks</strong> are restricted to <strong>POS</strong> and <strong>Inventory</strong> view only.
           </p>
         </div>
       </div>
 
-      <div className="bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm">
+      {/* Mobile: Card List */}
+      <div className="md:hidden space-y-3">
+        {staff.map((s) => (
+          <div key={s.id} className="bg-white border border-[#e4eae4] rounded-[20px] p-4 flex items-center gap-4 shadow-sm">
+            <div className="w-11 h-11 rounded-full bg-[#171d1a] text-white flex items-center justify-center font-black text-base uppercase shrink-0">
+              {s.name[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-[#171d1a] text-sm truncate">{s.name}</div>
+              <div className="text-[11px] text-[#bccac1] font-medium truncate">{s.email}</div>
+              <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${s.role === "owner" ? "bg-[#171d1a] text-white" : "bg-[#f5fbf5] text-[#00694c] border border-[#e4eae4]"}`}>
+                  {s.role}
+                </span>
+                <span className="text-[10px] font-bold text-[#6d7a73]">
+                  {s.role === "owner" ? "Full Access" : "POS + Stock"}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>Active
+                </span>
+              </div>
+            </div>
+            {s.role !== "owner" && (
+              <button className="text-[#bccac1] hover:text-[#e11d48] transition-colors shrink-0 p-1">
+                <span className="material-symbols-outlined text-[20px]">person_remove</span>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table */}
+      <div className="hidden md:block bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-[#f8faf9] border-b border-[#e4eae4]">
@@ -117,11 +149,7 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
             <h3 className="font-black text-[#171d1a] mb-1">No clerks yet</h3>
             <p className="text-sm text-[#6d7a73] font-medium mb-6">Use the "Add Attendant" button to register your first staff member.</p>
             <button
-              onClick={() => {
-                setFormData({ name: "", email: "", phone: "", password: "" });
-                setError("");
-                setIsInviteModalOpen(true);
-              }}
+              onClick={() => { setFormData({ name: "", email: "", phone: "", password: "" }); setError(""); setIsInviteModalOpen(true); }}
               className="bg-[#f8faf9] hover:bg-[#e4eae4] border border-[#e4eae4] text-[#171d1a] px-6 py-3 rounded-xl font-black text-sm transition-colors"
             >
               Add Your First Clerk
@@ -129,6 +157,21 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
           </div>
         )}
       </div>
+
+      {/* Mobile empty state */}
+      {staff.length <= 1 && (
+        <div className="md:hidden p-8 flex flex-col items-center justify-center text-center bg-white border border-[#e4eae4] rounded-[20px]">
+          <span className="material-symbols-outlined text-[40px] text-[#bccac1] mb-3">group_add</span>
+          <h3 className="font-black text-[#171d1a] mb-1 text-base">No clerks yet</h3>
+          <p className="text-sm text-[#6d7a73] font-medium mb-5">Use "Add Attendant" to register your first staff member.</p>
+          <button
+            onClick={() => { setFormData({ name: "", email: "", phone: "", password: "" }); setError(""); setIsInviteModalOpen(true); }}
+            className="bg-[#f8faf9] hover:bg-[#e4eae4] border border-[#e4eae4] text-[#171d1a] px-5 py-2.5 rounded-xl font-black text-sm transition-colors"
+          >
+            Add Your First Clerk
+          </button>
+        </div>
+      )}
 
       {/* Direct Add Clerk Modal */}
       <AnimatePresence>

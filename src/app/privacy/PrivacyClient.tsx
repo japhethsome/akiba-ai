@@ -17,10 +17,10 @@ export default function PrivacyPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-3xl w-full mt-10 bg-white p-10 md:p-16 rounded-[40px] border border-[#bccac1] shadow-xl"
+        className="max-w-3xl w-full mt-10 bg-white p-6 sm:p-10 md:p-16 rounded-[28px] md:rounded-[40px] border border-[#bccac1] shadow-xl"
       >
         <h1 className="text-4xl font-black text-[#171d1a] mb-4">Privacy Policy</h1>
-        <p className="text-sm text-[#3d4943] opacity-60 mb-10 tracking-widest uppercase font-bold">Last Updated: May 2025</p>
+        <p className="text-sm text-[#3d4943] opacity-60 mb-10 tracking-widest uppercase font-bold">Last Updated: May 2026</p>
         
         <div className="space-y-8 text-[#3d4943] leading-relaxed">
           <section>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         </div>
 
         <footer className="mt-16 pt-8 border-t border-[#f0f4f0] text-center">
-          <p className="text-xs opacity-50">&copy; 2025 Akiba AI. Built for the future of Kenyan retail.</p>
+          <p className="text-xs opacity-50">&copy; 2026 Akiba AI. Built for the future of Kenyan retail.</p>
         </footer>
       </motion.div>
     </div>

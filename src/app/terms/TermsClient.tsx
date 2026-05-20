@@ -17,10 +17,10 @@ export default function TermsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-3xl w-full mt-10 bg-white p-10 md:p-16 rounded-[40px] border border-[#bccac1] shadow-xl"
+        className="max-w-3xl w-full mt-10 bg-white p-6 sm:p-10 md:p-16 rounded-[28px] md:rounded-[40px] border border-[#bccac1] shadow-xl"
       >
         <h1 className="text-4xl font-black text-[#171d1a] mb-4">Terms of Service</h1>
-        <p className="text-sm text-[#3d4943] opacity-60 mb-10 tracking-widest uppercase font-bold">Last Updated: May 2025</p>
+        <p className="text-sm text-[#3d4943] opacity-60 mb-10 tracking-widest uppercase font-bold">Last Updated: May 2026</p>
         
         <div className="space-y-8 text-[#3d4943] leading-relaxed">
           <section>
@@ -43,7 +43,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-black text-[#171d1a] mb-3">3. Usage Restrictions</h2>
             <p>
               The service must be used for lawful business operations only. Any attempt to compromise the 
-              platform's security or integrity is strictly prohibited.
+              platform&apos;s security or integrity is strictly prohibited.
             </p>
           </section>
 
@@ -57,7 +57,8 @@ export default function TermsPage() {
         </div>
 
         <footer className="mt-16 pt-8 border-t border-[#f0f4f0] text-center">
-          <Link href="/auth" className="text-[#00694c] font-black hover:underline">Accept & Start Trial</Link>
+          <p className="text-xs text-[#6d7a73] mb-4">&copy; 2026 Akiba AI. All rights reserved.</p>
+          <Link href="/auth?mode=register" className="text-[#00694c] font-black hover:underline">Accept &amp; Start Trial</Link>
         </footer>
       </motion.div>
     </div>

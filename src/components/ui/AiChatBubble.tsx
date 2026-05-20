@@ -76,32 +76,32 @@ export function AiChatBubble() {
   };
 
   const quickPrompts = [
-    { emoji: "📊", label: "Stock summary", prompt: "Give me a brief summary of my stock levels and which items are running low." },
-    { emoji: "💰", label: "Pricing tips", prompt: "What are some effective pricing strategies for a Kenyan retail store?" },
-    { emoji: "📦", label: "Restock advice", prompt: "Based on my low-stock items, what should I prioritize restocking first?" },
+    { icon: "analytics", label: "Stock summary", prompt: "Give me a brief summary of my stock levels and which items are running low." },
+    { icon: "sell", label: "Pricing tips", prompt: "What are some effective pricing strategies for a Kenyan retail store?" },
+    { icon: "inventory", label: "Restock advice", prompt: "Based on my low-stock items, what should I prioritize restocking first?" },
   ];
 
   return (
     <>
       {/* Floating Trigger */}
-      <div className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-50">
+      <div className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-[150]">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[#00694c] to-[#004d37] text-white flex items-center justify-center shadow-2xl hover:shadow-emerald-900/30 transition-all relative border border-[#00a87a]/20"
+          className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[#00694c] to-[#004d37] text-white flex items-center justify-center shadow-2xl hover:shadow-emerald-900/30 transition-all relative border border-[#00a87a]/20"
         >
           <AnimatePresence mode="wait">
             {isOpen ? (
-              <motion.span key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} className="material-symbols-outlined text-[26px]">
+              <motion.span key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} className="material-symbols-outlined text-[22px] md:text-[26px]">
                 close
               </motion.span>
             ) : (
               <motion.div key="chat" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="flex items-center justify-center">
-                <span className="material-symbols-outlined text-[26px]">forum</span>
-                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="material-symbols-outlined text-[22px] md:text-[26px]">forum</span>
+                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00a87a] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-[#00a87a]"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#00a87a]"></span>
                 </span>
               </motion.div>
             )}
@@ -117,7 +117,7 @@ export function AiChatBubble() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 80, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed bottom-24 right-4 md:bottom-28 md:right-8 z-50 w-[calc(100vw-32px)] sm:w-[390px] h-[520px] bg-white border border-[#e4eae4] rounded-[28px] overflow-hidden shadow-2xl flex flex-col"
+            className="fixed bottom-[152px] right-4 md:bottom-28 md:right-8 z-[150] w-[calc(100vw-32px)] sm:w-[390px] h-[460px] md:h-[520px] bg-white border border-[#e4eae4] rounded-[28px] overflow-hidden shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="p-4 bg-gradient-to-br from-[#171d1a] to-[#252f2a] text-white flex items-center gap-3 shrink-0">
@@ -164,7 +164,7 @@ export function AiChatBubble() {
               {apiError && (
                 <div className="flex justify-center">
                   <div className="bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-bold rounded-xl px-3 py-2 max-w-[90%] text-center">
-                    ⚠️ {apiError}
+                    <span className="material-symbols-outlined text-[14px] text-rose-400">warning</span> {apiError}
                   </div>
                 </div>
               )}
@@ -179,9 +179,10 @@ export function AiChatBubble() {
                   <button
                     key={q.label}
                     onClick={() => setInputValue(q.prompt)}
-                    className="bg-white border border-[#e4eae4] hover:border-[#00694c] text-[10px] text-[#6d7a73] font-black px-3 py-2 rounded-xl shrink-0 transition-colors shadow-sm whitespace-nowrap"
+                    className="bg-white border border-[#e4eae4] hover:border-[#00694c] text-[10px] text-[#6d7a73] font-black px-3 py-2 rounded-xl shrink-0 transition-colors shadow-sm whitespace-nowrap flex items-center gap-1"
                   >
-                    {q.emoji} {q.label}
+                    <span className="material-symbols-outlined text-[13px] text-[#00694c]">{q.icon}</span>
+                    {q.label}
                   </button>
                 ))}
               </div>

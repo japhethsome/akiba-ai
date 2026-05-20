@@ -432,7 +432,7 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
                 <div>
                   <p className="text-[#4ade80] text-xs font-black uppercase tracking-widest mb-1">{sw ? "Hatua 1 kati ya 3" : "Step 1 of 3"}</p>
                   <h1 className="text-2xl md:text-3xl font-black text-white leading-tight">
-                    {sw ? `Karibu, ${ownerName}! 👋` : `Welcome, ${ownerName}! 👋`}
+                    {sw ? `Karibu, ${ownerName}!` : `Welcome, ${ownerName}!`}
                   </h1>
                   <p className="text-white/50 mt-2 text-sm">
                     {sw ? "Duka lako linafanya biashara gani?" : `What type of business is "${storeName}"?`}
@@ -608,7 +608,7 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
                   <span className="material-symbols-outlined text-[48px] text-[#4ade80]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                 </motion.div>
                 <div>
-                  <h1 className="text-3xl font-black text-white">{sw ? "Umefanikiwa! 🎉" : "You're all set! 🎉"}</h1>
+                  <h1 className="text-3xl font-black text-white">{sw ? "Umefanikiwa!" : "You're all set!"}</h1>
                   <p className="text-white/50 text-sm mt-2 max-w-xs mx-auto">
                     {sw
                       ? `Duka lako "${storeName}" lina bidhaa ${products.length} tayari. AI iko tayari kukusaidia!`

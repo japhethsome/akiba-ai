@@ -90,27 +90,27 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-8 max-w-7xl mx-auto relative">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-10 pb-24 md:pb-10 space-y-4 md:space-y-6 relative overflow-hidden">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-[#171d1a]">Inventory</h1>
-          <p className="text-[#6d7a73] font-medium mt-1">Manage your stock levels and product catalog.</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#171d1a]">Inventory</h1>
+          <p className="text-[#6d7a73] font-medium mt-0.5 text-sm hidden sm:block">Manage your stock levels and product catalog.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle - desktop only */}
           <div className="hidden md:flex bg-white border border-[#e4eae4] p-1 rounded-xl shadow-sm">
             <button 
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-[#f5fbf5] text-[#00694c] shadow-sm" : "text-[#bccac1] hover:text-[#6d7a73] hover:bg-gray-50"}`}
+              className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-[#f5fbf5] text-[#00694c] shadow-sm" : "text-[#bccac1] hover:text-[#6d7a73]"}`}
               title="Grid View"
             >
               <span className="material-symbols-outlined text-[20px]">grid_view</span>
             </button>
             <button 
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-[#f5fbf5] text-[#00694c] shadow-sm" : "text-[#bccac1] hover:text-[#6d7a73] hover:bg-gray-50"}`}
+              className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-[#f5fbf5] text-[#00694c] shadow-sm" : "text-[#bccac1] hover:text-[#6d7a73]"}`}
               title="List View"
             >
               <span className="material-symbols-outlined text-[20px]">view_list</span>
@@ -126,10 +126,11 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 setFormData({ name: "", category: "Groceries", sellingPrice: 0, buyingPrice: 0, stock: 0, reorderLevel: 5, supplierId: "" });
                 setIsAddModalOpen(true);
               }}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#00694c] to-[#008560] text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-[#00694c]/20 transition-all w-full md:w-auto"
+              className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#00694c] to-[#008560] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-black text-xs sm:text-sm shadow-xl shadow-[#00694c]/20 transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">add_circle</span>
-              Add Product
+              <span className="material-symbols-outlined text-[18px]">add_circle</span>
+              <span className="hidden sm:inline">Add Product</span>
+              <span className="sm:hidden">Add</span>
             </motion.button>
           )}
         </div>
@@ -144,20 +145,20 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
             exit={{ opacity: 0, height: 0, y: -20 }}
             className="overflow-hidden"
           >
-            <div className="bg-[#fff1f2] border border-[#fecdd3] p-6 rounded-[24px] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#fb7185] to-[#e11d48] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/20 shrink-0">
-                  <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+            <div className="bg-[#fff1f2] border border-[#fecdd3] p-4 sm:p-5 rounded-[16px] sm:rounded-[20px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#fb7185] to-[#e11d48] rounded-xl flex items-center justify-center text-white shadow-lg shrink-0">
+                  <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-[#9f1239]">Action Required</h3>
-                  <p className="text-[#be123c] text-sm font-medium">Akiba AI detected <strong className="font-black">{lowStockCount} items</strong> at or below critical reorder levels.</p>
+                  <h3 className="text-base font-black text-[#9f1239]">Action Required</h3>
+                  <p className="text-[#be123c] text-xs font-medium">Akiba AI detected <strong className="font-black">{lowStockCount} items</strong> at or below critical reorder levels.</p>
                 </div>
               </div>
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-[#9f1239] text-white px-6 py-3 rounded-xl font-bold text-xs hover:bg-[#881337] transition-colors shadow-lg shadow-[#9f1239]/20 w-full md:w-auto text-center"
+                className="bg-[#9f1239] text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-[#881337] transition-colors shadow-lg w-full sm:w-auto text-center"
               >
                 Generate Restock List
               </motion.button>
@@ -167,15 +168,16 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
       </AnimatePresence>
 
       {/* Search & Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative group">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">search</span>
+      <div className="flex flex-col gap-3">
+        {/* Search bar */}
+        <div className="relative group">
+          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#bccac1] group-focus-within:text-[#00694c] transition-colors text-[20px]">search</span>
           <input 
             type="text" 
-            placeholder="Search by product name..." 
+            placeholder="Search products..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-14 pl-12 pr-12 bg-white border border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:ring-4 focus:ring-[#00694c]/5 transition-all shadow-sm"
+            className="w-full h-11 pl-10 pr-10 bg-white border border-[#e4eae4] rounded-xl text-sm font-medium outline-none focus:border-[#00694c] focus:ring-4 focus:ring-[#00694c]/5 transition-all shadow-sm"
           />
           <AnimatePresence>
             {searchQuery && (
@@ -183,32 +185,29 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
                 onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#e11d48] transition-colors flex items-center justify-center p-1"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#e11d48] transition-colors"
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <span className="material-symbols-outlined text-[18px]">close</span>
               </motion.button>
             )}
           </AnimatePresence>
         </div>
-        
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+
+        {/* Category chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {categories.map((cat) => (
-            <motion.button
+            <button
               key={cat}
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.97 }}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-6 h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border whitespace-nowrap ${
+              className={`px-4 h-8 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border whitespace-nowrap shrink-0 ${
                 selectedCategory === cat 
-                  ? "bg-[#171d1a] text-white border-[#171d1a] shadow-lg shadow-black/10" 
-                  : "bg-white text-[#6d7a73] border-[#e4eae4] hover:border-[#bccac1] hover:bg-gray-50 hover:text-[#171d1a]"
+                  ? "bg-[#171d1a] text-white border-[#171d1a]" 
+                  : "bg-white text-[#6d7a73] border-[#e4eae4] hover:border-[#bccac1]"
               }`}
             >
               {cat}
-            </motion.button>
+            </button>
           ))}
         </div>
       </div>
@@ -256,13 +255,13 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
             </motion.div>
           ) : (
             viewMode === "grid" ? (
-              /* Grid View */
+              /* Grid View — 1 col on mobile, 2 on md, 3 on xl */
               <motion.div 
                 key="grid"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
               >
                 <AnimatePresence>
                   {filteredProducts.map((product) => (
@@ -272,69 +271,77 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                      whileHover={{ y: -4 }}
-                      className="bg-white p-6 rounded-[24px] border border-[#e4eae4] hover:border-[#00a87a] hover:shadow-2xl hover:shadow-[#00a87a]/10 transition-all cursor-pointer group relative overflow-hidden"
+                      className="bg-white p-3.5 sm:p-5 rounded-[20px] border border-[#e4eae4] hover:border-[#00a87a] hover:shadow-lg transition-all cursor-pointer group relative flex flex-col justify-between w-full gap-3"
                     >
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#f5fbf5] text-[#00694c] border border-[#e4eae4]">
-                          {product.category}
+                      {/* Top Row / Details Section */}
+                      <div className="flex justify-between items-start w-full gap-2">
+                        {/* Details */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-md text-[8px] sm:text-[10px] font-black uppercase tracking-wider bg-[#f5fbf5] text-[#00694c] border border-[#e4eae4] truncate shrink-0">
+                              {product.category}
+                            </span>
+                            {product.stock <= product.reorderLevel && (
+                              <span className="text-[8px] font-black bg-[#fff1f2] text-[#e11d48] border border-[#fecdd3] px-1.5 py-0.5 rounded-full uppercase shrink-0">Low Stock</span>
+                            )}
+                          </div>
+                          <h3 className="text-xs sm:text-base font-black text-[#171d1a] leading-tight group-hover:text-[#00694c] transition-colors line-clamp-2">{product.name}</h3>
+                          <p className="text-[10px] sm:text-[11px] font-bold text-[#6d7a73] sm:text-[#bccac1]">KES {product.price.toLocaleString()}</p>
                         </div>
-                        <motion.button 
-                          onClick={() => openEditModal(product)}
-                          whileHover={{ scale: 1.1, backgroundColor: "#f0f4f0" }}
-                          whileTap={{ scale: 0.9 }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[#bccac1] hover:text-[#00a87a] transition-colors z-10 relative"
-                        >
-                          <span className="material-symbols-outlined text-[20px]">edit</span>
-                        </motion.button>
+
+                        {/* Action buttons + stock (for desktop) */}
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between shrink-0 gap-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); openEditModal(product); }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[#bccac1] hover:text-[#00a87a] hover:bg-[#f5fbf5] transition-colors shrink-0"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </button>
+                        </div>
                       </div>
 
-                      <h3 className="text-xl font-black text-[#171d1a] mb-1 group-hover:text-[#00694c] transition-colors truncate">{product.name}</h3>
-                      <p className="text-[11px] font-black text-[#bccac1] uppercase tracking-[0.2em] mb-6">KES {product.price.toLocaleString()}</p>
-
-                      <div className="space-y-4">
+                      {/* Progress Bar & Desktop Stock (desktop only) */}
+                      <div className="hidden sm:block space-y-2.5">
                         <div className="flex justify-between items-end">
                           <div>
-                            <div className="text-[10px] font-black text-[#6d7a73] uppercase tracking-widest mb-1">Stock Level</div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-2xl font-black tracking-tight ${
-                                product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"
-                              }`}>
+                            <div className="text-[8px] sm:text-[9px] font-black text-[#6d7a73] uppercase tracking-wider mb-0.5">Stock</div>
+                            <div className="flex items-baseline gap-1">
+                              <span className={`text-lg sm:text-xl font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
                                 {product.stock}
                               </span>
-                              <span className="text-sm font-medium text-[#bccac1]">units</span>
+                              <span className="text-[9px] font-medium text-[#bccac1]">units</span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-[10px] font-black text-[#bccac1] uppercase tracking-widest mb-1">Updated</div>
-                            <div className="text-[12px] font-bold text-[#6d7a73]">{formatDate(product.lastUpdated)}</div>
-                          </div>
                         </div>
-
-                        {/* Progress Bar */}
-                        <div className="h-2 w-full bg-[#f8faf9] rounded-full overflow-hidden relative">
+                        <div className="h-1.5 w-full bg-[#f8faf9] rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min((product.stock / Math.max(product.reorderLevel * 2, 1)) * 100, 100)}%` }}
                             transition={{ duration: 1, ease: "easeOut" }}
-                            className={`absolute top-0 left-0 h-full rounded-full ${
-                              product.stock <= product.reorderLevel ? "bg-[#e11d48]" : "bg-[#00a87a]"
-                            }`}
+                            className={`h-full rounded-full ${product.stock <= product.reorderLevel ? "bg-[#e11d48]" : "bg-[#00a87a]"}`}
                           />
                         </div>
                       </div>
-                      
-                      {/* Hover Action Overlay */}
-                      <div className="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-white via-white to-transparent pt-12">
-                         <motion.button 
-                           onClick={() => setRestockTarget(product)}
-                           whileHover={{ scale: 1.02 }}
-                           whileTap={{ scale: 0.98 }}
-                           className="w-full h-12 bg-[#171d1a] hover:bg-black text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-colors flex items-center justify-center gap-2"
-                         >
-                            <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
-                            Quick Restock
-                         </motion.button>
+
+                      {/* Mobile Stock & Restock button row (flexible layout) */}
+                      <div className="flex items-center justify-between gap-3 w-full sm:mt-1 border-t sm:border-t-0 border-[#f2f6f2] pt-2.5 sm:pt-0">
+                        {/* Mobile Stock Indicator (hidden on desktop) */}
+                        <div className="sm:hidden flex items-center gap-1">
+                          <span className="text-[9px] font-black text-[#6d7a73] uppercase">Stock:</span>
+                          <span className={`text-xs font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
+                            {product.stock}
+                          </span>
+                          <span className="text-[9px] font-medium text-[#bccac1]">units</span>
+                        </div>
+
+                        {/* Restock Button — touch optimized target */}
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setRestockTarget(product); }}
+                          className="flex-1 sm:w-full h-11 sm:h-10 bg-[#f5fbf5] hover:bg-[#00694c] hover:text-white text-[#00694c] border border-[#d1ebd7] hover:border-[#00694c] rounded-xl font-black text-[9px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">add_shopping_cart</span>
+                          <span>Restock</span>
+                        </button>
                       </div>
                     </motion.div>
                   ))}
@@ -350,7 +357,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 className="bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm"
               >
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full min-w-[700px] md:min-w-0 text-left border-collapse">
                     <thead>
                       <tr className="bg-[#f8faf9] border-b border-[#e4eae4]">
                         <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Product Name</th>
@@ -467,7 +474,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                   <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Product Name</label>
                   <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" placeholder="e.g. Unga wa Dola" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Category</label>
                     <input type="text" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" placeholder="e.g. Groceries" />
@@ -477,7 +484,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                     <input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Selling Price (KES)</label>
                     <input type="number" value={formData.sellingPrice} onChange={(e) => setFormData({...formData, sellingPrice: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
@@ -487,7 +494,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                     <input type="number" value={formData.buyingPrice} onChange={(e) => setFormData({...formData, buyingPrice: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Reorder Level Alert Threshold</label>
                     <input type="number" value={formData.reorderLevel} onChange={(e) => setFormData({...formData, reorderLevel: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />

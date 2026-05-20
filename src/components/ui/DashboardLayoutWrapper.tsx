@@ -10,9 +10,10 @@ export async function DashboardLayoutWrapper({ children }: { children: React.Rea
   const role = session?.role || "clerk";
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f8faf9] text-[#171d1a] font-sans selection:bg-[#00a87a]/20 relative">
+    <div className="flex flex-col min-h-screen w-full max-w-full bg-[#f8faf9] text-[#171d1a] font-sans selection:bg-[#00a87a]/20 relative overflow-x-hidden">
       <TopNav userRole={role} />
-      <div className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0">
+      {/* pb-[72px] matches the exact MobileNav height so content is never hidden under it */}
+      <div className="flex-1 flex flex-col w-full max-w-full min-w-0 min-h-0 pb-[72px] md:pb-0">
         {children}
       </div>
       <MobileNav userRole={role} />

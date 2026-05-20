@@ -129,7 +129,7 @@ export function TransactionsClientUI({
   };
 
   return (
-    <div className="p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
+    <div className="p-4 md:p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div>
@@ -142,10 +142,10 @@ export function TransactionsClientUI({
         </div>
 
         {/* TABS SELECTOR */}
-        <div className="flex bg-[#e4eae4]/50 border border-[#e4eae4] p-1.5 rounded-2xl shrink-0">
+        <div className="flex bg-[#e4eae4]/50 border border-[#e4eae4] p-1.5 rounded-2xl shrink-0 w-full md:w-auto">
           <button
             onClick={() => setActiveTab("ledger")}
-            className={`px-6 py-3 rounded-xl text-xs font-black transition-all ${
+            className={`flex-1 md:flex-initial text-center px-6 py-3 rounded-xl text-xs font-black transition-all ${
               activeTab === "ledger"
                 ? "bg-[#171d1a] text-white shadow-lg shadow-black/10"
                 : "text-[#6d7a73] hover:text-[#171d1a]"
@@ -155,7 +155,7 @@ export function TransactionsClientUI({
           </button>
           <button
             onClick={() => setActiveTab("forecasts")}
-            className={`px-6 py-3 rounded-xl text-xs font-black transition-all ${
+            className={`flex-1 md:flex-initial text-center px-6 py-3 rounded-xl text-xs font-black transition-all ${
               activeTab === "forecasts"
                 ? "bg-[#171d1a] text-white shadow-lg shadow-black/10"
                 : "text-[#6d7a73] hover:text-[#171d1a]"
@@ -214,7 +214,7 @@ export function TransactionsClientUI({
             ].map((stat, i) => (
               <div
                 key={i}
-                className="bg-white border border-[#e4eae4] rounded-[28px] p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
+                className="bg-white border border-[#e4eae4] rounded-[24px] md:rounded-[28px] p-4 md:p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#6d7a73]">
@@ -232,7 +232,7 @@ export function TransactionsClientUI({
           </div>
 
           {/* LEDGER GRID (Span 8) */}
-          <div className="lg:col-span-8 bg-white border border-[#e4eae4] rounded-[40px] p-8 shadow-sm flex flex-col">
+          <div className="lg:col-span-8 bg-white border border-[#e4eae4] rounded-[28px] md:rounded-[40px] p-5 md:p-8 shadow-sm flex flex-col">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-2xl font-black text-[#171d1a] tracking-tight">Sales ledger register</h2>
@@ -317,7 +317,7 @@ export function TransactionsClientUI({
           </div>
 
           {/* RECEIPT / DETAILS PANEL (Span 4) */}
-          <div className="lg:col-span-4 bg-white border border-[#e4eae4] rounded-[40px] p-8 shadow-sm flex flex-col justify-between min-h-[400px]">
+          <div className="lg:col-span-4 bg-white border border-[#e4eae4] rounded-[28px] md:rounded-[40px] p-5 md:p-8 shadow-sm flex flex-col justify-between min-h-[400px]">
             {selectedTx ? (
               <div className="flex flex-col h-full justify-between gap-6">
                 <div>
@@ -402,7 +402,7 @@ export function TransactionsClientUI({
       {activeTab === "forecasts" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* SEASONAL DETECTOR BANNER (Span 12) */}
-          <div className="lg:col-span-12 bg-gradient-to-r from-[#584fbc]/10 to-[#00a87a]/5 border border-[#584fbc]/20 rounded-[32px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+          <div className="lg:col-span-12 bg-gradient-to-r from-[#584fbc]/10 to-[#00a87a]/5 border border-[#584fbc]/20 rounded-[24px] md:rounded-[32px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#584fbc]/5 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
             <div className="flex gap-5 items-center">
               <div className="w-14 h-14 bg-gradient-to-br from-[#584fbc] to-[#3a3385] rounded-2xl flex items-center justify-center shadow-lg shadow-[#584fbc]/20 text-white shrink-0">
@@ -427,7 +427,7 @@ export function TransactionsClientUI({
           </div>
 
           {/* DEMAND FORECAST CHARTS (Span 8) */}
-          <div className="lg:col-span-8 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm">
+          <div className="lg:col-span-8 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
               <div>
                 <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Demand Velocity Chart</h3>
@@ -469,7 +469,7 @@ export function TransactionsClientUI({
                 ))}
               </div>
 
-              <div className="relative z-10 w-full h-[240px] flex items-end gap-3 px-2">
+              <div className="relative z-10 w-full h-[240px] flex items-end gap-1.5 md:gap-3 px-1 md:px-2">
                 {activeChartPoints.map((point, index) => {
                   const histHeight = maxVal > 0 ? (point.historicalSales / maxVal) * 100 : 0;
                   const projHeight = maxVal > 0 ? (point.projectedSales / maxVal) * 100 : 0;
@@ -501,7 +501,7 @@ export function TransactionsClientUI({
                         )}
                       </div>
                       
-                      <span className={`text-[10px] font-black mt-2 uppercase ${isProjected ? "text-[#584fbc]" : "text-[#6d7a73]"}`}>
+                      <span className={`text-[8px] md:text-[10px] font-black mt-2 uppercase text-center truncate w-full ${isProjected ? "text-[#584fbc]" : "text-[#6d7a73]"}`}>
                         {point.period}
                       </span>
                     </div>
@@ -540,7 +540,7 @@ export function TransactionsClientUI({
               </AnimatePresence>
             </div>
 
-            <div className="flex gap-6 mt-8 pt-6 border-t border-[#e4eae4] text-xs font-bold text-[#6d7a73]">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-8 pt-6 border-t border-[#e4eae4] text-xs font-bold text-[#6d7a73]">
               <div className="flex items-center gap-2">
                 <div className="w-3.5 h-3.5 bg-gradient-to-r from-[#6d7a73] to-[#bccac1] rounded" />
                 <span>Historical Demand (POS data)</span>
@@ -553,7 +553,7 @@ export function TransactionsClientUI({
           </div>
 
           {/* STOCKOUT RISK ANALYSIS & WHATSUP Restocking (Span 4) */}
-          <div className="lg:col-span-4 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm min-h-[460px]">
+          <div className="lg:col-span-4 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm min-h-[460px]">
             <div className="mb-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Stockout Risk</h3>
@@ -634,7 +634,7 @@ export function TransactionsClientUI({
           </div>
 
           {/* SMART REORDER TIMELINE (Span 8) */}
-          <div className="lg:col-span-8 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm">
+          <div className="lg:col-span-8 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm">
             <div className="mb-6 flex justify-between items-center">
               <div>
                 <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Smart Reorder Timeline</h3>
@@ -694,7 +694,7 @@ export function TransactionsClientUI({
           </div>
 
           {/* CLERK REVENUE TARGETS (Span 4) */}
-          <div className="lg:col-span-4 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm">
+          <div className="lg:col-span-4 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm">
             <div className="mb-6">
               <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Clerk Revenue Targets</h3>
               <p className="text-xs font-bold text-[#6d7a73] uppercase tracking-widest mt-1">Projected sales goals based on previous shift history</p>

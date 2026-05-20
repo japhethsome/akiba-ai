@@ -56,31 +56,45 @@ export function ForecastsClientUI({
 }: ForecastsClientUIProps) {
   // Session lock to prevent multiple tabs
   useEffect(() => {
-    const tabId = Math.random().toString(36).substring(7);
-    const sessionKey = "akiba_active_session";
+    if (typeof window === "undefined") return;
+
+    // Clean up any stale localStorage key from the old lock mechanism
+    try {
+      localStorage.removeItem("akiba_active_session");
+    } catch (e) {}
+
+    if (typeof BroadcastChannel === "undefined") return;
+
+    const myTabId = Math.random().toString(36).substring(7);
+    const myCreatedAt = Date.now();
+    const channel = new BroadcastChannel("akiba_tab_channel");
     
-    const checkSession = () => {
-      const activeTab = localStorage.getItem(sessionKey);
-      if (activeTab && activeTab !== tabId) {
-        alert("Akiba AI is already open in another tab. Please use that tab or close it to continue here.");
-        window.location.href = "/";
-      } else {
-        localStorage.setItem(sessionKey, tabId);
+    // We wait 500ms before checking to allow any unmounting pages or double-renders to clean up
+    const timer = setTimeout(() => {
+      channel.postMessage({ type: "CHECK_OTHER_TABS", tabId: myTabId, createdAt: myCreatedAt });
+    }, 500);
+
+    const handleMessage = (event: MessageEvent) => {
+      const { type, tabId, createdAt } = event.data || {};
+      if (type === "CHECK_OTHER_TABS") {
+        // If we are the older tab (or win the tie-breaker), notify the new tab to close
+        if (myCreatedAt < createdAt || (myCreatedAt === createdAt && myTabId < tabId)) {
+          channel.postMessage({ type: "TAB_ALREADY_EXISTS", targetTabId: tabId });
+        }
+      } else if (type === "TAB_ALREADY_EXISTS") {
+        if (event.data.targetTabId === myTabId) {
+          alert("Akiba AI is already open in another tab. Please use that tab or close it to continue here.");
+          window.location.href = "/";
+        }
       }
     };
 
-    checkSession();
-    
-    const handleUnload = () => {
-      if (localStorage.getItem(sessionKey) === tabId) {
-        localStorage.removeItem(sessionKey);
-      }
-    };
+    channel.addEventListener("message", handleMessage);
 
-    window.addEventListener("beforeunload", handleUnload);
     return () => {
-      window.removeEventListener("beforeunload", handleUnload);
-      handleUnload();
+      clearTimeout(timer);
+      channel.removeEventListener("message", handleMessage);
+      channel.close();
     };
   }, []);
 
@@ -137,7 +151,7 @@ export function ForecastsClientUI({
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
+      className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 md:p-6 lg:p-10 max-w-[1600px] mx-auto w-full"
     >
       {/* 1. SECTOR HEADER & SEASONAL BANNER */}
       <motion.div variants={item} className="lg:col-span-12 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center mb-2">
@@ -149,14 +163,14 @@ export function ForecastsClientUI({
             Predictive Ordering &amp; Demand Forecasts
           </h1>
         </div>
-        <div className="flex gap-3">
-          <Link href="/dashboard">
-            <button className="bg-white border border-[#e4eae4] text-[#6d7a73] hover:text-[#171d1a] px-6 py-3.5 rounded-2xl font-black text-xs hover:border-[#bccac1] transition-all">
+        <div className="flex gap-3 w-full md:w-auto">
+          <Link href="/dashboard" className="flex-1 md:flex-initial">
+            <button className="w-full bg-white border border-[#e4eae4] text-[#6d7a73] hover:text-[#171d1a] px-6 py-3.5 rounded-2xl font-black text-xs hover:border-[#bccac1] transition-all">
               Dashboard
             </button>
           </Link>
-          <Link href="/dashboard/inventory">
-            <button className="bg-[#171d1a] text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-black transition-all shadow-md">
+          <Link href="/dashboard/inventory" className="flex-1 md:flex-initial">
+            <button className="w-full bg-[#171d1a] text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-black transition-all shadow-md">
               Manage Stock
             </button>
           </Link>
@@ -166,7 +180,7 @@ export function ForecastsClientUI({
       {/* SEASONAL DETECTOR BANNER (Span 12) */}
       <motion.div 
         variants={item} 
-        className="lg:col-span-12 bg-gradient-to-r from-[#584fbc]/10 to-[#00a87a]/5 border border-[#584fbc]/20 rounded-[32px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
+        className="lg:col-span-12 bg-gradient-to-r from-[#584fbc]/10 to-[#00a87a]/5 border border-[#584fbc]/20 rounded-[24px] md:rounded-[32px] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#584fbc]/5 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
         <div className="flex gap-5 items-center">
@@ -191,8 +205,7 @@ export function ForecastsClientUI({
         </div>
       </motion.div>
 
-      {/* 2. DEMAND FORECAST CHARTS (Span 8) */}
-      <motion.div variants={item} className="lg:col-span-8 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm">
+      <motion.div variants={item} className="lg:col-span-8 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Demand Velocity Chart</h3>
@@ -237,7 +250,7 @@ export function ForecastsClientUI({
             ))}
           </div>
 
-          <div className="relative z-10 w-full h-[240px] flex items-end gap-3 px-2">
+          <div className="relative z-10 w-full h-[240px] flex items-end gap-1.5 md:gap-3 px-1 md:px-2">
             {activeChartPoints.map((point, index) => {
               const histHeight = maxVal > 0 ? (point.historicalSales / maxVal) * 100 : 0;
               const projHeight = maxVal > 0 ? (point.projectedSales / maxVal) * 100 : 0;
@@ -273,7 +286,7 @@ export function ForecastsClientUI({
                   </div>
                   
                   {/* Axis Label */}
-                  <span className={`text-[10px] font-black mt-2 uppercase ${isProjected ? "text-[#584fbc]" : "text-[#6d7a73]"}`}>
+                  <span className={`text-[8px] md:text-[10px] font-black mt-2 uppercase text-center truncate w-full ${isProjected ? "text-[#584fbc]" : "text-[#6d7a73]"}`}>
                     {point.period}
                   </span>
                 </div>
@@ -314,7 +327,7 @@ export function ForecastsClientUI({
         </div>
 
         {/* Legend */}
-        <div className="flex gap-6 mt-8 pt-6 border-t border-[#e4eae4] text-xs font-bold text-[#6d7a73]">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mt-8 pt-6 border-t border-[#e4eae4] text-xs font-bold text-[#6d7a73]">
           <div className="flex items-center gap-2">
             <div className="w-3.5 h-3.5 bg-gradient-to-r from-[#6d7a73] to-[#bccac1] rounded" />
             <span>Historical Demand (POS data)</span>
@@ -327,7 +340,7 @@ export function ForecastsClientUI({
       </motion.div>
 
       {/* 3. STOCKOUT RISK ANALYSIS & WHATSAPP (Span 4) */}
-      <motion.div variants={item} className="lg:col-span-4 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm min-h-[460px]">
+      <motion.div variants={item} className="lg:col-span-4 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm min-h-[460px]">
         <div className="mb-6">
           <div className="flex justify-between items-center">
             <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Stockout Risk</h3>
@@ -410,7 +423,7 @@ export function ForecastsClientUI({
       </motion.div>
 
       {/* 4. SMART REORDER ALERTS & SUPPLIER LEAD-TIME SYNC (Span 8) */}
-      <motion.div variants={item} className="lg:col-span-8 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm">
+      <motion.div variants={item} className="lg:col-span-8 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm">
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Smart Reorder Timeline</h3>
@@ -475,7 +488,7 @@ export function ForecastsClientUI({
       </motion.div>
 
       {/* 5. ESTIMATED CLERK REVENUE TARGETS (Span 4) */}
-      <motion.div variants={item} className="lg:col-span-4 bg-white rounded-[40px] p-8 border border-[#e4eae4] flex flex-col shadow-sm">
+      <motion.div variants={item} className="lg:col-span-4 bg-white rounded-[28px] md:rounded-[40px] p-5 md:p-8 border border-[#e4eae4] flex flex-col shadow-sm">
         <div className="mb-6">
           <h3 className="text-2xl font-black text-[#171d1a] tracking-tight">Clerk Revenue Targets</h3>
           <p className="text-xs font-bold text-[#6d7a73] uppercase tracking-widest mt-1">Projected sales goals based on previous shift history</p>

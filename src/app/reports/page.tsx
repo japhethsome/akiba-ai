@@ -10,7 +10,7 @@ export default async function ReportsPage() {
 
   return (
     <DashboardLayoutWrapper>
-      <div className="p-6 lg:p-10 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center">
         <div className="w-24 h-24 bg-[#f8faf9] border border-[#e4eae4] rounded-full flex items-center justify-center mb-6">
           <span className="material-symbols-outlined text-[48px] text-[#bccac1]">bar_chart</span>
         </div>
