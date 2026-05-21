@@ -19,6 +19,8 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
   const [userName, setUserName] = useState(initialData.userName);
   const [storeName, setStoreName] = useState(initialData.storeName);
   const [storeCategory, setStoreCategory] = useState(initialData.storeCategory || "");
+  const [userEmail, setUserEmail] = useState(initialData.userEmail);
+  const [userPhone, setUserPhone] = useState(initialData.userPhone);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,16 +32,27 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
     setError(null);
     setSuccess(false);
 
-    if (!userName.trim() || !storeName.trim() || !storeCategory.trim()) {
-      setError("All fields are required.");
-      setLoading(false);
-      return;
+    const isClerk = initialData.userRole !== "owner";
+    if (isClerk) {
+      if (!userEmail.trim() || !userPhone.trim()) {
+        setError("Email and Phone number are required.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (!userName.trim() || !storeName.trim() || !storeCategory.trim() || !userEmail.trim() || !userPhone.trim()) {
+        setError("All fields are required.");
+        setLoading(false);
+        return;
+      }
     }
 
     const result = await updateSettings({
       userName,
       storeName,
       storeCategory,
+      userEmail,
+      userPhone,
     });
 
     setLoading(false);
@@ -82,6 +95,8 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
     "Other Business / Custom"
   ];
 
+  const isClerk = initialData.userRole !== "owner";
+
   return (
     <div className="p-4 md:p-6 lg:p-10 max-w-4xl mx-auto w-full">
       <div className="mb-8">
@@ -92,7 +107,9 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
           Store &amp; Account Settings
         </h1>
         <p className="text-sm font-medium text-[#6d7a73] mt-2">
-          Manage your business details, update your store name, category, and preferences.
+          {isClerk 
+            ? "Manage your personal profile details (email and phone number)."
+            : "Manage your business details, update your store name, category, and preferences."}
         </p>
       </div>
 
@@ -115,11 +132,11 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
           <div className="w-full border-t border-[#e4eae4] pt-4 mt-6 space-y-3.5 text-left text-xs font-semibold text-[#6d7a73]">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-[#bccac1]">mail</span>
-              <span className="truncate">{initialData.userEmail}</span>
+              <span className="truncate">{userEmail}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-[#bccac1]">call</span>
-              <span>{initialData.userPhone}</span>
+              <span>{userPhone}</span>
             </div>
           </div>
         </div>
@@ -142,8 +159,8 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
             )}
 
             <div className="group">
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
-                Owner / Manager Name
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors flex items-center gap-1.5">
+                Owner / Manager Name {isClerk && <span className="text-[9px] font-black bg-[#ba1a1a]/10 text-[#ba1a1a] px-1.5 py-0.5 rounded">🔒 Locked</span>}
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">
@@ -154,15 +171,16 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   required
+                  disabled={isClerk}
                   placeholder="Enter manager name"
-                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm"
+                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             <div className="group">
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
-                Store Name
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors flex items-center gap-1.5">
+                Store Name {isClerk && <span className="text-[9px] font-black bg-[#ba1a1a]/10 text-[#ba1a1a] px-1.5 py-0.5 rounded">🔒 Locked</span>}
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">
@@ -173,15 +191,16 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   required
+                  disabled={isClerk}
                   placeholder="Enter store name"
-                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm"
+                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             <div className="group">
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
-                Store Category
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors flex items-center gap-1.5">
+                Store Category {isClerk && <span className="text-[9px] font-black bg-[#ba1a1a]/10 text-[#ba1a1a] px-1.5 py-0.5 rounded">🔒 Locked</span>}
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">
@@ -191,7 +210,8 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
                   value={storeCategory}
                   onChange={(e) => setStoreCategory(e.target.value)}
                   required
-                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm appearance-none"
+                  disabled={isClerk}
+                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="" disabled>Select business type</option>
                   {businessCategories.map((cat) => (
@@ -203,10 +223,48 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
               </div>
             </div>
 
+            <div className="group">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
+                Email Address
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">
+                  mail
+                </span>
+                <input
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  required
+                  placeholder="Enter email address"
+                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="group">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
+                Phone Number
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">
+                  call
+                </span>
+                <input
+                  type="text"
+                  value={userPhone}
+                  onChange={(e) => setUserPhone(e.target.value)}
+                  required
+                  placeholder="Enter phone number"
+                  className="w-full h-14 pl-12 pr-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all focus:shadow-sm"
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl font-black text-sm text-white bg-[#171d1a] shadow-xl hover:bg-black transition-all disabled:opacity-50 active:scale-[0.98] mt-8"
+              className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl font-black text-sm text-white bg-[#171d1a] shadow-xl hover:bg-black transition-all disabled:opacity-50 active:scale-[0.98] mt-8 cursor-pointer"
             >
               {loading ? "Saving Changes..." : "Save Settings"}
               {!loading && <span className="material-symbols-outlined text-[20px]">save</span>}

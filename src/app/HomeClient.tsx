@@ -519,9 +519,9 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 { name: "AI Insights", href: "/ai-insights" }
               ] },
               { title: "Support", links: [
-                { name: "Help Center", href: "#" },
+                { name: "Help Center", href: "/help-center" },
                 { name: "Kiswahili Guide", href: "#" },
-                { name: "Contact Us", href: "#" }
+                { name: "Contact Us", href: "/contact" }
               ] },
               { title: "Company", links: [
                 { name: "About", href: "/about" },

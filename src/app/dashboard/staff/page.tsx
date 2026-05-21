@@ -2,13 +2,14 @@ import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { DashboardLayoutWrapper } from "@/components/ui/DashboardLayoutWrapper";
 import { StaffClientUI } from "./StaffClientUI";
+import { hasPermission } from "@/lib/permissions";
 
 import prisma from "@/lib/prisma";
 
 export default async function StaffPage() {
   const session = await getSession();
   if (!session) redirect("/auth");
-  if (session.role === "clerk") redirect("/dashboard/pos"); // Clerks cannot manage staff
+  if (!hasPermission(session.role, "staff")) redirect("/dashboard/pos");
 
   const user = await prisma.user.findUnique({
     where: { user_id: session.userId },

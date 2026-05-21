@@ -16,6 +16,11 @@ export default async function TransactionsPage() {
 
   if (!user) redirect("/auth");
 
+  const { hasPermission } = require("@/lib/permissions");
+  if (!hasPermission(user.role, "transactions")) {
+    redirect("/dashboard/pos");
+  }
+
   const isOwner = user.role === "owner";
 
   // Build appropriate where query depending on user role

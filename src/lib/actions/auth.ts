@@ -3,13 +3,19 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { setSession } from "@/lib/session";
+import crypto from "crypto";
 
 export async function registerOwner(formData: FormData) {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
-  const password = formData.get("password") as string;
+  const isGoogleRegister = formData.get("isGoogleRegister") === "true";
+  let password = formData.get("password") as string;
   const storeName = formData.get("storeName") as string;
+
+  if (isGoogleRegister) {
+    password = crypto.randomBytes(32).toString("hex");
+  }
 
   if (!name || !email || !phone || !password || !storeName) {
     return { error: "All fields are required" };
@@ -53,8 +59,10 @@ export async function registerOwner(formData: FormData) {
           store_id: newStore.id,
         },
       });
-
       return { user: newUser, store: newStore };
+    }, {
+      maxWait: 10000,
+      timeout: 30000,
     });
 
     await setSession(result.user.user_id, result.user.role, result.store.id);
@@ -71,8 +79,13 @@ export async function registerAttendant(formData: FormData) {
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
-    const password = formData.get("password") as string;
+    const isGoogleRegister = formData.get("isGoogleRegister") === "true";
+    let password = formData.get("password") as string;
     const inviteToken = formData.get("inviteToken") as string;
+
+    if (isGoogleRegister) {
+      password = crypto.randomBytes(32).toString("hex");
+    }
 
     if (!inviteToken) throw new Error("Missing invitation token.");
 
@@ -157,4 +170,36 @@ export async function logout() {
   (await cookies()).delete("session");
   const { redirect } = await import("next/navigation");
   redirect("/");
+}
+
+export async function loginUserWithGoogle(email: string) {
+  if (!email) {
+    return { error: "Email is required" };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { store: true },
+    });
+
+    if (!user) {
+      return { error: "No account found with this Google email. Please register first using the registration form." };
+    }
+
+    await setSession(user.user_id, user.role, user.store_id);
+
+    return { 
+      success: true, 
+      user: { 
+        id: user.user_id, 
+        name: user.name, 
+        role: user.role, 
+        store: user.store?.name || "My Store" 
+      } 
+    };
+  } catch (error: any) {
+    console.error("Google login error details:", error);
+    return { error: error.message || "An unexpected error occurred during Google login" };
+  }
 }

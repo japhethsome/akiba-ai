@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { addProduct, updateProduct, restockProduct } from "@/lib/actions/inventory";
+import { hasPermission } from "@/lib/permissions";
+import { PurchaseOrderModal, type POProduct } from "@/components/ui/PurchaseOrderModal";
 
 interface Product {
   id: string;
@@ -14,9 +16,27 @@ interface Product {
   reorderLevel: number;
   lastUpdated: string;
   supplierId?: string | null;
+  supplierName?: string | null;
+  supplierCompanyName?: string | null;
+  supplierContact?: string | null;
+  supplierWhatsapp?: string | null;
+  supplierEmail?: string | null;
+  supplierLocation?: string | null;
+  supplierLeadTime?: number | null;
+  supplierPaymentTerms?: string | null;
 }
 
-export function InventoryClient({ userRole, initialProducts, suppliers = [] }: { userRole: string, initialProducts: Product[], suppliers?: any[] }) {
+export function InventoryClient({
+  userRole,
+  initialProducts,
+  suppliers = [],
+  storeName = "My Store",
+}: {
+  userRole: string;
+  initialProducts: Product[];
+  suppliers?: any[];
+  storeName?: string;
+}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -25,31 +45,68 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
+  const [isPOModalOpen, setIsPOModalOpen] = useState(false);
 
   // Form States
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: "", category: "Groceries", sellingPrice: 0, buyingPrice: 0, stock: 0, reorderLevel: 5, supplierId: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "Groceries",
+    sellingPrice: 0,
+    buyingPrice: 0,
+    stock: 0,
+    reorderLevel: 5,
+    supplierId: "",
+  });
   const [restockAmount, setRestockAmount] = useState(0);
 
   // Dynamically extract unique categories from actual products
   const categories = useMemo(() => {
-    const cats = new Set(initialProducts.map(p => p.category));
+    const cats = new Set(initialProducts.map((p) => p.category));
     return ["All", ...Array.from(cats)];
   }, [initialProducts]);
 
   const filteredProducts = useMemo(() => {
-    return initialProducts.filter(p => {
+    return initialProducts.filter((p) => {
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [initialProducts, searchQuery, selectedCategory]);
 
-  const lowStockCount = initialProducts.filter(p => p.stock <= p.reorderLevel).length;
+  const lowStockProducts = useMemo(
+    () => initialProducts.filter((p) => p.stock <= p.reorderLevel),
+    [initialProducts]
+  );
+
+  const lowStockCount = lowStockProducts.length;
+
+  // Map low-stock products to POProduct shape
+  const poProducts: POProduct[] = useMemo(
+    () =>
+      lowStockProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        stock: p.stock,
+        reorderLevel: p.reorderLevel,
+        buyingPrice: p.buyingPrice,
+        supplierId: p.supplierId,
+        supplierName: p.supplierName,
+        supplierWhatsapp: p.supplierWhatsapp,
+        supplierEmail: p.supplierEmail,
+        supplierContact: p.supplierContact,
+        supplierLocation: p.supplierLocation,
+        supplierLeadTime: p.supplierLeadTime,
+        supplierPaymentTerms: p.supplierPaymentTerms,
+        supplierCompanyName: p.supplierCompanyName,
+      })),
+    [lowStockProducts]
+  );
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString("en-KE", { day: "numeric", month: "short" });
   };
 
   const handleAddProduct = () => {
@@ -62,7 +119,15 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
       }
       setIsAddModalOpen(false);
       setEditingProductId(null);
-      setFormData({ name: "", category: "Groceries", sellingPrice: 0, buyingPrice: 0, stock: 0, reorderLevel: 5, supplierId: "" });
+      setFormData({
+        name: "",
+        category: "Groceries",
+        sellingPrice: 0,
+        buyingPrice: 0,
+        stock: 0,
+        reorderLevel: 5,
+        supplierId: "",
+      });
     });
   };
 
@@ -95,20 +160,22 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#171d1a]">Inventory</h1>
-          <p className="text-[#6d7a73] font-medium mt-0.5 text-sm hidden sm:block">Manage your stock levels and product catalog.</p>
+          <p className="text-[#6d7a73] font-medium mt-0.5 text-sm hidden sm:block">
+            Manage your stock levels and product catalog.
+          </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* View Mode Toggle - desktop only */}
           <div className="hidden md:flex bg-white border border-[#e4eae4] p-1 rounded-xl shadow-sm">
-            <button 
+            <button
               onClick={() => setViewMode("grid")}
               className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "grid" ? "bg-[#f5fbf5] text-[#00694c] shadow-sm" : "text-[#bccac1] hover:text-[#6d7a73]"}`}
               title="Grid View"
             >
               <span className="material-symbols-outlined text-[20px]">grid_view</span>
             </button>
-            <button 
+            <button
               onClick={() => setViewMode("list")}
               className={`p-2 rounded-lg flex items-center justify-center transition-all ${viewMode === "list" ? "bg-[#f5fbf5] text-[#00694c] shadow-sm" : "text-[#bccac1] hover:text-[#6d7a73]"}`}
               title="List View"
@@ -117,13 +184,21 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
             </button>
           </div>
 
-          {userRole === "owner" && (
-            <motion.button 
+          {hasPermission(userRole, "inventory_edit") && (
+            <motion.button
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 setEditingProductId(null);
-                setFormData({ name: "", category: "Groceries", sellingPrice: 0, buyingPrice: 0, stock: 0, reorderLevel: 5, supplierId: "" });
+                setFormData({
+                  name: "",
+                  category: "Groceries",
+                  sellingPrice: 0,
+                  buyingPrice: 0,
+                  stock: 0,
+                  reorderLevel: 5,
+                  supplierId: "",
+                });
                 setIsAddModalOpen(true);
               }}
               className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#00694c] to-[#008560] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl font-black text-xs sm:text-sm shadow-xl shadow-[#00694c]/20 transition-all"
@@ -139,7 +214,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
       {/* AI Low Stock Alert (Proactive) */}
       <AnimatePresence>
         {lowStockCount > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0, y: -20 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
             exit={{ opacity: 0, height: 0, y: -20 }}
@@ -152,15 +227,19 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-[#9f1239]">Action Required</h3>
-                  <p className="text-[#be123c] text-xs font-medium">Akiba AI detected <strong className="font-black">{lowStockCount} items</strong> at or below critical reorder levels.</p>
+                  <p className="text-[#be123c] text-xs font-medium">
+                    Akiba AI detected <strong className="font-black">{lowStockCount} items</strong> at or below critical reorder levels.
+                  </p>
                 </div>
               </div>
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-[#9f1239] text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-[#881337] transition-colors shadow-lg w-full sm:w-auto text-center"
+                onClick={() => setIsPOModalOpen(true)}
+                className="bg-[#9f1239] text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-[#881337] transition-colors shadow-lg w-full sm:w-auto text-center flex items-center justify-center gap-2"
               >
-                Generate Restock List
+                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                Generate Restock Order
               </motion.button>
             </div>
           </motion.div>
@@ -172,16 +251,16 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
         {/* Search bar */}
         <div className="relative group">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#bccac1] group-focus-within:text-[#00694c] transition-colors text-[20px]">search</span>
-          <input 
-            type="text" 
-            placeholder="Search products..." 
+          <input
+            type="text"
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-11 pl-10 pr-10 bg-white border border-[#e4eae4] rounded-xl text-sm font-medium outline-none focus:border-[#00694c] focus:ring-4 focus:ring-[#00694c]/5 transition-all shadow-sm"
           />
           <AnimatePresence>
             {searchQuery && (
-              <motion.button 
+              <motion.button
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
@@ -201,8 +280,8 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`px-4 h-8 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border whitespace-nowrap shrink-0 ${
-                selectedCategory === cat 
-                  ? "bg-[#171d1a] text-white border-[#171d1a]" 
+                selectedCategory === cat
+                  ? "bg-[#171d1a] text-white border-[#171d1a]"
                   : "bg-white text-[#6d7a73] border-[#e4eae4] hover:border-[#bccac1]"
               }`}
             >
@@ -216,7 +295,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
       <div className="min-h-[400px]">
         <AnimatePresence mode="popLayout">
           {filteredProducts.length === 0 ? (
-            <motion.div 
+            <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -228,13 +307,13 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
               </div>
               <h3 className="text-xl font-black text-[#171d1a] mb-2">No Products Found</h3>
               <p className="text-[#6d7a73] text-sm max-w-md mb-8">
-                {searchQuery 
-                  ? `We couldn't find any products matching "${searchQuery}" in ${selectedCategory}.` 
+                {searchQuery
+                  ? `We couldn't find any products matching "${searchQuery}" in ${selectedCategory}.`
                   : "Your inventory is currently empty. Add your first product to start tracking stock."}
               </p>
-              
+
               {searchQuery ? (
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
@@ -242,8 +321,8 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 >
                   Clear Filters
                 </motion.button>
-              ) : userRole === "owner" ? (
-                <motion.button 
+              ) : hasPermission(userRole, "inventory_edit") ? (
+                <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setIsAddModalOpen(true)}
@@ -253,167 +332,195 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 </motion.button>
               ) : null}
             </motion.div>
-          ) : (
-            viewMode === "grid" ? (
-              /* Grid View — 1 col on mobile, 2 on md, 3 on xl */
-              <motion.div 
-                key="grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
-              >
-                <AnimatePresence>
-                  {filteredProducts.map((product) => (
-                    <motion.div 
-                      layout
-                      key={product.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                      className="bg-white p-3.5 sm:p-5 rounded-[20px] border border-[#e4eae4] hover:border-[#00a87a] hover:shadow-lg transition-all cursor-pointer group relative flex flex-col justify-between w-full gap-3"
-                    >
-                      {/* Top Row / Details Section */}
-                      <div className="flex justify-between items-start w-full gap-2">
-                        {/* Details */}
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="px-2 py-0.5 rounded-md text-[8px] sm:text-[10px] font-black uppercase tracking-wider bg-[#f5fbf5] text-[#00694c] border border-[#e4eae4] truncate shrink-0">
-                              {product.category}
-                            </span>
-                            {product.stock <= product.reorderLevel && (
-                              <span className="text-[8px] font-black bg-[#fff1f2] text-[#e11d48] border border-[#fecdd3] px-1.5 py-0.5 rounded-full uppercase shrink-0">Low Stock</span>
-                            )}
-                          </div>
-                          <h3 className="text-xs sm:text-base font-black text-[#171d1a] leading-tight group-hover:text-[#00694c] transition-colors line-clamp-2">{product.name}</h3>
-                          <p className="text-[10px] sm:text-[11px] font-bold text-[#6d7a73] sm:text-[#bccac1]">KES {product.price.toLocaleString()}</p>
+          ) : viewMode === "grid" ? (
+            /* Grid View */
+            <motion.div
+              key="grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+            >
+              <AnimatePresence>
+                {filteredProducts.map((product) => (
+                  <motion.div
+                    layout
+                    key={product.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                    className="bg-white p-3.5 sm:p-5 rounded-[20px] border border-[#e4eae4] hover:border-[#00a87a] hover:shadow-lg transition-all cursor-pointer group relative flex flex-col justify-between w-full gap-3"
+                  >
+                    {/* Top Row / Details Section */}
+                    <div className="flex justify-between items-start w-full gap-2">
+                      {/* Details */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded-md text-[8px] sm:text-[10px] font-black uppercase tracking-wider bg-[#f5fbf5] text-[#00694c] border border-[#e4eae4] truncate shrink-0">
+                            {product.category}
+                          </span>
+                          {product.stock <= product.reorderLevel && (
+                            <span className="text-[8px] font-black bg-[#fff1f2] text-[#e11d48] border border-[#fecdd3] px-1.5 py-0.5 rounded-full uppercase shrink-0">Low Stock</span>
+                          )}
                         </div>
+                        <h3 className="text-xs sm:text-base font-black text-[#171d1a] leading-tight group-hover:text-[#00694c] transition-colors line-clamp-2">
+                          {product.name}
+                        </h3>
+                        <p className="text-[10px] sm:text-[11px] font-bold text-[#6d7a73] sm:text-[#bccac1]">
+                          KES {product.price.toLocaleString()}
+                        </p>
+                        {/* Supplier Badge */}
+                        {product.supplierName && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span className="material-symbols-outlined text-[11px] text-[#bccac1]">local_shipping</span>
+                            <span className="text-[9px] font-bold text-[#6d7a73] truncate">{product.supplierName}</span>
+                          </div>
+                        )}
+                      </div>
 
-                        {/* Action buttons + stock (for desktop) */}
+                      {/* Action buttons */}
+                      {hasPermission(userRole, "inventory_edit") && (
                         <div className="flex sm:flex-col items-center sm:items-end justify-between shrink-0 gap-2">
-                          <button 
+                          <button
                             onClick={(e) => { e.stopPropagation(); openEditModal(product); }}
                             className="w-7 h-7 rounded-full flex items-center justify-center text-[#bccac1] hover:text-[#00a87a] hover:bg-[#f5fbf5] transition-colors shrink-0"
                           >
                             <span className="material-symbols-outlined text-[16px]">edit</span>
                           </button>
                         </div>
-                      </div>
+                      )}
+                    </div>
 
-                      {/* Progress Bar & Desktop Stock (desktop only) */}
-                      <div className="hidden sm:block space-y-2.5">
-                        <div className="flex justify-between items-end">
-                          <div>
-                            <div className="text-[8px] sm:text-[9px] font-black text-[#6d7a73] uppercase tracking-wider mb-0.5">Stock</div>
-                            <div className="flex items-baseline gap-1">
-                              <span className={`text-lg sm:text-xl font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
-                                {product.stock}
-                              </span>
-                              <span className="text-[9px] font-medium text-[#bccac1]">units</span>
-                            </div>
+                    {/* Progress Bar & Desktop Stock */}
+                    <div className="hidden sm:block space-y-2.5">
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <div className="text-[8px] sm:text-[9px] font-black text-[#6d7a73] uppercase tracking-wider mb-0.5">Stock</div>
+                          <div className="flex items-baseline gap-1">
+                            <span className={`text-lg sm:text-xl font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
+                              {product.stock}
+                            </span>
+                            <span className="text-[9px] font-medium text-[#bccac1]">units</span>
                           </div>
                         </div>
-                        <div className="h-1.5 w-full bg-[#f8faf9] rounded-full overflow-hidden">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min((product.stock / Math.max(product.reorderLevel * 2, 1)) * 100, 100)}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                            className={`h-full rounded-full ${product.stock <= product.reorderLevel ? "bg-[#e11d48]" : "bg-[#00a87a]"}`}
-                          />
-                        </div>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#f8faf9] rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min((product.stock / Math.max(product.reorderLevel * 2, 1)) * 100, 100)}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className={`h-full rounded-full ${product.stock <= product.reorderLevel ? "bg-[#e11d48]" : "bg-[#00a87a]"}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mobile Stock & Restock button row */}
+                    <div className="flex items-center justify-between gap-3 w-full sm:mt-1 border-t sm:border-t-0 border-[#f2f6f2] pt-2.5 sm:pt-0">
+                      {/* Mobile Stock Indicator */}
+                      <div className="sm:hidden flex items-center gap-1">
+                        <span className="text-[9px] font-black text-[#6d7a73] uppercase">Stock:</span>
+                        <span className={`text-xs font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
+                          {product.stock}
+                        </span>
+                        <span className="text-[9px] font-medium text-[#bccac1]">units</span>
                       </div>
 
-                      {/* Mobile Stock & Restock button row (flexible layout) */}
-                      <div className="flex items-center justify-between gap-3 w-full sm:mt-1 border-t sm:border-t-0 border-[#f2f6f2] pt-2.5 sm:pt-0">
-                        {/* Mobile Stock Indicator (hidden on desktop) */}
-                        <div className="sm:hidden flex items-center gap-1">
-                          <span className="text-[9px] font-black text-[#6d7a73] uppercase">Stock:</span>
-                          <span className={`text-xs font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
-                            {product.stock}
-                          </span>
-                          <span className="text-[9px] font-medium text-[#bccac1]">units</span>
-                        </div>
-
-                        {/* Restock Button — touch optimized target */}
-                        <button 
+                      {/* Restock Button */}
+                      {hasPermission(userRole, "inventory_edit") && (
+                        <button
                           onClick={(e) => { e.stopPropagation(); setRestockTarget(product); }}
                           className="flex-1 sm:w-full h-11 sm:h-10 bg-[#f5fbf5] hover:bg-[#00694c] hover:text-white text-[#00694c] border border-[#d1ebd7] hover:border-[#00694c] rounded-xl font-black text-[9px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
                         >
                           <span className="material-symbols-outlined text-[14px]">add_shopping_cart</span>
                           <span>Restock</span>
                         </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              /* List View */
-              <motion.div 
-                key="list"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm"
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[700px] md:min-w-0 text-left border-collapse">
-                    <thead>
-                      <tr className="bg-[#f8faf9] border-b border-[#e4eae4]">
-                        <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Product Name</th>
-                        <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Category</th>
-                        <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Price</th>
-                        <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Stock</th>
-                        <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Status</th>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            /* List View */
+            <motion.div
+              key="list"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm"
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[700px] md:min-w-0 text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#f8faf9] border-b border-[#e4eae4]">
+                      <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Product Name</th>
+                      <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Category</th>
+                      <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Supplier</th>
+                      <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Price</th>
+                      <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Stock</th>
+                      <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Status</th>
+                      {hasPermission(userRole, "inventory_edit") && (
                         <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73] text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence>
-                        {filteredProducts.map((product) => (
-                          <motion.tr 
-                            layout
-                            initial={{ opacity: 0, backgroundColor: "#ffffff" }}
-                            animate={{ opacity: 1, backgroundColor: "#ffffff" }}
-                            exit={{ opacity: 0, backgroundColor: "#f9fafb" }}
-                            whileHover={{ backgroundColor: "#f5fbf5" }}
-                            key={product.id} 
-                            className="border-b border-[#e4eae4] last:border-0 group transition-colors"
-                          >
-                            <td className="p-4">
-                              <div className="font-black text-[#171d1a] group-hover:text-[#00694c] transition-colors">{product.name}</div>
-                              <div className="text-[10px] font-bold text-[#bccac1] mt-0.5">Updated {formatDate(product.lastUpdated)}</div>
-                            </td>
-                            <td className="p-4">
-                              <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-[#f8faf9] text-[#6d7a73] border border-[#e4eae4]">
-                                {product.category}
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence>
+                      {filteredProducts.map((product) => (
+                        <motion.tr
+                          layout
+                          initial={{ opacity: 0, backgroundColor: "#ffffff" }}
+                          animate={{ opacity: 1, backgroundColor: "#ffffff" }}
+                          exit={{ opacity: 0, backgroundColor: "#f9fafb" }}
+                          whileHover={{ backgroundColor: "#f5fbf5" }}
+                          key={product.id}
+                          className="border-b border-[#e4eae4] last:border-0 group transition-colors"
+                        >
+                          <td className="p-4">
+                            <div className="font-black text-[#171d1a] group-hover:text-[#00694c] transition-colors">{product.name}</div>
+                            <div className="text-[10px] font-bold text-[#bccac1] mt-0.5">Updated {formatDate(product.lastUpdated)}</div>
+                          </td>
+                          <td className="p-4">
+                            <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-[#f8faf9] text-[#6d7a73] border border-[#e4eae4]">
+                              {product.category}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            {product.supplierName ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[13px] text-[#00694c]">local_shipping</span>
+                                <span className="text-xs font-bold text-[#171d1a]">{product.supplierName}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-[#bccac1] font-medium">—</span>
+                            )}
+                          </td>
+                          <td className="p-4 font-black text-[#171d1a]">
+                            <span className="text-[10px] text-[#bccac1] mr-1">KES</span>
+                            {product.price.toLocaleString()}
+                          </td>
+                          <td className="p-4">
+                            <span className={`font-black text-lg ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
+                              {product.stock}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            {product.stock <= product.reorderLevel ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-[#fff1f2] text-[#e11d48] border border-[#fecdd3]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#e11d48] animate-pulse"></span>
+                                Low Stock
                               </span>
-                            </td>
-                            <td className="p-4 font-black text-[#171d1a]">
-                              <span className="text-[10px] text-[#bccac1] mr-1">KES</span>
-                              {product.price.toLocaleString()}
-                            </td>
-                            <td className="p-4">
-                              <span className={`font-black text-lg ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
-                                {product.stock}
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+                                Healthy
                               </span>
-                            </td>
-                            <td className="p-4">
-                              {product.stock <= product.reorderLevel ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-[#fff1f2] text-[#e11d48] border border-[#fecdd3]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#e11d48] animate-pulse"></span>
-                                  Low Stock
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
-                                  Healthy
-                                </span>
-                              )}
-                            </td>
+                            )}
+                          </td>
+                          {hasPermission(userRole, "inventory_edit") && (
                             <td className="p-4 text-right">
                               <div className="flex justify-end gap-2">
-                                <motion.button 
+                                <motion.button
                                   onClick={() => openEditModal(product)}
                                   whileHover={{ scale: 1.1, backgroundColor: "#f8faf9" }}
                                   whileTap={{ scale: 0.9 }}
@@ -422,7 +529,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                                 >
                                   <span className="material-symbols-outlined text-[18px]">edit</span>
                                 </motion.button>
-                                <motion.button 
+                                <motion.button
                                   onClick={() => setRestockTarget(product)}
                                   whileHover={{ scale: 1.1, backgroundColor: "#fff1f2" }}
                                   whileTap={{ scale: 0.9 }}
@@ -433,37 +540,39 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                                 </motion.button>
                               </div>
                             </td>
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
-            )
+                          )}
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Add Product Modal */}
+      {/* Add / Edit Product Modal */}
       <AnimatePresence>
         {isAddModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setIsAddModalOpen(false)}
               className="absolute inset-0 bg-[#171d1a]/80 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-[32px] p-8 w-full max-w-md relative z-10 shadow-2xl"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-black text-[#171d1a]">{editingProductId ? "Edit Product" : "Add New Product"}</h2>
+                <h2 className="text-2xl font-black text-[#171d1a]">
+                  {editingProductId ? "Edit Product" : "Add New Product"}
+                </h2>
                 <button onClick={() => setIsAddModalOpen(false)} className="text-[#bccac1] hover:text-[#e11d48] transition-colors p-1">
                   <span className="material-symbols-outlined text-[24px]">close</span>
                 </button>
@@ -472,42 +581,74 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
               <div className="space-y-4">
                 <div>
                   <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Product Name</label>
-                  <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" placeholder="e.g. Unga wa Dola" />
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                    placeholder="e.g. Unga wa Dola"
+                  />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Category</label>
-                    <input type="text" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" placeholder="e.g. Groceries" />
+                    <input
+                      type="text"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                      placeholder="e.g. Groceries"
+                    />
                   </div>
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Initial Stock</label>
-                    <input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
+                    <input
+                      type="number"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Selling Price (KES)</label>
-                    <input type="number" value={formData.sellingPrice} onChange={(e) => setFormData({...formData, sellingPrice: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
+                    <input
+                      type="number"
+                      value={formData.sellingPrice}
+                      onChange={(e) => setFormData({ ...formData, sellingPrice: Number(e.target.value) })}
+                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                    />
                   </div>
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Buying Price / Cost (KES)</label>
-                    <input type="number" value={formData.buyingPrice} onChange={(e) => setFormData({...formData, buyingPrice: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
+                    <input
+                      type="number"
+                      value={formData.buyingPrice}
+                      onChange={(e) => setFormData({ ...formData, buyingPrice: Number(e.target.value) })}
+                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Reorder Level Alert Threshold</label>
-                    <input type="number" value={formData.reorderLevel} onChange={(e) => setFormData({...formData, reorderLevel: Number(e.target.value)})} className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all" />
+                    <input
+                      type="number"
+                      value={formData.reorderLevel}
+                      onChange={(e) => setFormData({ ...formData, reorderLevel: Number(e.target.value) })}
+                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                    />
                   </div>
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Supplier</label>
-                    <select 
-                      value={formData.supplierId} 
-                      onChange={(e) => setFormData({...formData, supplierId: e.target.value})} 
+                    <select
+                      value={formData.supplierId}
+                      onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
                       className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] outline-none text-[#171d1a] appearance-none"
                     >
                       <option value="">No Supplier</option>
-                      {suppliers.map(s => (
+                      {suppliers.map((s) => (
                         <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>
                       ))}
                     </select>
@@ -515,7 +656,7 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 </div>
               </div>
 
-              <motion.button 
+              <motion.button
                 onClick={handleAddProduct}
                 disabled={isPending || !formData.name}
                 whileHover={{ scale: 1.02 }}
@@ -533,14 +674,14 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
       <AnimatePresence>
         {restockTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => { setRestockTarget(null); setRestockAmount(0); }}
               className="absolute inset-0 bg-[#171d1a]/80 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -550,31 +691,39 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
                 <span className="material-symbols-outlined text-[32px]">add_shopping_cart</span>
               </div>
               <h2 className="text-2xl font-black text-[#171d1a] mb-1">Quick Restock</h2>
-              <p className="text-sm font-medium text-[#6d7a73] mb-6">How many units of <strong className="text-[#171d1a]">{restockTarget.name}</strong> are you adding?</p>
+              <p className="text-sm font-medium text-[#6d7a73] mb-6">
+                How many units of <strong className="text-[#171d1a]">{restockTarget.name}</strong> are you adding?
+              </p>
 
               <div className="flex items-center justify-center gap-4 mb-8">
-                <button 
+                <button
                   onClick={() => setRestockAmount(Math.max(0, restockAmount - 10))}
                   className="w-12 h-12 rounded-2xl bg-[#f8faf9] border border-[#e4eae4] text-[#171d1a] font-black text-xl hover:border-[#bccac1] transition-colors"
-                >-10</button>
-                <input 
-                  type="number" 
-                  value={restockAmount} 
-                  onChange={(e) => setRestockAmount(Number(e.target.value))} 
-                  className="w-24 h-16 text-center bg-white border-2 border-[#00694c] rounded-2xl text-3xl font-black text-[#171d1a] outline-none" 
+                >
+                  -10
+                </button>
+                <input
+                  type="number"
+                  value={restockAmount}
+                  onChange={(e) => setRestockAmount(Number(e.target.value))}
+                  className="w-24 h-16 text-center bg-white border-2 border-[#00694c] rounded-2xl text-3xl font-black text-[#171d1a] outline-none"
                 />
-                <button 
+                <button
                   onClick={() => setRestockAmount(restockAmount + 10)}
                   className="w-12 h-12 rounded-2xl bg-[#f8faf9] border border-[#e4eae4] text-[#171d1a] font-black text-xl hover:border-[#bccac1] transition-colors"
-                >+10</button>
+                >
+                  +10
+                </button>
               </div>
 
               <div className="flex gap-3">
-                <button 
+                <button
                   onClick={() => { setRestockTarget(null); setRestockAmount(0); }}
                   className="flex-1 h-14 bg-[#f8faf9] hover:bg-[#e4eae4] text-[#171d1a] rounded-2xl font-black text-sm transition-colors"
-                >Cancel</button>
-                <motion.button 
+                >
+                  Cancel
+                </button>
+                <motion.button
                   onClick={handleRestock}
                   disabled={isPending || restockAmount <= 0}
                   whileHover={{ scale: 1.02 }}
@@ -589,6 +738,13 @@ export function InventoryClient({ userRole, initialProducts, suppliers = [] }: {
         )}
       </AnimatePresence>
 
+      {/* Purchase Order Modal */}
+      <PurchaseOrderModal
+        isOpen={isPOModalOpen}
+        onClose={() => setIsPOModalOpen(false)}
+        lowStockProducts={poProducts}
+        storeName={storeName}
+      />
     </div>
   );
 }

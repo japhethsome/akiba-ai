@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import { hasPermission } from "@/lib/permissions";
 
 export async function addProduct(data: {
   name: string;
@@ -22,7 +23,7 @@ export async function addProduct(data: {
       include: { store: true },
     });
 
-    if (!user || user.role !== "owner") throw new Error("Unauthorized");
+    if (!user || !hasPermission(user.role, "inventory_edit")) throw new Error("Unauthorized");
 
     const newProduct = await prisma.product.create({
       data: {
@@ -68,7 +69,7 @@ export async function restockProduct(productId: string, additionalStock: number)
       include: { store: true },
     });
 
-    if (!user || user.role !== "owner") throw new Error("Unauthorized");
+    if (!user || !hasPermission(user.role, "inventory_edit")) throw new Error("Unauthorized");
 
     const product = await prisma.product.findUnique({
       where: { product_id: productId },
@@ -127,8 +128,8 @@ export async function updateProduct(
       include: { store: true },
     });
 
-    if (!user || user.role !== "owner") {
-      throw new Error("Unauthorized: Only owners can edit products");
+    if (!user || !hasPermission(user.role, "inventory_edit")) {
+      throw new Error("Unauthorized: You do not have permissions to edit products");
     }
 
     await prisma.product.update({

@@ -110,6 +110,9 @@ export async function processCheckout(
         });
         receiptTotal += totalPrice;
       }
+    }, {
+      maxWait: 10000,
+      timeout: 30000,
     });
 
     revalidatePath("/dashboard/inventory");
@@ -220,6 +223,9 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
           });
         }
       }
+    }, {
+      maxWait: 15000,
+      timeout: 60000,
     });
 
     revalidatePath("/dashboard/inventory");
@@ -232,4 +238,40 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
     return { error: error.message || "Failed to sync offline checkouts" };
   }
 }
+
+export async function notifyOwnerLowStock(items: { name: string; stock: number }[]) {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: session.userId },
+      include: { store: true },
+    });
+
+    if (!user) throw new Error("Unauthorized");
+
+    const messageContent = `Low stock report submitted by ${user.name} (${user.role}) for: ${items.map(i => `${i.name} (${i.stock} left)`).join(", ")}`;
+
+    await prisma.systemLog.create({
+      data: {
+        store_id: user.store_id,
+        type: "LOW_STOCK_ALERT",
+        content: JSON.stringify({
+          reportedBy: user.name,
+          role: user.role,
+          items,
+          message: messageContent,
+          timestamp: new Date().toISOString(),
+        }),
+      },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to notify owner:", error);
+    return { error: error.message || "Failed to notify owner" };
+  }
+}
+
 

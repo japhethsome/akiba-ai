@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { registerOwner, loginUser, registerAttendant } from "@/lib/actions/auth";
+import { registerOwner, loginUser, registerAttendant, loginUserWithGoogle } from "@/lib/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Language = "en" | "sw";
@@ -107,7 +107,118 @@ export default function AuthClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [nameVal, setNameVal] = useState("");
+  const [emailVal, setEmailVal] = useState("");
+  const [googleEmail, setGoogleEmail] = useState("");
+  const [googleInfoMsg, setGoogleInfoMsg] = useState<string | null>(null);
+
   const [password, setPassword] = useState("");
+
+  // Parse JWT token safely
+  function parseJwt(token: string) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const handleGoogleCallback = async (response: any) => {
+    const decoded = parseJwt(response.credential);
+    if (!decoded) {
+      setError("Failed to decode Google account details.");
+      return;
+    }
+
+    const { email, name } = decoded;
+
+    if (mode === "login") {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await loginUserWithGoogle(email);
+        if (res.error) {
+          setError(res.error);
+        } else if (res.success) {
+          router.push("/dashboard");
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to log in with Google.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setNameVal(name || "");
+      setEmailVal(email || "");
+      setGoogleEmail(email || "");
+      setGoogleInfoMsg("Google Account connected! Please enter your M-Pesa phone number and Store Name to complete registration.");
+      setError(null);
+
+      // Focus phone number input
+      setTimeout(() => {
+        const phoneInput = document.getElementsByName("phone")[0] as HTMLInputElement;
+        if (phoneInput) {
+          phoneInput.focus();
+        }
+      }, 200);
+    }
+  };
+
+  // Clear Google details if user toggles mode manually
+  useEffect(() => {
+    setGoogleEmail("");
+    setGoogleInfoMsg(null);
+    setNameVal("");
+    setEmailVal("");
+  }, [mode]);
+
+  // Load Google script and button
+  useEffect(() => {
+    const initGoogle = () => {
+      const g = (window as any).google;
+      if (!g) return;
+
+      g.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "1036071473667-27bblb266m502s5i9vsqbdf5iicq53f6.apps.googleusercontent.com",
+        callback: handleGoogleCallback,
+      });
+
+      const btnParent = document.getElementById("google-signin-btn");
+      if (btnParent) {
+        g.accounts.id.renderButton(btnParent, {
+          theme: "outline",
+          size: "large",
+          width: btnParent.clientWidth || 360,
+          text: "continue_with",
+          shape: "pill",
+        });
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      const g = (window as any).google;
+      if (!g) {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initGoogle;
+        document.body.appendChild(script);
+      } else {
+        const timeout = setTimeout(initGoogle, 100);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [mode, googleEmail]);
   const [passwordStrength, setPasswordStrength] = useState({
     length: false,
     number: false,
@@ -141,14 +252,15 @@ export default function AuthClient() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    if (googleEmail) {
+      formData.append("isGoogleRegister", "true");
+    }
     
     let result;
     if (mode === "register") {
       const name = formData.get("name") as string;
       const email = formData.get("email") as string;
       const phone = formData.get("phone") as string;
-      const passwordVal = formData.get("password") as string;
-      const confirmPassword = formData.get("confirmPassword") as string;
 
       if (!name || name.trim().length < 3) {
         setLoading(false);
@@ -173,23 +285,28 @@ export default function AuthClient() {
         return;
       }
 
-      // Password strength validation
-      const isPassStrong = passwordVal.length >= 8 &&
-                           /[0-9]/.test(passwordVal) &&
-                           /[^A-Za-z0-9]/.test(passwordVal) &&
-                           /[A-Z]/.test(passwordVal) &&
-                           /[a-z]/.test(passwordVal);
+      if (!googleEmail) {
+        const passwordVal = formData.get("password") as string;
+        const confirmPassword = formData.get("confirmPassword") as string;
 
-      if (!isPassStrong) {
-        setLoading(false);
-        setError("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, a number, and a special character.");
-        return;
-      }
+        // Password strength validation
+        const isPassStrong = passwordVal.length >= 8 &&
+                             /[0-9]/.test(passwordVal) &&
+                             /[^A-Za-z0-9]/.test(passwordVal) &&
+                             /[A-Z]/.test(passwordVal) &&
+                             /[a-z]/.test(passwordVal);
 
-      if (passwordVal !== confirmPassword) {
-        setLoading(false);
-        setError("Passwords do not match");
-        return;
+        if (!isPassStrong) {
+          setLoading(false);
+          setError("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, a number, and a special character.");
+          return;
+        }
+
+        if (passwordVal !== confirmPassword) {
+          setLoading(false);
+          setError("Passwords do not match");
+          return;
+        }
       }
 
       if (inviteToken) {
@@ -404,6 +521,13 @@ export default function AuthClient() {
                   {error}
                 </motion.div>
               )}
+              {googleInfoMsg && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  {googleInfoMsg}
+                </motion.div>
+              )}
               {mode === "register" && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                   <div className="group">
@@ -411,7 +535,12 @@ export default function AuthClient() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">person</span>
                       <input type="text" placeholder="Wanjiku Maina" name="name" required
-                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                        value={nameVal}
+                        onChange={(e) => setNameVal(e.target.value)}
+                        readOnly={!!googleEmail}
+                        className={`w-full h-14 pl-12 pr-4 border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm ${
+                          googleEmail ? "bg-[#e4eae4] cursor-not-allowed" : "bg-[#f5fbf5]"
+                        }`} />
                     </div>
                   </div>
                   <div className="group">
@@ -419,7 +548,12 @@ export default function AuthClient() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
                       <input type="email" placeholder="wanjiku@gmail.com" name="email" required
-                        className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                        value={emailVal}
+                        onChange={(e) => setEmailVal(e.target.value)}
+                        readOnly={!!googleEmail}
+                        className={`w-full h-14 pl-12 pr-4 border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm ${
+                          googleEmail ? "bg-[#e4eae4] cursor-not-allowed" : "bg-[#f5fbf5]"
+                        }`} />
                     </div>
                   </div>
                   <div className="group">
@@ -430,57 +564,61 @@ export default function AuthClient() {
                         className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                     </div>
                   </div>
-                  <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
-                      <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="password" required
-                        value={password}
-                        onChange={(e) => validatePassword(e.target.value)}
-                        className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
-                      </button>
-                    </div>
-                    {/* Password Strength Indicators */}
-                    {password.length > 0 && (
-                      <div className="mt-2.5 p-3.5 bg-[#f8faf9] border border-[#e4eae4] rounded-2xl space-y-1.5 text-[11px] font-bold text-[#6d7a73] transition-all">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-[#3d4943] mb-1">Password Requirements:</p>
-                        <div className="flex items-center gap-2">
-                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.length ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
-                            {passwordStrength.length ? "check_circle" : "cancel"}
-                          </span>
-                          <span className={passwordStrength.length ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least 8 characters</span>
+                  {!googleEmail && (
+                    <>
+                      <div className="group">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
+                          <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="password" required={!googleEmail}
+                            value={password}
+                            onChange={(e) => validatePassword(e.target.value)}
+                            className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
+                            <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                          </button>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.case ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
-                            {passwordStrength.case ? "check_circle" : "cancel"}
-                          </span>
-                          <span className={passwordStrength.case ? "text-[#171d1a]" : "text-[#6d7a73]"}>Uppercase & lowercase letters</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.number ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
-                            {passwordStrength.number ? "check_circle" : "cancel"}
-                          </span>
-                          <span className={passwordStrength.number ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one number</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`material-symbols-outlined text-[14px] ${passwordStrength.special ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
-                            {passwordStrength.special ? "check_circle" : "cancel"}
-                          </span>
-                          <span className={passwordStrength.special ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one special character</span>
+                        {/* Password Strength Indicators */}
+                        {password.length > 0 && (
+                          <div className="mt-2.5 p-3.5 bg-[#f8faf9] border border-[#e4eae4] rounded-2xl space-y-1.5 text-[11px] font-bold text-[#6d7a73] transition-all">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-[#3d4943] mb-1">Password Requirements:</p>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.length ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.length ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.length ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least 8 characters</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.case ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.case ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.case ? "text-[#171d1a]" : "text-[#6d7a73]"}>Uppercase & lowercase letters</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.number ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.number ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.number ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one number</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.special ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.special ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.special ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one special character</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="group">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Confirm Password</label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock_reset</span>
+                          <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="confirmPassword" required={!googleEmail}
+                            className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="group">
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Confirm Password</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock_reset</span>
-                      <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="confirmPassword" required
-                        className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
-                    </div>
-                  </div>
+                    </>
+                  )}
                   {!inviteToken && (
                     <div className="group">
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.storeName}</label>
@@ -533,15 +671,9 @@ export default function AuthClient() {
                 <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-[#6d7a73]">{t.form.or}</span></div>
               </div>
 
-              <button className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl border-2 border-[#bccac1] bg-white text-sm font-black text-[#171d1a] hover:bg-[#f5fbf5] hover:border-[#00694c] transition-all active:scale-[0.98]">
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="#EA4335" d="M5.26 9.77A7.2 7.2 0 0 1 12 4.8c1.73 0 3.3.62 4.53 1.64L19.9 3.07A11.96 11.96 0 0 0 12 0C7.5 0 3.6 2.66 1.6 6.57l3.66 3.2z"/>
-                  <path fill="#34A853" d="M16.04 18.01A7.17 7.17 0 0 1 12 19.2c-2.97 0-5.5-1.8-6.7-4.42L1.6 17.97A11.97 11.97 0 0 0 12 24c3.24 0 6.18-1.2 8.42-3.14l-4.38-2.85z"/>
-                  <path fill="#FBBC05" d="M19.89 20.86C22.43 18.56 24 15.47 24 12c0-.78-.1-1.55-.24-2.28H12v4.8h6.72a5.84 5.84 0 0 1-2.68 3.5l4.85 2.84z"/>
-                  <path fill="#4285F4" d="M5.3 14.78A7.15 7.15 0 0 1 4.8 12c0-.97.18-1.9.5-2.77L1.6 6.57A11.93 11.93 0 0 0 0 12c0 1.92.45 3.72 1.25 5.32l4.05-2.54z"/>
-                </svg>
-                {t.form.googleBtn}
-              </button>
+              <div className="w-full flex justify-center">
+                <div id="google-signin-btn" className="w-full flex justify-center"></div>
+              </div>
 
               <p className="text-center text-sm font-medium text-[#6d7a73]">
                 {mode === "login" ? t.form.newTo : t.form.alreadyHave}{" "}

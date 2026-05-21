@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { DashboardLayoutWrapper } from "@/components/ui/DashboardLayoutWrapper";
+import { hasPermission } from "@/lib/permissions";
 import prisma from "@/lib/prisma";
 import { PosClientUI } from "./PosClientUI";
 
@@ -13,7 +14,24 @@ export default async function PosPage() {
     include: { store: true },
   });
 
-  if (!user || !user.store.onboarded) redirect("/dashboard/onboarding");
+  if (!user) redirect("/auth");
+  if (user.role === "owner" && !user.store.onboarded) redirect("/dashboard/onboarding");
+
+  if (!hasPermission(user.role, "pos")) {
+    if (hasPermission(user.role, "inventory_view")) {
+      redirect("/dashboard/inventory");
+    } else if (hasPermission(user.role, "transactions")) {
+      redirect("/transactions");
+    } else if (hasPermission(user.role, "suppliers")) {
+      redirect("/dashboard/suppliers");
+    } else if (hasPermission(user.role, "staff")) {
+      redirect("/dashboard/staff");
+    } else if (hasPermission(user.role, "reports")) {
+      redirect("/reports");
+    } else {
+      redirect("/auth");
+    }
+  }
 
   const products = await prisma.product.findMany({
     where: { store_id: user.store_id },
@@ -26,6 +44,7 @@ export default async function PosPage() {
     category: p.category,
     price: Number(p.selling_price),
     stock: p.stock_quantity,
+    reorderLevel: p.reorder_level,
   }));
 
   return (

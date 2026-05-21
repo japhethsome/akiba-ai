@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useTransition, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { processCheckout, processBulkCheckouts } from "@/lib/actions/pos";
+import { processCheckout, processBulkCheckouts, notifyOwnerLowStock } from "@/lib/actions/pos";
 
 interface Product {
   id: string;
@@ -10,6 +10,7 @@ interface Product {
   category: string;
   price: number;
   stock: number;
+  reorderLevel?: number;
 }
 
 interface CartItem extends Product {
@@ -57,6 +58,8 @@ export function PosClientUI({
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<"register" | "dashboard" | "cash-drawer" | "ai-insights">("register");
   const [showMobileCart, setShowMobileCart] = useState(false);
+  const [notifyingOwner, setNotifyingOwner] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
 
   // Network & Sync States
   const [isOnline, setIsOnline] = useState(true);
@@ -124,6 +127,32 @@ export function PosClientUI({
   // AI Insights States
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
   const [insightsGenerated, setInsightsGenerated] = useState(false);
+  const [insights, setInsights] = useState<{
+    type: string;
+    title: string;
+    description: string;
+    badge: string;
+    discussPrompt: string;
+  }[]>([]);
+
+  const generateInsights = async () => {
+    setIsGeneratingInsights(true);
+    try {
+      const res = await fetch("/api/ai/pos-insights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      if (data.insights) {
+        setInsights(data.insights);
+      }
+    } catch (e) {
+      console.error("Error fetching POS insights:", e);
+    } finally {
+      setIsGeneratingInsights(false);
+      setInsightsGenerated(true);
+    }
+  };
 
   // Keep live local products state updated when initialProducts changes
   useEffect(() => {
@@ -749,8 +778,24 @@ export function PosClientUI({
 
   // Derived low stock items
   const lowStockItems = useMemo(() => {
-    return products.filter(p => p.stock <= 5);
+    return products.filter(p => p.stock <= (p.reorderLevel ?? 5));
   }, [products]);
+
+  const handleNotifyOwner = () => {
+    if (lowStockItems.length === 0) return;
+    setNotifyingOwner(true);
+    startTransition(async () => {
+      const itemsToNotify = lowStockItems.map(p => ({ name: p.name, stock: p.stock }));
+      const result = await notifyOwnerLowStock(itemsToNotify);
+      setNotifyingOwner(false);
+      if (result.success) {
+        setNotifySuccess(true);
+        setTimeout(() => setNotifySuccess(false), 4000);
+      } else {
+        alert(result.error || "Failed to notify owner.");
+      }
+    });
+  };
 
   // Send Restock alerts simulation
   const triggerRestockSMS = (productName: string) => {
@@ -903,6 +948,52 @@ export function PosClientUI({
                     }`}
                   >
                     {scannedMessage}
+                  </motion.div>
+                )}
+
+                {/* Low Stock Alert Banner */}
+                {lowStockItems.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-4 bg-[#fff1f2] border border-[#fecdd3] p-4 rounded-[16px] flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm relative overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-gradient-to-br from-[#fb7185] to-[#e11d48] rounded-xl flex items-center justify-center text-white shadow-md shrink-0">
+                        <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-xs font-black text-[#9f1239] uppercase tracking-wider">Low Stock Alert</h4>
+                        <p className="text-[#be123c] text-[11px] font-medium leading-relaxed truncate md:whitespace-normal">
+                          The following items are low or out of stock:{" "}
+                          <span className="font-bold text-[#9f1239]">
+                            {lowStockItems.map(item => `${item.name} (${item.stock} left)`).join(", ")}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="shrink-0 flex items-center gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleNotifyOwner}
+                        disabled={notifyingOwner || notifySuccess}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm ${
+                          notifySuccess 
+                            ? "bg-emerald-600 text-white" 
+                            : "bg-[#e11d48] text-white hover:bg-[#be123c]"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {notifySuccess ? "check_circle" : "mail"}
+                        </span>
+                        <span>
+                          {notifyingOwner ? "Sending..." : notifySuccess ? "Owner Notified" : "Notify Owner"}
+                        </span>
+                      </motion.button>
+                    </div>
                   </motion.div>
                 )}
 
@@ -1641,13 +1732,7 @@ export function PosClientUI({
                     
                     {!insightsGenerated && (
                       <button 
-                        onClick={() => {
-                          setIsGeneratingInsights(true);
-                          setTimeout(() => {
-                            setIsGeneratingInsights(false);
-                            setInsightsGenerated(true);
-                          }, 2500);
-                        }}
+                        onClick={generateInsights}
                         className="bg-white hover:bg-purple-100 text-purple-900 h-10 px-5 rounded-xl text-xs font-black shadow-md cursor-pointer transition-all active:scale-95"
                       >
                         {isGeneratingInsights ? "Evaluating Register Ledger..." : "Generate AI Insights"}
@@ -1669,56 +1754,57 @@ export function PosClientUI({
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="grid grid-cols-1 md:grid-cols-3 gap-6"
                   >
-                    {/* Insight Card 1 */}
-                    <div className="bg-white border border-[#e4eae4] hover:border-purple-200 rounded-3xl p-5 shadow-sm transition-all hover:shadow-lg flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-purple-700">inventory_2</span>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-700">Bundle Hack</span>
-                        </div>
-                        <h4 className="font-black text-sm text-[#171d1a] leading-snug">Suggest "Tea & Bread" morning breakfast bundle</h4>
-                        <p className="text-xs text-[#6d7a73] leading-relaxed">
-                          Analysis shows customers buying Bread match with Tea Leaves in 74% of checkouts. Set a 5% bundle discount to boost average receipt values.
-                        </p>
-                      </div>
-                      <div className="bg-purple-50 text-purple-700 p-3 rounded-2xl text-[10px] font-bold leading-normal">
-                        Estimated Revenue Increase: <strong>+12% average basket</strong>
-                      </div>
-                    </div>
+                    {insights.map((insight, idx) => {
+                      let iconName = "inventory_2";
+                      let iconColor = "text-purple-700";
+                      let typeLabel = "Bundle Hack";
+                      let badgeBg = "bg-purple-50 text-purple-700";
 
-                    {/* Insight Card 2 */}
-                    <div className="bg-white border border-[#e4eae4] hover:border-purple-200 rounded-3xl p-5 shadow-sm transition-all hover:shadow-lg flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-amber-600">thermostat</span>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">Demand Peak</span>
-                        </div>
-                        <h4 className="font-black text-sm text-[#171d1a] leading-snug">Afternoon Heat wave Soft drinks velocity spike</h4>
-                        <p className="text-xs text-[#6d7a73] leading-relaxed">
-                          Warm sunny weather predictions for this week will likely trigger a 35% soda/juices demand surge. Maintain cooler stock levels above 20 units.
-                        </p>
-                      </div>
-                      <div className="bg-amber-50 text-amber-800 p-3 rounded-2xl text-[10px] font-bold leading-normal">
-                        Restocking Suggestion: <strong>Refill Soda coolers by 2:00 PM</strong>
-                      </div>
-                    </div>
+                      if (insight.type === "demand") {
+                        iconName = "thermostat";
+                        iconColor = "text-amber-600";
+                        typeLabel = "Demand Peak";
+                        badgeBg = "bg-amber-50 text-amber-800";
+                      } else if (insight.type === "slow_moving") {
+                        iconName = "trending_down";
+                        iconColor = "text-rose-600";
+                        typeLabel = "Slow Moving Shelf";
+                        badgeBg = "bg-rose-50 text-rose-700";
+                      }
 
-                    {/* Insight Card 3 */}
-                    <div className="bg-white border border-[#e4eae4] hover:border-purple-200 rounded-3xl p-5 shadow-sm transition-all hover:shadow-lg flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-rose-600">trending_down</span>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-rose-700">Slow Moving Shelf</span>
+                      return (
+                        <div key={idx} className="bg-white border border-[#e4eae4] hover:border-purple-200 rounded-3xl p-5 shadow-sm transition-all hover:shadow-lg flex flex-col justify-between space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined ${iconColor}`}>{iconName}</span>
+                              <span className={`text-[10px] font-black uppercase tracking-wider ${iconColor}`}>{typeLabel}</span>
+                            </div>
+                            <h4 className="font-black text-sm text-[#171d1a] leading-snug">{insight.title}</h4>
+                            <p className="text-xs text-[#6d7a73] leading-relaxed">
+                              {insight.description}
+                            </p>
+                          </div>
+                          <div className="space-y-3">
+                            <div className={`${badgeBg} p-3 rounded-2xl text-[10px] font-bold leading-normal`}>
+                              {insight.badge}
+                            </div>
+                            <button
+                              onClick={() => {
+                                window.dispatchEvent(
+                                  new CustomEvent("open-ai-chat", {
+                                    detail: { prompt: insight.discussPrompt }
+                                  })
+                                );
+                              }}
+                              className="w-full flex items-center justify-center gap-1.5 bg-[#f5fbf5] hover:bg-[#eaf4ea] border border-[#bccac1] hover:border-[#00694c] text-[10px] text-[#00694c] font-black py-2 rounded-xl transition-all cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">forum</span>
+                              Discuss with Chatbot
+                            </button>
+                          </div>
                         </div>
-                        <h4 className="font-black text-sm text-[#171d1a] leading-snug">Detergent soap velocity is down by 40%</h4>
-                        <p className="text-xs text-[#6d7a73] leading-relaxed">
-                          Your detergent inventory log has registered 0 sales this week. Reposition stock closer to checkouts or set up an attractive weekend price discount.
-                        </p>
-                      </div>
-                      <div className="bg-rose-50 text-rose-700 p-3 rounded-2xl text-[10px] font-bold leading-normal">
-                        Action Plan: <strong>Set 5% off shelf price tag</strong>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </motion.div>
                 )}
 

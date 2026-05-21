@@ -68,6 +68,9 @@ export async function completeOnboarding(
           content: `Store "${user.store.name}" successfully onboarded as "${storeCategory}" with ${products.length} starter product(s).`,
         },
       });
+    }, {
+      maxWait: 10000,
+      timeout: 30000,
     });
 
     return { success: true };

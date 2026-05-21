@@ -21,9 +21,24 @@ export default async function DashboardPage() {
     redirect("/dashboard/onboarding");
   }
 
-  // Clerks get sent directly to POS
-  if (user.role === "clerk") {
-    redirect("/dashboard/pos");
+  // Non-owners (attendants/clerks) redirect to their first authorized page
+  if (user.role !== "owner") {
+    const { hasPermission } = require("@/lib/permissions");
+    if (hasPermission(user.role, "pos")) {
+      redirect("/dashboard/pos");
+    } else if (hasPermission(user.role, "inventory_view")) {
+      redirect("/dashboard/inventory");
+    } else if (hasPermission(user.role, "transactions")) {
+      redirect("/transactions");
+    } else if (hasPermission(user.role, "suppliers")) {
+      redirect("/dashboard/suppliers");
+    } else if (hasPermission(user.role, "staff")) {
+      redirect("/dashboard/staff");
+    } else if (hasPermission(user.role, "reports")) {
+      redirect("/reports");
+    } else {
+      redirect("/auth");
+    }
   }
 
   // Fetch real metrics

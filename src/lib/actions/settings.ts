@@ -37,6 +37,8 @@ export async function updateSettings(data: {
   userName: string;
   storeName: string;
   storeCategory: string;
+  userEmail: string;
+  userPhone: string;
 }) {
   const session = await getSession();
   if (!session) return { success: false, error: "Unauthorized" };
@@ -47,26 +49,71 @@ export async function updateSettings(data: {
     });
 
     if (!user) return { success: false, error: "User not found" };
-    if (user.role !== "owner") {
-      return { success: false, error: "Only store owners can update settings." };
-    }
 
-    await prisma.$transaction(async (tx) => {
-      // Update user name
-      await tx.user.update({
-        where: { user_id: user.user_id },
-        data: { name: data.userName },
-      });
-
-      // Update store details
-      await tx.store.update({
-        where: { id: user.store_id },
-        data: {
-          name: data.storeName,
-          category: data.storeCategory,
+    // Check for email and phone conflicts first
+    if (data.userEmail !== user.email) {
+      const existingEmail = await prisma.user.findFirst({
+        where: {
+          email: data.userEmail,
+          NOT: { user_id: user.user_id },
         },
       });
-    });
+      if (existingEmail) {
+        return { success: false, error: "Email is already in use by another user." };
+      }
+    }
+
+    if (data.userPhone !== user.phone) {
+      const existingPhone = await prisma.user.findFirst({
+        where: {
+          phone: data.userPhone,
+          NOT: { user_id: user.user_id },
+        },
+      });
+      if (existingPhone) {
+        return { success: false, error: "Phone number is already in use by another user." };
+      }
+    }
+
+    if (user.role !== "owner") {
+      // Clerks can only update email and phone number
+      await prisma.user.update({
+        where: { user_id: user.user_id },
+        data: {
+          email: data.userEmail,
+          phone: data.userPhone,
+        },
+      });
+    } else {
+      // Owners can update everything
+      if (!data.userName.trim() || !data.storeName.trim() || !data.storeCategory.trim()) {
+        return { success: false, error: "Owner name, store name, and store category are required." };
+      }
+
+      await prisma.$transaction(async (tx) => {
+        // Update user details
+        await tx.user.update({
+          where: { user_id: user.user_id },
+          data: {
+            name: data.userName,
+            email: data.userEmail,
+            phone: data.userPhone,
+          },
+        });
+
+        // Update store details
+        await tx.store.update({
+          where: { id: user.store_id },
+          data: {
+            name: data.storeName,
+            category: data.storeCategory,
+          },
+        });
+      }, {
+        maxWait: 10000,
+        timeout: 30000,
+      });
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/settings");

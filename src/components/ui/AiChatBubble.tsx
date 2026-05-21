@@ -7,6 +7,122 @@ interface Message {
   content: string;
 }
 
+function formatMessageContent(content: string, role: "user" | "assistant"): React.ReactNode {
+  if (role === "user") {
+    return <span className="whitespace-pre-wrap">{content}</span>;
+  }
+
+  // Preprocessor: Ensure hashtags have newlines before them if they are preceded by non-newlines
+  let processed = content.replace(/([^\n])\s*(#{1,6})\s+/g, "$1\n\n$2 ");
+
+  // Also replace multiple consecutive newlines with exactly two newlines to normalize paragraph spaces
+  processed = processed.replace(/\n{3,}/g, "\n\n");
+
+  const lines = processed.split("\n");
+  const renderedElements: React.ReactNode[] = [];
+
+  const parseBoldText = (text: string) => {
+    const parts = text.split(/\*\*([^*]+)\*\*/g);
+    return parts.map((part, index) => {
+      // Even indexes are normal text, odd indexes are bold text
+      if (index % 2 === 1) {
+        return (
+          <strong key={index} className="font-extrabold text-[#00694c]">
+            {part}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
+  let inList = false;
+  let listItems: React.ReactNode[] = [];
+  let listKey = 0;
+
+  const flushList = () => {
+    if (inList && listItems.length > 0) {
+      renderedElements.push(
+        <ul key={`list-${listKey++}`} className="list-disc pl-5 my-2 space-y-1 text-[#171d1a]">
+          {listItems}
+        </ul>
+      );
+      listItems = [];
+      inList = false;
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (!line) {
+      flushList();
+      renderedElements.push(<div key={`spacer-${i}`} className="h-2" />);
+      continue;
+    }
+
+    // Check for headings
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      flushList();
+      const level = headingMatch[1].length;
+      const text = headingMatch[2];
+      renderedElements.push(
+        <div
+          key={`heading-${i}`}
+          className={`font-black uppercase text-[#00694c] mt-3 mb-1.5 ${
+            level === 1 ? "text-sm" : level === 2 ? "text-[11px]" : "text-[10px]"
+          }`}
+        >
+          {parseBoldText(text)}
+        </div>
+      );
+      continue;
+    }
+
+    // Check for bullet list items
+    const bulletMatch = line.match(/^[-*•]\s+(.*)$/);
+    if (bulletMatch) {
+      inList = true;
+      const text = bulletMatch[1];
+      listItems.push(
+        <li key={`li-${i}`} className="pl-1 text-[#171d1a] marker:text-[#00694c]">
+          {parseBoldText(text)}
+        </li>
+      );
+      continue;
+    }
+
+    // Check for numbered list items (e.g. "1. Item")
+    const numberedMatch = line.match(/^(\d+)\.\s+(.*)$/);
+    if (numberedMatch) {
+      flushList();
+      const num = numberedMatch[1];
+      const text = numberedMatch[2];
+      renderedElements.push(
+        <div key={`num-${i}`} className="flex items-start gap-2 my-1.5 pl-1">
+          <span className="font-extrabold text-[#00694c] shrink-0">{num}.</span>
+          <span className="text-[#171d1a]">{parseBoldText(text)}</span>
+        </div>
+      );
+      continue;
+    }
+
+    // Normal paragraph line
+    flushList();
+    renderedElements.push(
+      <p key={`p-${i}`} className="mb-2 text-[#171d1a] last:mb-0">
+        {parseBoldText(line)}
+      </p>
+    );
+  }
+
+  // Flush any remaining list items at the end
+  flushList();
+
+  return <div className="space-y-1">{renderedElements}</div>;
+}
+
 export function AiChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -21,13 +137,24 @@ export function AiChatBubble() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const sendMessageRef = useRef<((text?: string) => Promise<void>) | null>(null);
+
+  useEffect(() => {
+    sendMessageRef.current = handleSendMessage;
+  });
+
   useEffect(() => {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen, isTyping]);
 
   useEffect(() => {
-    const handleOpenChat = () => {
+    const handleOpenChat = (e: Event) => {
+      const customEvent = e as CustomEvent<{ prompt?: string }>;
       setIsOpen(true);
+      if (customEvent.detail?.prompt) {
+        // Trigger auto submit of this prompt immediately
+        sendMessageRef.current?.(customEvent.detail.prompt);
+      }
     };
     window.addEventListener("open-ai-chat", handleOpenChat);
     return () => {
@@ -35,11 +162,14 @@ export function AiChatBubble() {
     };
   }, []);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isTyping) return;
+  const handleSendMessage = async (textToSend?: string) => {
+    const promptText = textToSend !== undefined ? textToSend : inputValue;
+    if (!promptText.trim() || isTyping) return;
 
-    const userMessage = inputValue.trim();
-    setInputValue("");
+    const userMessage = promptText.trim();
+    if (textToSend === undefined) {
+      setInputValue("");
+    }
     setApiError("");
 
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
@@ -58,7 +188,6 @@ export function AiChatBubble() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Show the specific error from the server
         const errMsg = data?.error || `Server error (${response.status})`;
         throw new Error(errMsg);
       }
@@ -146,7 +275,7 @@ export function AiChatBubble() {
                       ? "bg-[#171d1a] text-white rounded-br-none"
                       : "bg-white text-[#171d1a] border border-[#e4eae4] rounded-bl-none"
                   }`}>
-                    {msg.content}
+                    {formatMessageContent(msg.content, msg.role)}
                   </div>
                 </div>
               ))}
@@ -199,7 +328,7 @@ export function AiChatBubble() {
                 className="flex-1 h-11 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-xs font-bold outline-none focus:border-[#00694c] focus:bg-white transition-all placeholder:text-[#bccac1]"
               />
               <button
-                onClick={handleSendMessage}
+                onClick={() => handleSendMessage()}
                 disabled={!inputValue.trim() || isTyping}
                 className="h-11 w-11 bg-[#171d1a] hover:bg-black disabled:opacity-40 text-white rounded-xl flex items-center justify-center transition-all shrink-0"
               >

@@ -16,8 +16,9 @@ export default async function ForecastsPage() {
 
   if (!user) redirect("/auth");
 
-  // Clerks get sent directly to POS
-  if (user.role === "clerk") {
+  // Protection check using permissions
+  const { hasPermission } = require("@/lib/permissions");
+  if (!hasPermission(user.role, "reports")) {
     redirect("/dashboard/pos");
   }
 

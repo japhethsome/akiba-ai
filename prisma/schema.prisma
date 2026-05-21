@@ -42,14 +42,19 @@ model User {
 }
 
 model Supplier {
-  supplier_id    String    @id @default(uuid())
-  name           String
-  contact        String
-  location       String?
-  store_id       String
-  lead_time_days Int       @default(0)
-  products       Product[]
-  store          Store     @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  supplier_id     String    @id @default(uuid())
+  name            String
+  company_name    String?
+  contact         String
+  whatsapp_number String?
+  email           String?
+  location        String?
+  lead_time_days  Int       @default(0)
+  payment_terms   String?
+  notes           String?
+  store_id        String
+  products        Product[]
+  store           Store     @relation(fields: [store_id], references: [id], onDelete: Cascade)
 }
 
 model Product {

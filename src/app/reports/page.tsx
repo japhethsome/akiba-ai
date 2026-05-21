@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { DashboardLayoutWrapper } from "@/components/ui/DashboardLayoutWrapper";
 import Link from "next/link";
 
+import { hasPermission } from "@/lib/permissions";
+
 export default async function ReportsPage() {
   const session = await getSession();
   if (!session) redirect("/auth");
-  if (session.role === "clerk") redirect("/dashboard/pos"); // RBAC protection
+  if (!hasPermission(session?.role, "reports")) redirect("/dashboard/pos"); // RBAC protection
 
   return (
     <DashboardLayoutWrapper>

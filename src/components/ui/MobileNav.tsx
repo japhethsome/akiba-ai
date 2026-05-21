@@ -3,18 +3,25 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const mobileItems = [
-  { icon: "home", label: "Home", href: "/dashboard", roles: ["owner"] },
-  { icon: "point_of_sale", label: "POS", href: "/dashboard/pos", roles: ["owner", "clerk", "attendant"] },
-  { icon: "inventory_2", label: "Stock", href: "/dashboard/inventory", roles: ["owner", "clerk", "attendant"] },
-  { icon: "receipt_long", label: "Sales", href: "/transactions", roles: ["owner", "clerk", "attendant"] },
-  { icon: "local_shipping", label: "Suppliers", href: "/dashboard/suppliers", roles: ["owner"] },
-  { icon: "group", label: "Staff", href: "/dashboard/staff", roles: ["owner"] },
+import { hasPermission, Permission } from "@/lib/permissions";
+
+const mobileItems: Array<{ icon: string; label: string; href: string; permission: Permission | null }> = [
+  { icon: "home", label: "Home", href: "/dashboard", permission: null },
+  { icon: "point_of_sale", label: "POS", href: "/dashboard/pos", permission: "pos" },
+  { icon: "inventory_2", label: "Stock", href: "/dashboard/inventory", permission: "inventory_view" },
+  { icon: "receipt_long", label: "Sales", href: "/transactions", permission: "transactions" },
+  { icon: "local_shipping", label: "Suppliers", href: "/dashboard/suppliers", permission: "suppliers" },
+  { icon: "group", label: "Staff", href: "/dashboard/staff", permission: "staff" },
 ];
 
 export function MobileNav({ userRole = "owner" }: { userRole?: string }) {
   const pathname = usePathname();
-  const visibleItems = mobileItems.filter(item => item.roles.includes(userRole));
+  const visibleItems = mobileItems.filter(item => {
+    if (item.permission === null) {
+      return userRole === "owner";
+    }
+    return hasPermission(userRole, item.permission);
+  });
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4eae4] z-[100] shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-[28px]"

@@ -135,6 +135,9 @@ export async function voidTransaction(transactionId: string) {
           voided_at: new Date(),
         },
       });
+    }, {
+      maxWait: 10000,
+      timeout: 30000,
     });
 
     revalidatePath("/transactions");
