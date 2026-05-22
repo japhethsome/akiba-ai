@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { cleanWhatsAppNumber } from "@/lib/phone";
 
 interface DemandPoint {
   period: string;
@@ -123,7 +124,7 @@ export function ForecastsClientUI({
   const triggerWhatsAppRequest = (alert: ReorderAlert) => {
     const message = `Habari ${alert.supplier_name}, this is ${storeName}. We would like to place an order for ${alert.name}. Recommended Restock Quantity: ${alert.suggested_qty} units. Please confirm lead time of ${alert.lead_time_days} days. Shukran.`;
     const encodedText = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${alert.supplier_contact.replace(/\D/g, "")}?text=${encodedText}`;
+    const whatsappUrl = `https://wa.me/${cleanWhatsAppNumber(alert.supplier_contact)}?text=${encodedText}`;
     window.open(whatsappUrl, "_blank");
   };
 

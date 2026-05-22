@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { addProduct, updateProduct, restockProduct } from "@/lib/actions/inventory";
 import { hasPermission } from "@/lib/permissions";
 import { PurchaseOrderModal, type POProduct } from "@/components/ui/PurchaseOrderModal";
+import Link from "next/link";
 
 interface Product {
   id: string;
@@ -46,6 +47,8 @@ export function InventoryClient({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
   const [isPOModalOpen, setIsPOModalOpen] = useState(false);
+  const [selectedSupplierIdForPO, setSelectedSupplierIdForPO] = useState<string | null>(null);
+  const [extraPOProduct, setExtraPOProduct] = useState<POProduct | null>(null);
 
   // Form States
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -104,6 +107,13 @@ export function InventoryClient({
     [lowStockProducts]
   );
 
+  const poProductsToSend = useMemo(() => {
+    if (!extraPOProduct) return poProducts;
+    const exists = poProducts.some((p) => p.id === extraPOProduct.id);
+    if (exists) return poProducts;
+    return [...poProducts, extraPOProduct];
+  }, [poProducts, extraPOProduct]);
+
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleDateString("en-KE", { day: "numeric", month: "short" });
@@ -131,6 +141,12 @@ export function InventoryClient({
     });
   };
 
+  const handleNumberChange = (field: keyof typeof formData, rawValue: string) => {
+    const digits = rawValue.replace(/[^0-9]/g, "");
+    const sanitized = digits.replace(/^0+([0-9])/, "$1");
+    setFormData((prev) => ({ ...prev, [field]: sanitized ? Number(sanitized) : 0 }));
+  };
+
   const openEditModal = (product: Product) => {
     setEditingProductId(product.id);
     setFormData({
@@ -143,6 +159,36 @@ export function InventoryClient({
       supplierId: product.supplierId || "",
     });
     setIsAddModalOpen(true);
+  };
+
+  const handleCreateSupplierOrder = () => {
+    if (!restockTarget) return;
+    setSelectedSupplierIdForPO(restockTarget.supplierId || null);
+    setExtraPOProduct({
+      id: restockTarget.id,
+      name: restockTarget.name,
+      category: restockTarget.category,
+      stock: restockTarget.stock,
+      reorderLevel: restockTarget.reorderLevel,
+      buyingPrice: restockTarget.buyingPrice,
+      supplierId: restockTarget.supplierId,
+      supplierName: restockTarget.supplierName,
+      supplierWhatsapp: restockTarget.supplierWhatsapp,
+      supplierEmail: restockTarget.supplierEmail,
+      supplierContact: restockTarget.supplierContact,
+      supplierLocation: restockTarget.supplierLocation,
+      supplierLeadTime: restockTarget.supplierLeadTime,
+      supplierPaymentTerms: restockTarget.supplierPaymentTerms,
+      supplierCompanyName: restockTarget.supplierCompanyName,
+    });
+    setRestockTarget(null);
+    setIsPOModalOpen(true);
+  };
+
+  const handleClosePOModal = () => {
+    setIsPOModalOpen(false);
+    setSelectedSupplierIdForPO(null);
+    setExtraPOProduct(null);
   };
 
   const handleRestock = () => {
@@ -166,6 +212,15 @@ export function InventoryClient({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Reorder Center Link */}
+          <Link
+            href="/dashboard/suppliers?tab=reorder"
+            className="flex items-center gap-1.5 bg-white hover:bg-[#f8faf9] border border-[#e4eae4] text-[#6d7a73] hover:text-[#171d1a] px-3.5 py-2.5 rounded-xl font-black text-xs transition-all shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[16px]">local_mall</span>
+            <span>Reorder Center</span>
+          </Link>
+
           {/* View Mode Toggle - desktop only */}
           <div className="hidden md:flex bg-white border border-[#e4eae4] p-1 rounded-xl shadow-sm">
             <button
@@ -232,15 +287,24 @@ export function InventoryClient({
                   </p>
                 </div>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setIsPOModalOpen(true)}
-                className="bg-[#9f1239] text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-[#881337] transition-colors shadow-lg w-full sm:w-auto text-center flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                Generate Restock Order
-              </motion.button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setIsPOModalOpen(true)}
+                  className="bg-[#9f1239] text-white px-5 py-2.5 rounded-xl font-black text-xs hover:bg-[#881337] transition-colors shadow-lg w-full sm:w-auto text-center flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                  Generate Restock Order
+                </motion.button>
+                <Link
+                  href="/dashboard/suppliers?tab=reorder"
+                  className="bg-white border border-[#fecdd3] text-[#9f1239] hover:bg-[#fff1f2] px-5 py-2.5 rounded-xl font-black text-xs transition-colors w-full sm:w-auto text-center flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[16px]">local_mall</span>
+                  Go to Reorder Center
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
@@ -601,11 +665,15 @@ export function InventoryClient({
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Initial Stock</label>
+                    <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">
+                      {editingProductId ? "Current Stock" : "Initial Stock"}
+                    </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.stock}
-                      onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                      onChange={(e) => handleNumberChange("stock", e.target.value)}
                       className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
                     />
                   </div>
@@ -614,18 +682,22 @@ export function InventoryClient({
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Selling Price (KES)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.sellingPrice}
-                      onChange={(e) => setFormData({ ...formData, sellingPrice: Number(e.target.value) })}
+                      onChange={(e) => handleNumberChange("sellingPrice", e.target.value)}
                       className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Buying Price / Cost (KES)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.buyingPrice}
-                      onChange={(e) => setFormData({ ...formData, buyingPrice: Number(e.target.value) })}
+                      onChange={(e) => handleNumberChange("buyingPrice", e.target.value)}
                       className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
                     />
                   </div>
@@ -634,24 +706,31 @@ export function InventoryClient({
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Reorder Level Alert Threshold</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.reorderLevel}
-                      onChange={(e) => setFormData({ ...formData, reorderLevel: Number(e.target.value) })}
+                      onChange={(e) => handleNumberChange("reorderLevel", e.target.value)}
                       className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Supplier</label>
-                    <select
-                      value={formData.supplierId}
-                      onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
-                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] outline-none text-[#171d1a] appearance-none"
-                    >
-                      <option value="">No Supplier</option>
-                      {suppliers.map((s) => (
-                        <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={formData.supplierId}
+                        onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
+                        className="w-full h-12 pl-4 pr-10 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] outline-none text-[#171d1a] appearance-none"
+                      >
+                        <option value="">No Supplier</option>
+                        {suppliers.map((s) => (
+                          <option key={s.supplier_id} value={s.supplier_id}>{s.name}</option>
+                        ))}
+                      </select>
+                      <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#bccac1] pointer-events-none text-[20px]">
+                        keyboard_arrow_down
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -670,81 +749,135 @@ export function InventoryClient({
         )}
       </AnimatePresence>
 
-      {/* Quick Restock Modal */}
-      <AnimatePresence>
-        {restockTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => { setRestockTarget(null); setRestockAmount(0); }}
-              className="absolute inset-0 bg-[#171d1a]/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[32px] p-8 w-full max-w-sm relative z-10 shadow-2xl text-center"
-            >
-              <div className="w-16 h-16 bg-[#f5fbf5] text-[#00694c] rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-outlined text-[32px]">add_shopping_cart</span>
-              </div>
-              <h2 className="text-2xl font-black text-[#171d1a] mb-1">Quick Restock</h2>
-              <p className="text-sm font-medium text-[#6d7a73] mb-6">
-                How many units of <strong className="text-[#171d1a]">{restockTarget.name}</strong> are you adding?
-              </p>
+       {/* Quick Restock Modal */}
+       <AnimatePresence>
+         {restockTarget && (
+           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               onClick={() => { setRestockTarget(null); setRestockAmount(0); }}
+               className="absolute inset-0 bg-[#171d1a]/80 backdrop-blur-sm"
+             />
+             <motion.div
+               initial={{ opacity: 0, scale: 0.95, y: 20 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+               className="bg-white rounded-[32px] p-8 w-full max-w-md relative z-10 shadow-2xl"
+             >
+               <div className="text-center mb-6">
+                 <div className="w-16 h-16 bg-[#f5fbf5] text-[#00694c] rounded-full flex items-center justify-center mx-auto mb-4">
+                   <span className="material-symbols-outlined text-[32px]">add_shopping_cart</span>
+                 </div>
+                 <h2 className="text-2xl font-black text-[#171d1a] mb-1">Restock Options</h2>
+                 <p className="text-xs font-semibold text-[#6d7a73]">
+                   Choose a restocking route for <strong className="text-[#171d1a]">{restockTarget.name}</strong>.
+                 </p>
+               </div>
 
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <button
-                  onClick={() => setRestockAmount(Math.max(0, restockAmount - 10))}
-                  className="w-12 h-12 rounded-2xl bg-[#f8faf9] border border-[#e4eae4] text-[#171d1a] font-black text-xl hover:border-[#bccac1] transition-colors"
-                >
-                  -10
-                </button>
-                <input
-                  type="number"
-                  value={restockAmount}
-                  onChange={(e) => setRestockAmount(Number(e.target.value))}
-                  className="w-24 h-16 text-center bg-white border-2 border-[#00694c] rounded-2xl text-3xl font-black text-[#171d1a] outline-none"
-                />
-                <button
-                  onClick={() => setRestockAmount(restockAmount + 10)}
-                  className="w-12 h-12 rounded-2xl bg-[#f8faf9] border border-[#e4eae4] text-[#171d1a] font-black text-xl hover:border-[#bccac1] transition-colors"
-                >
-                  +10
-                </button>
-              </div>
+               {/* Supplier Routing Card */}
+               {restockTarget.supplierId ? (
+                 <div className="bg-[#f5fbf5] border border-[#d1ebd7] rounded-2xl p-4 mb-6 text-left flex items-center justify-between gap-3 shadow-sm">
+                   <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 bg-[#e6eee6] rounded-xl flex items-center justify-center text-[#00694c] shrink-0">
+                       <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                     </div>
+                     <div>
+                       <div className="text-xs font-black text-[#171d1a] leading-snug">{restockTarget.supplierName}</div>
+                       <div className="text-[10px] font-bold text-[#6d7a73]">
+                         {restockTarget.supplierCompanyName || "Linked Supplier"}
+                       </div>
+                     </div>
+                   </div>
+                   <button
+                     onClick={handleCreateSupplierOrder}
+                     className="bg-[#00694c] hover:bg-[#00553e] text-white px-3.5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                   >
+                     <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                     Order PO
+                   </button>
+                 </div>
+               ) : (
+                 <div className="bg-[#fffbeb] border border-[#fde68a] rounded-2xl p-4 mb-6 text-left flex items-start gap-2.5 shadow-sm">
+                   <span className="material-symbols-outlined text-[#b27b16] text-[20px] shrink-0">warning</span>
+                   <div>
+                     <div className="text-xs font-black text-[#805200]">No Supplier Linked</div>
+                     <div className="text-[10px] font-semibold text-[#b27b16] mt-0.5">
+                       Assign a supplier to enable automated restock orders via WhatsApp, SMS, or Email.
+                     </div>
+                     <button
+                       onClick={() => {
+                         const target = restockTarget;
+                         setRestockTarget(null);
+                         openEditModal(target);
+                       }}
+                       className="text-[10px] font-black text-[#805200] hover:text-[#5c3a00] underline mt-1.5 inline-flex items-center gap-0.5"
+                     >
+                       Link Supplier Now →
+                     </button>
+                   </div>
+                 </div>
+               )}
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => { setRestockTarget(null); setRestockAmount(0); }}
-                  className="flex-1 h-14 bg-[#f8faf9] hover:bg-[#e4eae4] text-[#171d1a] rounded-2xl font-black text-sm transition-colors"
-                >
-                  Cancel
-                </button>
-                <motion.button
-                  onClick={handleRestock}
-                  disabled={isPending || restockAmount <= 0}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 h-14 bg-[#171d1a] disabled:opacity-50 text-white rounded-2xl font-black text-sm transition-colors flex items-center justify-center shadow-lg"
-                >
-                  {isPending ? <span className="material-symbols-outlined animate-spin">refresh</span> : "Confirm"}
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+               {/* Manual Adjustments Option */}
+               <div className="border-t border-[#f2f6f2] pt-5">
+                 <div className="text-[10px] font-black uppercase tracking-widest text-[#6d7a73] mb-3 text-left">
+                   Manual Stock Increment (Physical Arrival)
+                 </div>
+                 
+                 <div className="flex items-center justify-center gap-4 mb-6">
+                   <button
+                     onClick={() => setRestockAmount(Math.max(0, restockAmount - 10))}
+                     className="w-12 h-12 rounded-2xl bg-[#f8faf9] border border-[#e4eae4] text-[#171d1a] font-black text-xl hover:border-[#bccac1] transition-colors"
+                   >
+                     -10
+                   </button>
+                   <input
+                     type="number"
+                     value={restockAmount}
+                     onChange={(e) => setRestockAmount(Number(e.target.value))}
+                     className="w-24 h-14 text-center bg-white border-2 border-[#00694c] rounded-2xl text-2xl font-black text-[#171d1a] outline-none"
+                   />
+                   <button
+                     onClick={() => setRestockAmount(restockAmount + 10)}
+                     className="w-12 h-12 rounded-2xl bg-[#f8faf9] border border-[#e4eae4] text-[#171d1a] font-black text-xl hover:border-[#bccac1] transition-colors"
+                   >
+                     +10
+                   </button>
+                 </div>
 
-      {/* Purchase Order Modal */}
-      <PurchaseOrderModal
-        isOpen={isPOModalOpen}
-        onClose={() => setIsPOModalOpen(false)}
-        lowStockProducts={poProducts}
-        storeName={storeName}
-      />
-    </div>
+                 <div className="flex gap-3">
+                   <button
+                     onClick={() => { setRestockTarget(null); setRestockAmount(0); }}
+                     className="flex-1 h-14 bg-[#f8faf9] hover:bg-[#e4eae4] text-[#171d1a] rounded-2xl font-black text-sm transition-colors"
+                   >
+                     Cancel
+                   </button>
+                   <motion.button
+                     onClick={handleRestock}
+                     disabled={isPending || restockAmount <= 0}
+                     whileHover={{ scale: 1.02 }}
+                     whileTap={{ scale: 0.98 }}
+                     className="flex-1 h-14 bg-[#171d1a] disabled:opacity-50 text-white rounded-2xl font-black text-sm transition-colors flex items-center justify-center shadow-lg"
+                   >
+                     {isPending ? <span className="material-symbols-outlined animate-spin">refresh</span> : "Confirm Count"}
+                   </motion.button>
+                 </div>
+               </div>
+             </motion.div>
+           </div>
+         )}
+       </AnimatePresence>
+ 
+       {/* Purchase Order Modal */}
+       <PurchaseOrderModal
+         isOpen={isPOModalOpen}
+         onClose={handleClosePOModal}
+         lowStockProducts={poProductsToSend}
+         storeName={storeName}
+         initialSupplierId={selectedSupplierIdForPO}
+       />
+     </div>
   );
 }

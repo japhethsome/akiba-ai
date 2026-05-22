@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useTransition, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { processCheckout, processBulkCheckouts, notifyOwnerLowStock } from "@/lib/actions/pos";
+import { cleanWhatsAppNumber } from "@/lib/phone";
 
 interface Product {
   id: string;
@@ -761,7 +762,7 @@ export function PosClientUI({
     message += `Thank you for shopping with us! Powered by Akiba AI.`;
 
     const encoded = encodeURIComponent(message);
-    const phoneClean = digitalPhone.replace(/\+/g, "");
+    const phoneClean = cleanWhatsAppNumber(digitalPhone);
     return `https://wa.me/${phoneClean}?text=${encoded}`;
   };
 

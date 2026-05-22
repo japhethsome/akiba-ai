@@ -1,10 +1,12 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  savedAt?: string;
+  streaming?: boolean;
 }
 
 function formatMessageContent(content: string, role: "user" | "assistant"): React.ReactNode {
@@ -24,7 +26,6 @@ function formatMessageContent(content: string, role: "user" | "assistant"): Reac
   const parseBoldText = (text: string) => {
     const parts = text.split(/\*\*([^*]+)\*\*/g);
     return parts.map((part, index) => {
-      // Even indexes are normal text, odd indexes are bold text
       if (index % 2 === 1) {
         return (
           <strong key={index} className="font-extrabold text-[#00694c]">
@@ -40,6 +41,10 @@ function formatMessageContent(content: string, role: "user" | "assistant"): Reac
   let listItems: React.ReactNode[] = [];
   let listKey = 0;
 
+  let inTable = false;
+  let tableRows: string[][] = [];
+  let tableKey = 0;
+
   const flushList = () => {
     if (inList && listItems.length > 0) {
       renderedElements.push(
@@ -52,13 +57,65 @@ function formatMessageContent(content: string, role: "user" | "assistant"): Reac
     }
   };
 
+  const flushTable = () => {
+    if (inTable && tableRows.length > 0) {
+      const headers = tableRows[0];
+      const dataRows = tableRows.slice(1);
+      renderedElements.push(
+        <div key={`table-${tableKey++}`} className="overflow-x-auto my-3 border border-[#e4eae4] rounded-xl shadow-sm">
+          <table className="min-w-full divide-y divide-[#e4eae4] text-xs text-left bg-white">
+            <thead className="bg-[#f4fbf7]">
+              <tr>
+                {headers.map((h, idx) => (
+                  <th key={idx} className="px-3 py-2 text-[10px] sm:text-[11px] font-bold text-[#00694c] uppercase tracking-wider">
+                    {parseBoldText(h)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e4eae4] text-[#171d1a]">
+              {dataRows.map((row, rowIdx) => (
+                <tr key={rowIdx} className="hover:bg-[#f5fbf5]/50 transition-colors">
+                  {row.map((cell, cellIdx) => (
+                    <td key={cellIdx} className="px-3 py-2 font-medium">
+                      {parseBoldText(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      tableRows = [];
+      inTable = false;
+    }
+  };
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
     if (!line) {
       flushList();
+      flushTable();
       renderedElements.push(<div key={`spacer-${i}`} className="h-2" />);
       continue;
+    }
+
+    // Check for tables
+    if (line.startsWith("|") && line.endsWith("|")) {
+      flushList();
+      const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+      const isDivider = cells.every((c) => /^:?-+:?$/.test(c));
+      if (isDivider) {
+        inTable = true;
+        continue;
+      }
+      tableRows.push(cells);
+      inTable = true;
+      continue;
+    } else {
+      flushTable();
     }
 
     // Check for headings
@@ -93,7 +150,7 @@ function formatMessageContent(content: string, role: "user" | "assistant"): Reac
       continue;
     }
 
-    // Check for numbered list items (e.g. "1. Item")
+    // Check for numbered list items
     const numberedMatch = line.match(/^(\d+)\.\s+(.*)$/);
     if (numberedMatch) {
       flushList();
@@ -117,25 +174,37 @@ function formatMessageContent(content: string, role: "user" | "assistant"): Reac
     );
   }
 
-  // Flush any remaining list items at the end
   flushList();
-
+  flushTable();
   return <div className="space-y-1">{renderedElements}</div>;
+}
+
+function formatTimestamp(isoString?: string): string {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  return date.toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" });
 }
 
 export function AiChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Mambo! I am Akiba AI, your business intelligence assistant. Ask me anything about your inventory, pricing, or restocks!" }
+    {
+      role: "assistant",
+      content: "Mambo! I am Akiba AI, your business intelligence assistant. I have live access to your store's inventory, suppliers, and sales data. Ask me anything!",
+    },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   const sendMessageRef = useRef<((text?: string) => Promise<void>) | null>(null);
 
@@ -143,16 +212,35 @@ export function AiChatBubble() {
     sendMessageRef.current = handleSendMessage;
   });
 
+  // Load conversation history on mount
+  useEffect(() => {
+    if (historyLoaded) return;
+    setHistoryLoaded(true);
+    fetch("/api/ai/chat")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.messages && data.messages.length > 0) {
+          setMessages([
+            {
+              role: "assistant",
+              content: "Mambo! I am Akiba AI. Here is our recent conversation history — feel free to continue where we left off!",
+            },
+            ...data.messages,
+          ]);
+        }
+      })
+      .catch(() => {/* silently fail — default greeting already set */});
+  }, [historyLoaded]);
+
   useEffect(() => {
     if (isOpen) scrollToBottom();
-  }, [messages, isOpen, isTyping]);
+  }, [messages, isOpen, isTyping, scrollToBottom]);
 
   useEffect(() => {
     const handleOpenChat = (e: Event) => {
       const customEvent = e as CustomEvent<{ prompt?: string }>;
       setIsOpen(true);
       if (customEvent.detail?.prompt) {
-        // Trigger auto submit of this prompt immediately
         sendMessageRef.current?.(customEvent.detail.prompt);
       }
     };
@@ -161,6 +249,33 @@ export function AiChatBubble() {
       window.removeEventListener("open-ai-chat", handleOpenChat);
     };
   }, []);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [isOpen]);
+
+  const handleClearChat = async () => {
+    if (!confirm("Clear all conversation history? This cannot be undone.")) return;
+    setIsClearing(true);
+    try {
+      await fetch("/api/ai/chat", { method: "DELETE" });
+      setMessages([
+        {
+          role: "assistant",
+          content: "Chat cleared! I am Akiba AI, your business intelligence assistant. How can I help you today?",
+        },
+      ]);
+      setApiError("");
+      setRateLimitRemaining(null);
+    } catch {
+      /* silently fail */
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const promptText = textToSend !== undefined ? textToSend : inputValue;
@@ -175,6 +290,10 @@ export function AiChatBubble() {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsTyping(true);
+
+    // Add placeholder streaming assistant message
+    const streamPlaceholderIdx = newMessages.length;
+    setMessages((prev) => [...prev, { role: "assistant", content: "", streaming: true }]);
 
     try {
       const response = await fetch("/api/ai/chat", {
@@ -192,23 +311,63 @@ export function AiChatBubble() {
         throw new Error(errMsg);
       }
 
+      if (data.rateLimitRemaining !== undefined) {
+        setRateLimitRemaining(data.rateLimitRemaining);
+      }
+
       const aiReply = data?.choices?.[0]?.message?.content;
       if (!aiReply) throw new Error("The AI returned an empty response. Please try again.");
 
-      setMessages((prev) => [...prev, { role: "assistant", content: aiReply }]);
+      // Simulate streaming: reveal text progressively
+      const receivedAt = new Date().toISOString();
+      const words = aiReply.split(" ");
+      let displayed = "";
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[streamPlaceholderIdx] = { role: "assistant", content: "", streaming: true, savedAt: receivedAt };
+        return updated;
+      });
+
+      for (let i = 0; i < words.length; i++) {
+        displayed += (i === 0 ? "" : " ") + words[i];
+        const partial = displayed;
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[streamPlaceholderIdx] = {
+            role: "assistant",
+            content: partial,
+            streaming: i < words.length - 1,
+            savedAt: receivedAt,
+          };
+          return updated;
+        });
+        // Stagger word reveal (faster for long messages)
+        if (words.length > 60) {
+          await new Promise((r) => setTimeout(r, 8));
+        } else {
+          await new Promise((r) => setTimeout(r, 18));
+        }
+      }
     } catch (err: any) {
       console.error("AI Chat Error:", err);
       setApiError(err.message || "Something went wrong.");
+      // Remove streaming placeholder on error
+      setMessages((prev) => prev.filter((_, idx) => idx !== streamPlaceholderIdx));
     } finally {
       setIsTyping(false);
     }
   };
 
   const quickPrompts = [
-    { icon: "analytics", label: "Stock summary", prompt: "Give me a brief summary of my stock levels and which items are running low." },
-    { icon: "sell", label: "Pricing tips", prompt: "What are some effective pricing strategies for a Kenyan retail store?" },
-    { icon: "inventory", label: "Restock advice", prompt: "Based on my low-stock items, what should I prioritize restocking first?" },
+    { icon: "analytics", label: "Stock summary", prompt: "Give me a brief summary of my current stock levels and which items are running critically low." },
+    { icon: "sell", label: "Pricing tips", prompt: "Based on my current buying prices, what selling prices would give me a healthy 30–40% margin?" },
+    { icon: "inventory", label: "Restock priority", prompt: "Which items should I restock first today and from which supplier? Include their contact." },
+    { icon: "trending_up", label: "Today's sales", prompt: "How are my sales performing today? What is today's revenue and what sold the most?" },
+    { icon: "chat", label: "Draft PO message", prompt: "Draft a professional WhatsApp reorder message to my supplier for the items that are low in stock." },
   ];
+
+  const showQuickPrompts = messages.length === 1 || messages.length === 2;
 
   return (
     <>
@@ -246,7 +405,7 @@ export function AiChatBubble() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 80, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed bottom-[152px] right-4 md:bottom-28 md:right-8 z-[150] w-[calc(100vw-32px)] sm:w-[390px] h-[460px] md:h-[520px] bg-white border border-[#e4eae4] rounded-[28px] overflow-hidden shadow-2xl flex flex-col"
+            className="fixed bottom-[152px] right-4 md:bottom-28 md:right-8 z-[150] w-[calc(100vw-32px)] sm:w-[400px] h-[500px] md:h-[560px] bg-white border border-[#e4eae4] rounded-[28px] overflow-hidden shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="p-4 bg-gradient-to-br from-[#171d1a] to-[#252f2a] text-white flex items-center gap-3 shrink-0">
@@ -257,43 +416,68 @@ export function AiChatBubble() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-black text-sm text-white flex items-center gap-2">
                   Akiba AI
-                  <span className="bg-[#00a87a]/20 border border-[#00a87a]/40 text-[#00a87a] text-[9px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded">Smart AI</span>
+                  <span className="bg-[#00a87a]/20 border border-[#00a87a]/40 text-[#00a87a] text-[9px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded">Live Data</span>
                 </h3>
-                <p className="text-[10px] text-[#bccac1] font-bold">Your inventory intelligence assistant</p>
+                <p className="text-[10px] text-[#bccac1] font-bold">
+                  {rateLimitRemaining !== null ? `${rateLimitRemaining} messages left this hour` : "Business intelligence assistant"}
+                </p>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-[#bccac1] hover:text-white transition-colors p-1 shrink-0">
-                <span className="material-symbols-outlined text-[20px]">expand_more</span>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleClearChat}
+                  disabled={isClearing}
+                  className="p-1.5 text-[#bccac1] hover:text-rose-400 transition-colors rounded-lg hover:bg-white/10"
+                  title="Clear chat history"
+                >
+                  <span className="material-symbols-outlined text-[16px]">{isClearing ? "hourglass_empty" : "delete_sweep"}</span>
+                </button>
+                <button onClick={() => setIsOpen(false)} className="text-[#bccac1] hover:text-white transition-colors p-1 shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">expand_more</span>
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f8faf9]" style={{ scrollbarWidth: "none" }}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8faf9]" style={{ scrollbarWidth: "none" }}>
               {messages.map((msg, index) => (
                 <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[85%] rounded-[18px] p-3.5 text-xs leading-relaxed font-semibold shadow-sm ${
-                    msg.role === "user"
-                      ? "bg-[#171d1a] text-white rounded-br-none"
-                      : "bg-white text-[#171d1a] border border-[#e4eae4] rounded-bl-none"
-                  }`}>
-                    {formatMessageContent(msg.content, msg.role)}
+                  <div className="flex flex-col gap-1 max-w-[88%]">
+                    <div
+                      className={`rounded-[18px] p-3.5 text-xs leading-relaxed font-semibold shadow-sm ${
+                        msg.role === "user"
+                          ? "bg-[#171d1a] text-white rounded-br-none"
+                          : "bg-white text-[#171d1a] border border-[#e4eae4] rounded-bl-none"
+                      }`}
+                    >
+                      {msg.content
+                        ? formatMessageContent(msg.content, msg.role)
+                        : msg.streaming
+                        ? <span className="inline-block w-1 h-3.5 bg-[#00694c] animate-pulse rounded-sm" />
+                        : null}
+                    </div>
+                    {msg.role === "assistant" && msg.savedAt && !msg.streaming && (
+                      <span className="text-[9px] text-[#bccac1] font-bold pl-1">{formatTimestamp(msg.savedAt)}</span>
+                    )}
                   </div>
                 </div>
               ))}
 
-              {isTyping && (
+              {isTyping && !messages.some((m) => m.streaming) && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-[#e4eae4] rounded-[18px] rounded-bl-none p-3.5 flex items-center gap-1 shadow-sm">
+                  <div className="bg-white border border-[#e4eae4] rounded-[18px] rounded-bl-none px-4 py-3 flex items-center gap-2 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00694c] animate-bounce" style={{ animationDelay: "0ms" }}></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00694c] animate-bounce" style={{ animationDelay: "150ms" }}></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00694c] animate-bounce" style={{ animationDelay: "300ms" }}></span>
+                    <span className="text-[10px] font-bold text-[#6d7a73] ml-1">Akiba AI is thinking...</span>
                   </div>
                 </div>
               )}
 
               {apiError && (
                 <div className="flex justify-center">
-                  <div className="bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-bold rounded-xl px-3 py-2 max-w-[90%] text-center">
-                    <span className="material-symbols-outlined text-[14px] text-rose-400">warning</span> {apiError}
+                  <div className="bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-bold rounded-xl px-3 py-2 max-w-[90%] text-center flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[14px] text-rose-400">warning</span>
+                    {apiError}
                   </div>
                 </div>
               )}
@@ -301,14 +485,14 @@ export function AiChatBubble() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Prompts — show only at start */}
-            {messages.length === 1 && (
-              <div className="px-4 py-2.5 bg-[#f8faf9] border-t border-[#e4eae4] flex gap-2 overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
+            {/* Quick Prompts */}
+            {showQuickPrompts && (
+              <div className="px-3 py-2.5 bg-[#f8faf9] border-t border-[#e4eae4] flex gap-2 overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
                 {quickPrompts.map((q) => (
                   <button
                     key={q.label}
-                    onClick={() => setInputValue(q.prompt)}
-                    className="bg-white border border-[#e4eae4] hover:border-[#00694c] text-[10px] text-[#6d7a73] font-black px-3 py-2 rounded-xl shrink-0 transition-colors shadow-sm whitespace-nowrap flex items-center gap-1"
+                    onClick={() => handleSendMessage(q.prompt)}
+                    className="bg-white border border-[#e4eae4] hover:border-[#00694c] hover:bg-[#f0fdf4] text-[10px] text-[#6d7a73] font-black px-3 py-2 rounded-xl shrink-0 transition-colors shadow-sm whitespace-nowrap flex items-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-[13px] text-[#00694c]">{q.icon}</span>
                     {q.label}
@@ -320,6 +504,7 @@ export function AiChatBubble() {
             {/* Input */}
             <div className="p-3 bg-white border-t border-[#e4eae4] flex gap-2 shrink-0">
               <input
+                ref={inputRef}
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}

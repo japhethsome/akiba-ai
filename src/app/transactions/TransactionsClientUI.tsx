@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { voidTransaction } from "@/lib/actions/transactions";
+import { cleanWhatsAppNumber } from "@/lib/phone";
 
 interface Transaction {
   transaction_id: string;
@@ -124,7 +125,7 @@ export function TransactionsClientUI({
 
   const triggerWhatsAppRequest = (alert: ReorderAlert) => {
     const message = `Habari ${alert.supplier_name}. We would like to place an order for ${alert.name}. Recommended Restock Quantity: ${alert.suggested_qty} units. Please confirm lead time of ${alert.lead_time_days} days. Shukran.`;
-    const whatsappUrl = `https://wa.me/${alert.supplier_contact.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${cleanWhatsAppNumber(alert.supplier_contact)}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 

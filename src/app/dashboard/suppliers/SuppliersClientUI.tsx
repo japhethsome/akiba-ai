@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { addSupplier, updateSupplier, deleteSupplier } from "@/lib/actions/suppliers";
 import { PurchaseOrderModal, type POProduct } from "@/components/ui/PurchaseOrderModal";
+import { cleanWhatsAppNumber } from "@/lib/phone";
 
 interface SupplierProduct {
   product_id: string;
@@ -62,8 +63,20 @@ export function SuppliersClientUI({
   const [globalPOOpen, setGlobalPOOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<"suppliers" | "reorder">("suppliers");
+  const [orderedSuppliers, setOrderedSuppliers] = useState<Set<string>>(new Set());
 
   const isOwner = userRole === "owner";
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "reorder") {
+        setActiveTab("reorder");
+      }
+    }
+  }, []);
 
   const openAddModal = () => {
     setEditingSupplierId(null);
@@ -166,6 +179,28 @@ export function SuppliersClientUI({
     </div>
   );
 
+  // ─── Mark as Ordered ──────────────────────────────────────────────────────
+  const handleMarkOrdered = async (supplierId: string, supplierName: string) => {
+    try {
+      await fetch("/api/ai/po-save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          poNumber: `MANUAL-${Date.now()}`,
+          supplierName,
+          supplierContact: "",
+          grandTotal: 0,
+          itemCount: 0,
+          itemsSummary: "Manually marked as ordered",
+          notes: "Owner marked this supplier's restock as ordered via Reorder Center",
+        }),
+      });
+      setOrderedSuppliers((prev) => new Set([...prev, supplierId]));
+    } catch {
+      /* silently fail */
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 lg:p-10 space-y-6 md:space-y-8 max-w-7xl mx-auto pb-24 md:pb-10">
 
@@ -218,6 +253,42 @@ export function SuppliersClientUI({
         ))}
       </div>
 
+      {/* Tabs and Content Section */}
+      <div className="flex flex-col gap-4">
+        {/* Tab Switcher */}
+        <div className="flex bg-[#f0f4f0] p-1.5 rounded-2xl border border-[#e4eae4] w-full sm:w-auto self-start">
+        <button
+          onClick={() => setActiveTab("suppliers")}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${
+            activeTab === "suppliers"
+              ? "bg-white text-[#171d1a] shadow-md"
+              : "text-[#6d7a73] hover:text-[#171d1a]"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+          Suppliers
+          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === "suppliers" ? "bg-[#f0fdf4] text-[#00694c]" : "bg-[#e4eae4] text-[#6d7a73]"}`}>
+            {initialSuppliers.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab("reorder")}
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${
+            activeTab === "reorder"
+              ? "bg-white text-[#171d1a] shadow-md"
+              : "text-[#6d7a73] hover:text-[#171d1a]"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">local_mall</span>
+          Reorder Center
+          {totalLowStock > 0 && (
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full animate-pulse ${activeTab === "reorder" ? "bg-[#fff1f2] text-[#e11d48]" : "bg-[#fecdd3] text-[#e11d48]"}`}>
+              {totalLowStock}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Error message */}
       {errorMsg && (
         <div className="bg-[#fff1f2] border border-[#fecdd3] text-[#e11d48] text-sm font-bold rounded-2xl px-5 py-3 flex items-center gap-2">
@@ -226,8 +297,188 @@ export function SuppliersClientUI({
         </div>
       )}
 
-      {/* Supplier Cards */}
+      {/* ── REORDER CENTER TAB ─────────────────────────────────────────────── */}
+      {activeTab === "reorder" && (
+        <div className="space-y-5">
+          {totalLowStock === 0 ? (
+            <div className="bg-white border border-dashed border-[#bccac1] rounded-[28px] py-20 text-center">
+              <span className="material-symbols-outlined text-6xl text-[#00694c] block mb-4">check_circle</span>
+              <h3 className="text-xl font-bold text-[#171d1a] mb-1">All stock levels are healthy!</h3>
+              <p className="text-[#6d7a73] text-sm">No items need restocking at this time. Keep it up!</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary Banner */}
+              <div className="bg-gradient-to-r from-[#fff1f2] to-[#fffbeb] border border-[#fecdd3] rounded-[24px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#e11d48]/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[24px] text-[#e11d48] animate-pulse">warning</span>
+                  </div>
+                  <div>
+                    <div className="font-black text-[#171d1a] text-base">{totalLowStock} item{totalLowStock > 1 ? "s" : ""} need restocking</div>
+                    <div className="text-[11px] text-[#6d7a73] font-bold">
+                      Across {initialSuppliers.filter(s => s.products.some(p => p.stock_quantity <= p.reorder_level)).length} supplier{initialSuppliers.filter(s => s.products.some(p => p.stock_quantity <= p.reorder_level)).length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setGlobalPOOpen(true)}
+                  className="flex items-center gap-2 bg-[#e11d48] hover:bg-[#be123c] text-white px-5 py-3 rounded-2xl font-black text-sm shadow-lg shadow-[#e11d48]/20 transition-all shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                  Generate All POs
+                </motion.button>
+              </div>
+
+              {/* Per-Supplier Restock Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {initialSuppliers
+                  .filter(s => s.products.some(p => p.stock_quantity <= p.reorder_level))
+                  .map((supplier) => {
+                    const lowItems = supplier.products.filter(p => p.stock_quantity <= p.reorder_level);
+                    const criticalItems = lowItems.filter(p => p.stock_quantity === 0);
+                    const estimatedCost = lowItems.reduce((sum, p) => {
+                      const qty = Math.max(p.reorder_level * 2 - p.stock_quantity, p.reorder_level);
+                      return sum + qty * Number(p.buying_price);
+                    }, 0);
+                    const hasCritical = criticalItems.length > 0;
+                    const isOrdered = orderedSuppliers.has(supplier.supplier_id);
+                    const supplierPOProducts = buildPOProducts(supplier);
+
+                    return (
+                      <motion.div
+                        key={supplier.supplier_id}
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`bg-white rounded-[24px] border overflow-hidden shadow-sm transition-all ${
+                          isOrdered ? "border-[#bbf7d0] opacity-60" : hasCritical ? "border-[#fecdd3]" : "border-[#fde68a]"
+                        }`}
+                      >
+                        {/* Card Header */}
+                        <div className={`p-4 border-b flex items-center justify-between ${
+                          isOrdered ? "bg-[#f0fdf4] border-[#bbf7d0]" : hasCritical ? "bg-[#fff1f2] border-[#fecdd3]" : "bg-[#fffbeb] border-[#fde68a]"
+                        }`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg text-white ${
+                              isOrdered ? "bg-[#00694c]" : hasCritical ? "bg-[#e11d48]" : "bg-[#d97706]"
+                            }`}>
+                              {isOrdered ? <span className="material-symbols-outlined text-[18px]">check</span> : supplier.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-black text-[#171d1a] text-sm">{supplier.name}</div>
+                              {supplier.company_name && <div className="text-[10px] font-bold text-[#6d7a73]">{supplier.company_name}</div>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {hasCritical && (
+                              <span className="text-[9px] font-black text-[#e11d48] bg-[#fff1f2] border border-[#fecdd3] px-2 py-0.5 rounded-full uppercase">
+                                {criticalItems.length} Critical
+                              </span>
+                            )}
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
+                              isOrdered ? "text-[#00694c] bg-[#f0fdf4] border border-[#bbf7d0]" : "text-[#d97706] bg-[#fffbeb] border border-[#fde68a]"
+                            }`}>
+                              {isOrdered ? "Ordered" : `${lowItems.length} items`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Items List */}
+                        <div className="p-4 space-y-2.5">
+                          {lowItems.slice(0, 4).map(item => {
+                            const isCritical = item.stock_quantity === 0;
+                            const restockQty = Math.max(item.reorder_level * 2 - item.stock_quantity, item.reorder_level);
+                            return (
+                              <div key={item.product_id} className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${isCritical ? "bg-[#e11d48]" : "bg-[#d97706]"}`} />
+                                  <div className="text-xs font-bold text-[#171d1a] truncate">{item.name}</div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0 text-right">
+                                  <span className={`text-[9px] font-black ${isCritical ? "text-[#e11d48]" : "text-[#d97706]"}`}>
+                                    {item.stock_quantity}/{item.reorder_level}
+                                  </span>
+                                  <span className="text-[9px] font-bold text-[#bccac1]">→</span>
+                                  <span className="text-[9px] font-black text-[#00694c] bg-[#f0fdf4] px-1.5 py-0.5 rounded">+{restockQty}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {lowItems.length > 4 && (
+                            <div className="text-[10px] font-bold text-[#6d7a73] text-center">+ {lowItems.length - 4} more items</div>
+                          )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-4 pb-4 border-t border-[#e4eae4] pt-3 flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#6d7a73] font-bold">Estimated Order Cost</span>
+                            <span className="font-black text-[#171d1a]">KES {estimatedCost.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[#6d7a73] font-bold">Lead Time</span>
+                            <span className="font-bold text-[#171d1a]">{supplier.lead_time_days} days</span>
+                          </div>
+                          {(supplier.whatsapp_number || supplier.contact) && (
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-[#6d7a73] font-bold">WhatsApp</span>
+                              <span className="font-bold text-[#25d366]">{supplier.whatsapp_number || supplier.contact}</span>
+                            </div>
+                          )}
+
+                          <div className="flex gap-2 mt-1">
+                            {!isOrdered ? (
+                              <>
+                                {(supplier.whatsapp_number || supplier.contact) ? (
+                                  <button
+                                    onClick={() => setPoTarget(supplier)}
+                                    className="flex-1 h-10 flex items-center justify-center gap-1.5 bg-[#25d366] hover:bg-[#1ebe5d] text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shadow-md shadow-[#25d366]/20"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">chat</span>
+                                    Send WhatsApp PO
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => setPoTarget(supplier)}
+                                    className="flex-1 h-10 flex items-center justify-center gap-1.5 bg-[#f8faf9] hover:bg-[#e4eae4] border border-[#e4eae4] text-[#6d7a73] rounded-xl font-black text-[10px] uppercase tracking-wider transition-all"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                                    View PO
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleMarkOrdered(supplier.supplier_id, supplier.name)}
+                                  className="h-10 px-3 flex items-center justify-center gap-1 bg-[#f0fdf4] hover:bg-[#dcfce7] border border-[#bbf7d0] text-[#00694c] rounded-xl font-black text-[10px] uppercase tracking-wider transition-all"
+                                  title="Mark as Ordered"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                  Ordered
+                                </button>
+                              </>
+                            ) : (
+                              <div className="flex-1 h-10 flex items-center justify-center gap-2 bg-[#f0fdf4] border border-[#bbf7d0] text-[#00694c] rounded-xl font-black text-[10px] uppercase tracking-wider">
+                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                Order Placed — Awaiting Delivery
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── SUPPLIERS TAB ──────────────────────────────────────────────────── */}
+      {activeTab === "suppliers" && (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
         <AnimatePresence>
           {initialSuppliers.length === 0 ? (
             <div className="col-span-full bg-white border border-dashed border-[#bccac1] rounded-[28px] py-20 text-center">
@@ -298,7 +549,7 @@ export function SuppliersClientUI({
                       </div>
                       {supplier.whatsapp_number && (
                         <a
-                          href={`https://wa.me/${supplier.whatsapp_number.replace(/\D/g, "")}`}
+                          href={`https://wa.me/${cleanWhatsAppNumber(supplier.whatsapp_number)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 text-xs font-bold text-[#25d366] hover:underline"
@@ -362,7 +613,7 @@ export function SuppliersClientUI({
                     )}
                     {supplier.whatsapp_number && (
                       <a
-                        href={`https://wa.me/${supplier.whatsapp_number.replace(/\D/g, "")}`}
+                        href={`https://wa.me/${cleanWhatsAppNumber(supplier.whatsapp_number)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-9 h-9 flex items-center justify-center bg-[#25d366]/10 hover:bg-[#25d366]/20 text-[#25d366] rounded-xl transition-all"
@@ -420,8 +671,11 @@ export function SuppliersClientUI({
           )}
         </AnimatePresence>
       </div>
+      )}
+      </div>
 
       {/* Add / Edit Supplier Modal */}
+
       <AnimatePresence>
         {isFormOpen && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -576,6 +830,7 @@ export function SuppliersClientUI({
           onClose={() => setPoTarget(null)}
           lowStockProducts={buildPOProducts(poTarget)}
           storeName={storeName}
+          initialSupplierId={poTarget.supplier_id}
         />
       )}
 
