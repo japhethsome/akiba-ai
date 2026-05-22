@@ -7,14 +7,25 @@ import { cleanWhatsAppNumber } from "@/lib/phone";
 
 interface Transaction {
   transaction_id: string;
+  receipt_id: string | null;
   product_name: string;
   product_id: string;
   clerk_name: string;
   quantity: number;
   total_price: number;
   total_profit: number;
+  vat_amount: number;
+  vat_rate: number;
+  customer_pin: string | null;
   transaction_type: string;
   created_at: string;
+  storeName: string;
+  storeAddress: string | null;
+  kraPin: string | null;
+  etimsSerial: string | null;
+  storePhone: string | null;
+  storeEmail: string | null;
+  taxComplianceEnabled: boolean;
 }
 
 interface DemandPoint {
@@ -108,6 +119,332 @@ export function TransactionsClientUI({
     } else {
       setActionError(result.error || "Failed to void transaction");
     }
+  };
+
+  // Find other items sharing the same receipt code
+  const receiptItems = selectedTx 
+    ? transactions.filter(t => t.receipt_id === selectedTx.receipt_id && t.receipt_id !== null)
+    : [];
+
+  const items = receiptItems.length > 0 ? receiptItems : (selectedTx ? [selectedTx] : []);
+
+  const receiptTotal = items.reduce((sum, item) => sum + item.total_price, 0);
+  const receiptProfit = items.reduce((sum, item) => sum + item.total_profit, 0);
+  
+  let totalExempt = 0;
+  let totalVat = 0;
+  let totalTaxable = 0;
+  
+  items.forEach((item) => {
+    const rate = Number(item.vat_rate || 0);
+    const itemTotal = Number(item.total_price);
+    if (rate === 0) {
+      totalExempt += itemTotal;
+    } else {
+      totalTaxable += itemTotal - Number(item.vat_amount || 0);
+      totalVat += Number(item.vat_amount || 0);
+    }
+  });
+  
+  const subtotal = totalExempt + totalTaxable;
+
+  const printInvoice = () => {
+    if (!selectedTx) return;
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Tax Invoice - ${selectedTx.receipt_id || selectedTx.transaction_id}</title>
+          <style>
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #1a202c;
+              margin: 0;
+              padding: 40px;
+              font-size: 14px;
+              line-height: 1.5;
+            }
+            .invoice-container {
+              max-width: 800px;
+              margin: 0 auto;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              padding: 30px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid #1a365d;
+              padding-bottom: 20px;
+              margin-bottom: 25px;
+            }
+            .store-details h1 {
+              margin: 0 0 5px 0;
+              color: #1a365d;
+              font-size: 24px;
+              font-weight: 800;
+            }
+            .store-details p {
+              margin: 2px 0;
+              color: #4a5568;
+              font-size: 13px;
+            }
+            .invoice-title {
+              text-align: right;
+            }
+            .invoice-title h2 {
+              margin: 0 0 5px 0;
+              color: #1a365d;
+              font-size: 20px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .invoice-title p {
+              margin: 2px 0;
+              color: #4a5568;
+              font-size: 13px;
+            }
+            .details-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 30px;
+              background: #f7fafc;
+              padding: 15px;
+              border-radius: 6px;
+              border: 1px solid #edf2f7;
+            }
+            .details-block h4 {
+              margin: 0 0 8px 0;
+              color: #2d3748;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .details-block p {
+              margin: 4px 0;
+              color: #4a5568;
+              font-size: 13px;
+            }
+            .details-block strong {
+              color: #1a202c;
+            }
+            .items-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            .items-table th {
+              background-color: #1a365d;
+              color: #ffffff;
+              text-align: left;
+              padding: 10px 12px;
+              font-size: 12px;
+              text-transform: uppercase;
+              font-weight: 700;
+            }
+            .items-table td {
+              padding: 12px;
+              border-bottom: 1px solid #e2e8f0;
+              font-size: 13px;
+            }
+            .items-table tr:nth-child(even) td {
+              background-color: #f8fafc;
+            }
+            .summary-wrapper {
+              display: flex;
+              justify-content: flex-end;
+            }
+            .summary-table {
+              width: 320px;
+              border-collapse: collapse;
+            }
+            .summary-table td {
+              padding: 6px 12px;
+              font-size: 13px;
+              color: #4a5568;
+            }
+            .summary-table tr.total-row td {
+              border-top: 2px solid #1a365d;
+              border-bottom: 2px solid #1a365d;
+              font-size: 16px;
+              font-weight: 800;
+              color: #1a365d;
+              padding: 10px 12px;
+            }
+            .footer {
+              margin-top: 40px;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+              text-align: center;
+              font-size: 11px;
+              color: #718096;
+            }
+            .etims-badge {
+              display: inline-block;
+              background-color: #ebf8ff;
+              color: #2b6cb0;
+              border: 1px solid #bee3f8;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-weight: 700;
+              font-size: 10px;
+              margin-top: 5px;
+            }
+            @media print {
+              body {
+                padding: 0;
+              }
+              .invoice-container {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-container">
+            <div class="header">
+              <div class="store-details">
+                <h1>${selectedTx.storeName}</h1>
+                ${selectedTx.storeAddress ? `<p>${selectedTx.storeAddress}</p>` : ""}
+                ${selectedTx.storePhone ? `<p>Phone: ${selectedTx.storePhone}</p>` : ""}
+                ${selectedTx.storeEmail ? `<p>Email: ${selectedTx.storeEmail}</p>` : ""}
+                ${selectedTx.kraPin ? `<p><strong>KRA PIN:</strong> ${selectedTx.kraPin}</p>` : ""}
+              </div>
+              <div class="invoice-title">
+                <h2>TAX INVOICE</h2>
+                <p><strong>Invoice No:</strong> ${selectedTx.receipt_id || selectedTx.transaction_id}</p>
+                <p><strong>Date:</strong> ${new Date(selectedTx.created_at).toLocaleString()}</p>
+                ${selectedTx.etimsSerial ? `<div class="etims-badge">eTIMS Compliant: ${selectedTx.etimsSerial}</div>` : ""}
+              </div>
+            </div>
+
+            <div class="details-grid">
+              <div class="details-block">
+                <h4>Billed To (Buyer)</h4>
+                <p>Cash Customer</p>
+                ${selectedTx.customer_pin ? `<p><strong>Buyer PIN:</strong> ${selectedTx.customer_pin}</p>` : ""}
+              </div>
+              <div class="details-block">
+                <h4>Invoice Details</h4>
+                <p><strong>Served By:</strong> ${selectedTx.clerk_name}</p>
+                <p><strong>Payment Mode:</strong> ${selectedTx.transaction_type.replace("SALE_", "")}</p>
+                <p><strong>Status:</strong> Paid</p>
+              </div>
+            </div>
+
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="text-align: right;">Qty</th>
+                  <th style="text-align: right;">Unit Price (KES)</th>
+                  <th style="text-align: center;">VAT %</th>
+                  <th style="text-align: right;">VAT Amount (KES)</th>
+                  <th style="text-align: right;">Total (KES)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map((item: any) => `
+                  <tr>
+                    <td>${item.product_name}</td>
+                    <td style="text-align: right;">${item.quantity}</td>
+                    <td style="text-align: right;">${(item.total_price / item.quantity).toLocaleString()}</td>
+                    <td style="text-align: center;">${item.vat_rate}%</td>
+                    <td style="text-align: right;">${item.vat_amount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                    <td style="text-align: right;">${item.total_price.toLocaleString()}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+
+            <div class="summary-wrapper">
+              <table class="summary-table">
+                <tr>
+                  <td>Subtotal (Excl. VAT):</td>
+                  <td style="text-align: right;">KES ${(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                  <td>VAT Total (16%):</td>
+                  <td style="text-align: right;">KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                  <td>Exempt Sales (0%):</td>
+                  <td style="text-align: right;">KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr class="total-row">
+                  <td>Total Paid:</td>
+                  <td style="text-align: right;">KES ${receiptTotal.toLocaleString()}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>Generated by Akiba AI System. Under KRA / eTIMS Compliance Regulations.</p>
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const generateWhatsAppLink = () => {
+    if (!selectedTx) return "";
+    
+    let message = `*============================*\n`;
+    message += `*🏪 ${selectedTx.storeName.toUpperCase()}*\n`;
+    if (selectedTx.storeAddress) message += `📍 ${selectedTx.storeAddress}\n`;
+    if (selectedTx.storePhone) message += `📞 Phone: ${selectedTx.storePhone}\n`;
+    if (selectedTx.kraPin) message += `🧾 KRA PIN: ${selectedTx.kraPin}\n`;
+    message += `*============================*\n`;
+    message += `*🧾 DIGITAL TAX INVOICE*\n`;
+    message += `*Invoice No:* ${selectedTx.receipt_id || selectedTx.transaction_id}\n`;
+    message += `*Date:* ${new Date(selectedTx.created_at).toLocaleDateString()} ${new Date(selectedTx.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}\n`;
+    message += `*Served By:* ${selectedTx.clerk_name}\n`;
+    message += `------------------------------\n`;
+
+    items.forEach((item: any) => {
+      message += `• ${item.quantity}x ${item.product_name}\n`;
+      message += `  @ KES ${(item.total_price / item.quantity).toLocaleString()} [VAT ${item.vat_rate}%]\n`;
+    });
+
+    message += `------------------------------\n`;
+
+    if (selectedTx.taxComplianceEnabled) {
+      message += `Subtotal (Excl. VAT): KES ${(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+      message += `VAT Total (16%): KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+      if (totalExempt > 0) message += `Exempt (0%): KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+      message += `------------------------------\n`;
+    }
+
+    message += `💰 *TOTAL PAID: KES ${receiptTotal.toLocaleString()}*\n`;
+    message += `💳 *Payment Method:* ${selectedTx.transaction_type.replace("SALE_", "")}\n`;
+
+    if (selectedTx.customer_pin) {
+      message += `------------------------------\n`;
+      message += `👤 *Customer PIN:* ${selectedTx.customer_pin}\n`;
+    }
+
+    message += `*============================*\n`;
+    message += `Thank you for shopping with us! 🙏\n`;
+    message += `Powered by *Akiba AI*`;
+
+    return `https://wa.me/?text=${encodeURIComponent(message)}`;
   };
 
   // Forecast data computations
@@ -324,11 +661,16 @@ export function TransactionsClientUI({
                 <div>
                   <div className="border-b-2 border-dashed border-[#e4eae4] pb-4 mb-4 text-center">
                     <h3 className="text-lg font-black text-[#171d1a] uppercase tracking-wider">
-                      Akiba AI Store
+                      {selectedTx.storeName || "Akiba AI Store"}
                     </h3>
                     <p className="text-[10px] text-[#6d7a73] font-bold mt-0.5">
-                      Receipt Code: {selectedTx.transaction_id.slice(0, 8).toUpperCase()}
+                      Receipt Code: {(selectedTx.receipt_id || selectedTx.transaction_id).slice(0, 12).toUpperCase()}
                     </p>
+                    {selectedTx.etimsSerial && (
+                      <span className="inline-block bg-sky-50 text-sky-700 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-sky-100 mt-1">
+                        eTIMS: {selectedTx.etimsSerial}
+                      </span>
+                    )}
                   </div>
 
                   <div className="space-y-4 text-xs font-bold text-[#6d7a73]">
@@ -338,44 +680,84 @@ export function TransactionsClientUI({
                         {new Date(selectedTx.created_at).toLocaleString("en-KE")}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Product:</span>
-                      <span className="text-[#171d1a] font-black">{selectedTx.product_name}</span>
+                    
+                    <div className="border-t border-b border-[#e4eae4] border-dashed py-3 my-2 space-y-2 max-h-[160px] overflow-y-auto">
+                      {items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between text-[11px] text-[#171d1a] font-black">
+                          <span className="truncate">{item.quantity}x {item.product_name}</span>
+                          <span>KES {item.total_price.toLocaleString()}</span>
+                        </div>
+                      ))}
                     </div>
+
                     <div className="flex justify-between">
                       <span>Operator Clerk:</span>
                       <span className="text-[#171d1a]">{selectedTx.clerk_name}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Quantity Sold:</span>
-                      <span className="text-[#171d1a]">{selectedTx.quantity} units</span>
-                    </div>
+
+                    {selectedTx.customer_pin && (
+                      <div className="flex justify-between">
+                        <span>Buyer KRA PIN:</span>
+                        <span className="text-[#171d1a] font-black">{selectedTx.customer_pin}</span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between">
                       <span>Payment Method:</span>
                       <span className="text-[#171d1a] font-black">
                         {selectedTx.transaction_type.replace("SALE_", "")}
                       </span>
                     </div>
+
+                    {selectedTx.taxComplianceEnabled && (
+                      <div className="space-y-1.5 pt-2 border-t border-[#e4eae4] text-[11px]">
+                        <div className="flex justify-between">
+                          <span>Subtotal (Excl. VAT):</span>
+                          <span>KES {(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>VAT Amount (16%):</span>
+                          <span>KES {totalVat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        {totalExempt > 0 && (
+                          <div className="flex justify-between">
+                            <span>Exempt Sales (0%):</span>
+                            <span>KES {totalExempt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex justify-between border-t border-[#e4eae4] pt-4 text-sm">
                       <span className="font-black text-[#171d1a]">Total Paid:</span>
                       <span className="font-black text-[#00694c]">
-                        KES {selectedTx.total_price.toLocaleString()}
+                        KES {receiptTotal.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-[11px] text-emerald-700">
                       <span>Margin (Est Profit):</span>
-                      <span>KES {selectedTx.total_profit.toLocaleString()}</span>
+                      <span>KES {receiptProfit.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
                   <button
-                    onClick={() => window.print()}
-                    className="w-full py-4 border-2 border-[#171d1a] text-[#171d1a] hover:bg-[#171d1a] hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
+                    onClick={printInvoice}
+                    className="w-full py-4 border-2 border-[#171d1a] text-[#171d1a] hover:bg-[#171d1a] hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                   >
-                    Print Receipt
+                    <span className="material-symbols-outlined text-[18px]">print</span>
+                    Print Invoice
                   </button>
+                  <a
+                    href={generateWhatsAppLink()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-4 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">chat</span>
+                    WhatsApp Receipt
+                  </a>
                   <button
                     onClick={() => handleVoid(selectedTx.transaction_id)}
                     className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-md shadow-rose-900/10"

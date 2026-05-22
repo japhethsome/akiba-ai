@@ -11,6 +11,7 @@ export async function processCheckout(
   paymentMethod: string = "CASH",
   customerName?: string,
   customerPhone?: string,
+  customerPin?: string,
   loyaltyPointsEarned: number = 0,
   loyaltyPointsRedeemed: number = 0
 ) {
@@ -32,6 +33,8 @@ export async function processCheckout(
       quantity: number;
       unitPrice: number;
       totalPrice: number;
+      vatRate: number;
+      vatAmount: number;
     }[] = [];
     let receiptTotal = 0;
 
@@ -54,6 +57,10 @@ export async function processCheckout(
         const totalCost = Number(product.buying_price) * item.quantity;
         const totalProfit = totalPrice - totalCost;
 
+        // Calculate VAT inclusive amount
+        const vatRate = Number(product.vat_rate || 16);
+        const vatAmount = totalPrice * (vatRate / (100 + vatRate));
+
         // Deduct Stock
         await tx.product.update({
           where: { product_id: product.product_id },
@@ -68,6 +75,7 @@ export async function processCheckout(
         let reasonParts = [`POS Checkout (${paymentMethod})`];
         if (customerName) reasonParts.push(`Customer: ${customerName}`);
         if (customerPhone) reasonParts.push(`Phone: ${customerPhone}`);
+        if (customerPin) reasonParts.push(`PIN: ${customerPin}`);
         if (loyaltyPointsEarned > 0) reasonParts.push(`Loyalty Earned: +${loyaltyPointsEarned}`);
         if (loyaltyPointsRedeemed > 0) reasonParts.push(`Loyalty Redeemed: -${loyaltyPointsRedeemed}`);
         const reasonText = reasonParts.join(" | ");
@@ -82,6 +90,8 @@ export async function processCheckout(
             quantity: item.quantity,
             total_price: totalPrice,
             total_profit: totalProfit,
+            vat_amount: vatAmount,
+            customer_pin: customerPin || null,
             payment_method: paymentMethod,
             status: "COMPLETED",
             transaction_type: transactionType,
@@ -107,6 +117,8 @@ export async function processCheckout(
           quantity: item.quantity,
           unitPrice: Number(product.selling_price),
           totalPrice,
+          vatRate,
+          vatAmount,
         });
         receiptTotal += totalPrice;
       }
@@ -125,11 +137,20 @@ export async function processCheckout(
       receipt: {
         id: receiptId,
         storeName: user.store.name,
+        storeAddress: user.store.storeAddress,
+        kraPin: user.store.kraPin,
+        etimsSerial: user.store.etimsSerial,
+        storePhone: user.store.storePhone,
+        storeEmail: user.store.storeEmail,
+        taxComplianceEnabled: user.store.taxComplianceEnabled,
         paymentMethod,
         servedBy: user.name,
         createdAt: new Date().toISOString(),
         items: receiptItems,
         total: receiptTotal,
+        customerName: customerName || null,
+        customerPhone: customerPhone || null,
+        customerPin: customerPin || null,
       },
     };
   } catch (error) {
@@ -143,6 +164,7 @@ interface OfflineCheckout {
   paymentMethod: string;
   customerName?: string;
   customerPhone?: string;
+  customerPin?: string;
   loyaltyPointsEarned?: number;
   loyaltyPointsRedeemed?: number;
 }
@@ -178,6 +200,10 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
           const totalCost = Number(product.buying_price) * item.quantity;
           const totalProfit = totalPrice - totalCost;
 
+          // Calculate VAT
+          const vatRate = Number(product.vat_rate || 16);
+          const vatAmount = totalPrice * (vatRate / (100 + vatRate));
+
           // Deduct Stock
           await tx.product.update({
             where: { product_id: product.product_id },
@@ -190,6 +216,7 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
           let reasonParts = [`Offline Sync (${checkout.paymentMethod || "CASH"})`];
           if (checkout.customerName) reasonParts.push(`Customer: ${checkout.customerName}`);
           if (checkout.customerPhone) reasonParts.push(`Phone: ${checkout.customerPhone}`);
+          if (checkout.customerPin) reasonParts.push(`PIN: ${checkout.customerPin}`);
           if (checkout.loyaltyPointsEarned && checkout.loyaltyPointsEarned > 0) {
             reasonParts.push(`Loyalty Earned: +${checkout.loyaltyPointsEarned}`);
           }
@@ -206,6 +233,8 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
               quantity: item.quantity,
               total_price: totalPrice,
               total_profit: totalProfit,
+              vat_amount: vatAmount,
+              customer_pin: checkout.customerPin || null,
               transaction_type: transactionType,
             },
           });
@@ -271,6 +300,32 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
   } catch (error: any) {
     console.error("Failed to notify owner:", error);
     return { error: error.message || "Failed to notify owner" };
+  }
+}
+
+export async function recordExpense(amount: number, reason: string) {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: session.userId },
+    });
+
+    if (!user) throw new Error("Unauthorized");
+
+    await prisma.expense.create({
+      data: {
+        amount,
+        reason,
+        store_id: user.store_id,
+      },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to record expense:", error);
+    return { error: error.message || "Failed to record expense" };
   }
 }
 

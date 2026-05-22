@@ -42,9 +42,25 @@ export default async function TransactionsPage() {
   const transactions = await prisma.transaction.findMany({
     where,
     include: {
-      product: { select: { name: true } },
+      product: {
+        select: {
+          name: true,
+          vat_rate: true,
+          selling_price: true,
+        },
+      },
       user: { select: { name: true } },
-      store: { select: { name: true } },
+      store: {
+        select: {
+          name: true,
+          kraPin: true,
+          storeAddress: true,
+          etimsSerial: true,
+          storePhone: true,
+          storeEmail: true,
+          taxComplianceEnabled: true,
+        },
+      },
     },
     orderBy: { created_at: "desc" },
     take: 300,
@@ -99,14 +115,25 @@ export default async function TransactionsPage() {
   // Map to transaction schema expected by client UI component
   const mappedTransactions = transactions.map((t) => ({
     transaction_id: t.transaction_id,
+    receipt_id: t.receipt_id,
     product_name: t.product.name,
     product_id: t.product_id,
     clerk_name: t.user.name,
     quantity: t.quantity,
     total_price: Number(t.total_price),
     total_profit: Number(t.total_profit),
+    vat_amount: Number(t.vat_amount || 0),
+    vat_rate: Number(t.product.vat_rate || 0),
+    customer_pin: t.customer_pin,
     transaction_type: t.payment_method, // payment_method maps to transaction_type in TransactionsClientUI
     created_at: t.created_at.toISOString(),
+    storeName: t.store.name,
+    storeAddress: t.store.storeAddress,
+    kraPin: t.store.kraPin,
+    etimsSerial: t.store.etimsSerial,
+    storePhone: t.store.storePhone,
+    storeEmail: t.store.storeEmail,
+    taxComplianceEnabled: t.store.taxComplianceEnabled,
   }));
 
   return (

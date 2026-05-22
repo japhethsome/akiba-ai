@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useTransition, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { processCheckout, processBulkCheckouts, notifyOwnerLowStock } from "@/lib/actions/pos";
+import { processCheckout, processBulkCheckouts, notifyOwnerLowStock, recordExpense } from "@/lib/actions/pos";
 import { cleanWhatsAppNumber } from "@/lib/phone";
 
 interface Product {
@@ -38,6 +38,7 @@ interface OfflineOrder {
   paymentMethod: string;
   customerName?: string;
   customerPhone?: string;
+  customerPin?: string;
   loyaltyPointsEarned?: number;
   loyaltyPointsRedeemed?: number;
   totalPaid: number;
@@ -47,10 +48,21 @@ interface OfflineOrder {
 
 export function PosClientUI({ 
   initialProducts, 
-  currentUser = { name: "Attendant", role: "attendant" }
+  currentUser = { name: "Attendant", role: "attendant" },
+  store
 }: { 
   initialProducts: Product[];
   currentUser?: { name: string; role: string };
+  store?: {
+    name: string;
+    category?: string | null;
+    kraPin?: string | null;
+    storeAddress?: string | null;
+    etimsSerial?: string | null;
+    storePhone?: string | null;
+    storeEmail?: string | null;
+    taxComplianceEnabled: boolean;
+  } | null;
 }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,6 +127,7 @@ export function PosClientUI({
   const [splitCash, setSplitCash] = useState("");
   const [splitMpesa, setSplitMpesa] = useState("");
   const [splitCard, setSplitCard] = useState("");
+  const [checkoutCustomerPin, setCheckoutCustomerPin] = useState("");
   
   // Receipt modal states
   const [showReceipt, setShowReceipt] = useState(false);
@@ -124,6 +137,8 @@ export function PosClientUI({
   const [sendDigitalReceipt, setSendDigitalReceipt] = useState(false);
   const [digitalPhone, setDigitalPhone] = useState("");
   const [receiptStatus, setReceiptStatus] = useState("");
+  const [lastReceipt, setLastReceipt] = useState<any | null>(null);
+  const [offlineExpensesQueue, setOfflineExpensesQueue] = useState<{ amount: number; reason: string; timestamp: string }[]>([]);
 
   // AI Insights States
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
@@ -173,6 +188,10 @@ export function PosClientUI({
     const storedQueue = localStorage.getItem("akiba_pos_offline_queue");
     if (storedQueue) setOfflineQueue(JSON.parse(storedQueue));
 
+    // Load Offline Expenses
+    const storedExpenses = localStorage.getItem("akiba_pos_offline_expenses");
+    if (storedExpenses) setOfflineExpensesQueue(JSON.parse(storedExpenses));
+
     // Load Customers
     const storedCust = localStorage.getItem("akiba_pos_customers");
     if (storedCust) setCustomers(JSON.parse(storedCust));
@@ -200,6 +219,11 @@ export function PosClientUI({
   const saveOfflineQueue = (queue: OfflineOrder[]) => {
     setOfflineQueue(queue);
     localStorage.setItem("akiba_pos_offline_queue", JSON.stringify(queue));
+  };
+
+  const saveOfflineExpensesQueue = (queue: { amount: number; reason: string; timestamp: string }[]) => {
+    setOfflineExpensesQueue(queue);
+    localStorage.setItem("akiba_pos_offline_expenses", JSON.stringify(queue));
   };
 
   const saveCustomers = (cust: Customer[]) => {
@@ -426,6 +450,7 @@ export function PosClientUI({
         paymentMethod: paymentMethodLabel,
         customerName: selectedCustomer?.name,
         customerPhone: selectedCustomer?.phone,
+        customerPin: checkoutCustomerPin || undefined,
         loyaltyPointsEarned,
         loyaltyPointsRedeemed: redeemPoints ? loyaltyPointsMaxDiscount : 0,
         totalPaid: finalTotal,
@@ -462,7 +487,39 @@ export function PosClientUI({
       }
 
       // Finish up UI
-      triggerReceiptUI(paymentMethodLabel);
+      triggerReceiptUI(paymentMethodLabel, {
+        id: `RCT-OFF-${Date.now().toString().slice(-4)}`,
+        storeName: store?.name || "My Store",
+        storeAddress: store?.storeAddress || "Nairobi, Kenya",
+        kraPin: store?.kraPin || null,
+        etimsSerial: store?.etimsSerial || null,
+        storePhone: store?.storePhone || null,
+        storeEmail: store?.storeEmail || null,
+        taxComplianceEnabled: store?.taxComplianceEnabled || false,
+        paymentMethod: paymentMethodLabel,
+        servedBy: currentUser.name,
+        createdAt: new Date().toISOString(),
+        items: cart.map(i => {
+          const rate = 16; // default fallback
+          const price = i.price;
+          const qty = i.cartQuantity;
+          const total = price * qty;
+          const vat = total * (rate / (100 + rate));
+          return {
+            productId: i.id,
+            name: i.name,
+            quantity: qty,
+            unitPrice: price,
+            totalPrice: total,
+            vatRate: rate,
+            vatAmount: vat
+          };
+        }),
+        total: finalTotal,
+        customerName: selectedCustomer?.name || null,
+        customerPhone: selectedCustomer?.phone || null,
+        customerPin: checkoutCustomerPin || null
+      });
       return;
     }
 
@@ -478,6 +535,7 @@ export function PosClientUI({
         paymentMethodLabel,
         selectedCustomer?.name || undefined,
         selectedCustomer?.phone || undefined,
+        checkoutCustomerPin || undefined,
         loyaltyPointsEarned,
         redeemPoints ? loyaltyPointsMaxDiscount : 0
       );
@@ -521,17 +579,18 @@ export function PosClientUI({
           }
         }
 
-        triggerReceiptUI(paymentMethodLabel);
+        triggerReceiptUI(paymentMethodLabel, res.receipt);
       } else {
         alert(res.error || "Checkout failed");
       }
     });
   };
 
-  const triggerReceiptUI = (method: string) => {
+  const triggerReceiptUI = (method: string, receipt?: any) => {
     setLastOrder([...cart]);
     setLastTotal(finalTotal);
     setLastPaymentMethod(method);
+    setLastReceipt(receipt || null);
     setShowReceipt(true);
     setCheckoutModalOpen(false);
     
@@ -548,6 +607,7 @@ export function PosClientUI({
     // Reset checkout forms
     setCart([]);
     setDiscount(0);
+    setCheckoutCustomerPin("");
     setSelectedCustomer(null);
     setRedeemPoints(false);
     setShowMobileCart(false);
@@ -555,28 +615,56 @@ export function PosClientUI({
 
   // Sync Offline Queue to backend
   const handleSyncQueue = async () => {
-    if (offlineQueue.length === 0 || isSyncing) return;
+    if ((offlineQueue.length === 0 && offlineExpensesQueue.length === 0) || isSyncing) return;
     setIsSyncing(true);
 
     try {
-      const payload = offlineQueue.map(item => ({
-        cart: item.cart,
-        paymentMethod: item.paymentMethod,
-        customerName: item.customerName,
-        customerPhone: item.customerPhone,
-        loyaltyPointsEarned: item.loyaltyPointsEarned,
-        loyaltyPointsRedeemed: item.loyaltyPointsRedeemed,
-      }));
+      let syncCount = 0;
+      let errorMsg = "";
 
-      const res = await processBulkCheckouts(payload);
-      if (res.success) {
-        saveOfflineQueue([]);
-        alert("All offline checkouts successfully synchronized with server database.");
+      if (offlineQueue.length > 0) {
+        const payload = offlineQueue.map(item => ({
+          cart: item.cart,
+          paymentMethod: item.paymentMethod,
+          customerName: item.customerName,
+          customerPhone: item.customerPhone,
+          customerPin: item.customerPin,
+          loyaltyPointsEarned: item.loyaltyPointsEarned,
+          loyaltyPointsRedeemed: item.loyaltyPointsRedeemed,
+        }));
+
+        const res = await processBulkCheckouts(payload);
+        if (res.success) {
+          saveOfflineQueue([]);
+          syncCount += payload.length;
+        } else {
+          errorMsg += `Sales Sync Failed: ${res.error}. `;
+        }
+      }
+
+      if (offlineExpensesQueue.length > 0) {
+        let expenseSuccess = true;
+        for (const exp of offlineExpensesQueue) {
+          const res = await recordExpense(exp.amount, exp.reason);
+          if (!res.success) {
+            expenseSuccess = false;
+            errorMsg += `Expense Sync Failed: ${res.error || "Unknown"}. `;
+            break;
+          }
+        }
+        if (expenseSuccess) {
+          saveOfflineExpensesQueue([]);
+          syncCount += offlineExpensesQueue.length;
+        }
+      }
+
+      if (errorMsg) {
+        alert(errorMsg);
       } else {
-        alert(`Offline Sync Failed: ${res.error}`);
+        alert(`Successfully synchronized ${syncCount} offline entries with server database.`);
       }
     } catch (err: any) {
-      alert(`Network error syncing offline sales: ${err.message}`);
+      alert(`Network error syncing offline data: ${err.message}`);
     } finally {
       setIsSyncing(false);
     }
@@ -645,15 +733,35 @@ export function PosClientUI({
     const amountVal = Number(cashOutAmount);
     if (!amountVal || amountVal <= 0) return;
 
+    const reasonVal = cashOutReason || "Paid Out Expense";
     const outLog: CashLog = {
       id: `log-${Date.now()}`,
       type: "out",
       amount: amountVal,
-      reason: cashOutReason || "Paid Out Expense",
+      reason: reasonVal,
       timestamp: new Date(),
     };
 
     saveDrawerLogs([...cashLogs, outLog]);
+
+    if (isOnline) {
+      startTransition(async () => {
+        const res = await recordExpense(amountVal, reasonVal);
+        if (!res.success) {
+          console.error("Failed to sync expense in DB:", res.error);
+        }
+      });
+    } else {
+      saveOfflineExpensesQueue([
+        ...offlineExpensesQueue,
+        {
+          amount: amountVal,
+          reason: reasonVal,
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    }
+
     setCashOutAmount("");
     setCashOutReason("");
     setShowCashOutModal(false);
@@ -749,21 +857,333 @@ export function PosClientUI({
 
   // Digital Web WhatsApp text receipt URL helper
   const generateWhatsAppLink = () => {
-    if (!lastOrder.length) return "";
-    let message = `*--- AKIBA AI POS RECEIPT ---*\n`;
-    message += `*Date:* ${new Date().toLocaleDateString()}\n`;
-    message += `*Payment:* ${lastPaymentMethod}\n`;
-    message += `-----------------------------\n`;
-    lastOrder.forEach(item => {
-      message += `${item.cartQuantity}x ${item.name} @ KES ${item.price.toLocaleString()}\n`;
+    if (!lastReceipt) return "";
+
+    let message = `*============================*\n`;
+    message += `*🏪 ${lastReceipt.storeName.toUpperCase()}*\n`;
+    if (lastReceipt.storeAddress) message += `📍 ${lastReceipt.storeAddress}\n`;
+    if (lastReceipt.storePhone) message += `📞 Phone: ${lastReceipt.storePhone}\n`;
+    if (lastReceipt.kraPin) message += `🧾 KRA PIN: ${lastReceipt.kraPin}\n`;
+    message += `*============================*\n`;
+    message += `*🧾 DIGITAL TAX INVOICE*\n`;
+    message += `*Invoice No:* ${lastReceipt.id}\n`;
+    message += `*Date:* ${new Date(lastReceipt.createdAt).toLocaleDateString()} ${new Date(lastReceipt.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}\n`;
+    message += `*Served By:* ${lastReceipt.servedBy}\n`;
+    message += `------------------------------\n`;
+
+    lastReceipt.items.forEach((item: any) => {
+      message += `• ${item.quantity}x ${item.name}\n`;
+      message += `  @ KES ${item.unitPrice.toLocaleString()} [VAT ${item.vatRate}%]\n`;
     });
-    message += `-----------------------------\n`;
-    message += `*Total Paid: KES ${lastTotal.toLocaleString()}*\n\n`;
-    message += `Thank you for shopping with us! Powered by Akiba AI.`;
+
+    message += `------------------------------\n`;
+
+    // Calculate tax summaries
+    let totalExempt = 0;
+    let totalVat = 0;
+    lastReceipt.items.forEach((item: any) => {
+      if (Number(item.vatRate) === 0) {
+        totalExempt += Number(item.totalPrice);
+      } else {
+        totalVat += Number(item.vatAmount || 0);
+      }
+    });
+
+    if (lastReceipt.taxComplianceEnabled) {
+      message += `Subtotal (Excl. VAT): KES ${(lastReceipt.total - totalVat).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+      message += `VAT Total (16%): KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+      if (totalExempt > 0) message += `Exempt (0%): KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+      message += `------------------------------\n`;
+    }
+
+    message += `💰 *TOTAL PAID: KES ${lastReceipt.total.toLocaleString()}*\n`;
+    message += `💳 *Payment Method:* ${lastReceipt.paymentMethod}\n`;
+
+    if (lastReceipt.customerName) {
+      message += `------------------------------\n`;
+      message += `👤 *Customer:* ${lastReceipt.customerName}\n`;
+      if (lastReceipt.customerPin) message += `💳 Buyer PIN: ${lastReceipt.customerPin}\n`;
+    }
+
+    message += `*============================*\n`;
+    message += `Thank you for shopping with us! 🙏\n`;
+    message += `Powered by *Akiba AI*`;
 
     const encoded = encodeURIComponent(message);
     const phoneClean = cleanWhatsAppNumber(digitalPhone);
     return `https://wa.me/${phoneClean}?text=${encoded}`;
+  };
+
+  const printInvoice = (receipt: any) => {
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    let totalExempt = 0;
+    let totalTaxable = 0;
+    let totalVat = 0;
+
+    receipt.items.forEach((item: any) => {
+      const rate = Number(item.vatRate || 0);
+      const itemTotal = Number(item.totalPrice);
+      if (rate === 0) {
+        totalExempt += itemTotal;
+      } else {
+        totalTaxable += itemTotal - Number(item.vatAmount || 0);
+        totalVat += Number(item.vatAmount || 0);
+      }
+    });
+
+    const subtotal = totalExempt + totalTaxable;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Tax Invoice - ${receipt.id}</title>
+          <style>
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #1a202c;
+              margin: 0;
+              padding: 40px;
+              font-size: 14px;
+              line-height: 1.5;
+            }
+            .invoice-container {
+              max-width: 800px;
+              margin: 0 auto;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              padding: 30px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid #1a365d;
+              padding-bottom: 20px;
+              margin-bottom: 25px;
+            }
+            .store-details h1 {
+              margin: 0 0 5px 0;
+              color: #1a365d;
+              font-size: 24px;
+              font-weight: 800;
+            }
+            .store-details p {
+              margin: 2px 0;
+              color: #4a5568;
+              font-size: 13px;
+            }
+            .invoice-title {
+              text-align: right;
+            }
+            .invoice-title h2 {
+              margin: 0 0 5px 0;
+              color: #1a365d;
+              font-size: 20px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .invoice-title p {
+              margin: 2px 0;
+              color: #4a5568;
+              font-size: 13px;
+            }
+            .details-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 30px;
+              background: #f7fafc;
+              padding: 15px;
+              border-radius: 6px;
+              border: 1px solid #edf2f7;
+            }
+            .details-block h4 {
+              margin: 0 0 8px 0;
+              color: #2d3748;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .details-block p {
+              margin: 4px 0;
+              color: #4a5568;
+              font-size: 13px;
+            }
+            .details-block strong {
+              color: #1a202c;
+            }
+            .items-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            .items-table th {
+              background-color: #1a365d;
+              color: #ffffff;
+              text-align: left;
+              padding: 10px 12px;
+              font-size: 12px;
+              text-transform: uppercase;
+              font-weight: 700;
+            }
+            .items-table td {
+              padding: 12px;
+              border-bottom: 1px solid #e2e8f0;
+              font-size: 13px;
+            }
+            .items-table tr:nth-child(even) td {
+              background-color: #f8fafc;
+            }
+            .summary-wrapper {
+              display: flex;
+              justify-content: flex-end;
+            }
+            .summary-table {
+              width: 320px;
+              border-collapse: collapse;
+            }
+            .summary-table td {
+              padding: 6px 12px;
+              font-size: 13px;
+              color: #4a5568;
+            }
+            .summary-table tr.total-row td {
+              border-top: 2px solid #1a365d;
+              border-bottom: 2px solid #1a365d;
+              font-size: 16px;
+              font-weight: 800;
+              color: #1a365d;
+              padding: 10px 12px;
+            }
+            .footer {
+              margin-top: 40px;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+              text-align: center;
+              font-size: 11px;
+              color: #718096;
+            }
+            .etims-badge {
+              display: inline-block;
+              background-color: #ebf8ff;
+              color: #2b6cb0;
+              border: 1px solid #bee3f8;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-weight: 700;
+              font-size: 10px;
+              margin-top: 5px;
+            }
+            @media print {
+              body {
+                padding: 0;
+              }
+              .invoice-container {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-container">
+            <div class="header">
+              <div class="store-details">
+                <h1>${receipt.storeName}</h1>
+                ${receipt.storeAddress ? `<p>${receipt.storeAddress}</p>` : ""}
+                ${receipt.storePhone ? `<p>Phone: ${receipt.storePhone}</p>` : ""}
+                ${receipt.storeEmail ? `<p>Email: ${receipt.storeEmail}</p>` : ""}
+                ${receipt.kraPin ? `<p><strong>KRA PIN:</strong> ${receipt.kraPin}</p>` : ""}
+              </div>
+              <div class="invoice-title">
+                <h2>TAX INVOICE</h2>
+                <p><strong>Invoice No:</strong> ${receipt.id}</p>
+                <p><strong>Date:</strong> ${new Date(receipt.createdAt).toLocaleString()}</p>
+                ${receipt.etimsSerial ? `<div class="etims-badge">eTIMS Compliant: ${receipt.etimsSerial}</div>` : ""}
+              </div>
+            </div>
+
+            <div class="details-grid">
+              <div class="details-block">
+                <h4>Billed To (Buyer)</h4>
+                ${receipt.customerName ? `<p><strong>Name:</strong> ${receipt.customerName}</p>` : "<p>Cash Customer</p>"}
+                ${receipt.customerPhone ? `<p><strong>Phone:</strong> ${receipt.customerPhone}</p>` : ""}
+                ${receipt.customerPin ? `<p><strong>Buyer PIN:</strong> ${receipt.customerPin}</p>` : ""}
+              </div>
+              <div class="details-block">
+                <h4>Invoice Details</h4>
+                <p><strong>Served By:</strong> ${receipt.servedBy}</p>
+                <p><strong>Payment Mode:</strong> ${receipt.paymentMethod}</p>
+                <p><strong>Status:</strong> Paid</p>
+              </div>
+            </div>
+
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="text-align: right;">Qty</th>
+                  <th style="text-align: right;">Unit Price (KES)</th>
+                  <th style="text-align: center;">VAT %</th>
+                  <th style="text-align: right;">VAT Amount (KES)</th>
+                  <th style="text-align: right;">Total (KES)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${receipt.items.map((item: any) => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td style="text-align: right;">${item.quantity}</td>
+                    <td style="text-align: right;">${item.unitPrice.toLocaleString()}</td>
+                    <td style="text-align: center;">${item.vatRate}%</td>
+                    <td style="text-align: right;">${item.vatAmount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                    <td style="text-align: right;">${item.totalPrice.toLocaleString()}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+
+            <div class="summary-wrapper">
+              <table class="summary-table">
+                <tr>
+                  <td>Subtotal (Excl. VAT):</td>
+                  <td style="text-align: right;">KES ${(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                  <td>VAT Total (16%):</td>
+                  <td style="text-align: right;">KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                  <td>Exempt Sales (0%):</td>
+                  <td style="text-align: right;">KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                </tr>
+                <tr class="total-row">
+                  <td>Total Paid:</td>
+                  <td style="text-align: right;">KES ${receipt.total.toLocaleString()}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>Generated by Akiba AI System. Under KRA / eTIMS Compliance Regulations.</p>
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   // Smart POS Dashboard computations
@@ -829,7 +1249,7 @@ export function PosClientUI({
               <span className="xs:hidden">{isDrawerOpenSession ? "Open" : "Closed"}</span>
             </div>
             {/* Sync badge */}
-            {offlineQueue.length > 0 && (
+            {(offlineQueue.length > 0 || offlineExpensesQueue.length > 0) && (
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 onClick={handleSyncQueue}
@@ -837,8 +1257,8 @@ export function PosClientUI({
                 className="bg-amber-100 border border-amber-300 text-amber-800 text-[9px] font-black px-2 py-1.5 rounded-full flex items-center gap-1 active:scale-95 transition-transform"
               >
                 <span className="material-symbols-outlined text-[13px] animate-spin">sync</span>
-                <span className="hidden sm:inline">Sync ({offlineQueue.length})</span>
-                <span className="sm:hidden">{offlineQueue.length}</span>
+                <span className="hidden sm:inline">Sync ({offlineQueue.length + offlineExpensesQueue.length})</span>
+                <span className="sm:hidden">{offlineQueue.length + offlineExpensesQueue.length}</span>
               </motion.button>
             )}
             {/* User role — hidden on small mobile */}
@@ -2086,6 +2506,19 @@ export function PosClientUI({
                     </div>
                   </div>
                 )}
+                {/* Buyer KRA PIN Input */}
+                {store?.taxComplianceEnabled && (
+                  <div className="space-y-1 pt-2 border-t border-[#e4eae4]">
+                    <label className="text-[10px] font-black uppercase text-[#6d7a73]">Buyer KRA PIN (Optional / B2B)</label>
+                    <input 
+                      type="text"
+                      placeholder="e.g. A012345678Z"
+                      value={checkoutCustomerPin}
+                      onChange={(e) => setCheckoutCustomerPin(e.target.value.toUpperCase())}
+                      className="w-full h-11 px-3 bg-white border border-[#e4eae4] rounded-xl text-sm font-black focus:border-[#00694c] outline-none"
+                    />
+                  </div>
+                )}
 
                 {/* Digital receipt preference toggle */}
                 <div className="flex items-center justify-between border-t border-[#e4eae4] pt-4 text-xs font-bold">
@@ -2214,12 +2647,12 @@ export function PosClientUI({
               <p className="text-[#6d7a73] text-xs font-bold">Transaction registered. Stocks subtracted.</p>
               
               {/* Receipt Body */}
-              <div className="w-full bg-[#f8faf9] border border-[#e4eae4] border-dashed rounded-2xl p-5 my-5 text-left text-xs font-bold">
-                 <div className="flex justify-between text-[10px] text-[#bccac1] uppercase tracking-widest mb-3">
+              <div className="w-full bg-[#f8faf9] border border-[#e4eae4] border-dashed rounded-2xl p-5 my-5 text-left text-xs font-bold space-y-3">
+                 <div className="flex justify-between text-[10px] text-[#bccac1] uppercase tracking-widest border-b border-[#e4eae4] border-dashed pb-2">
                     <span>Cart Items Description</span>
                     <span>Subtotal KES</span>
                  </div>
-                 <div className="space-y-2 mb-3 max-h-[140px] overflow-y-auto pr-1 no-scrollbar">
+                 <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1 no-scrollbar">
                     {lastOrder.map((item, i) => (
                        <div key={i} className="flex justify-between text-[#171d1a] font-black">
                           <span className="truncate pr-4">{item.cartQuantity}x {item.name}</span>
@@ -2227,7 +2660,29 @@ export function PosClientUI({
                        </div>
                     ))}
                  </div>
-                 <div className="border-t border-[#e4eae4] border-dashed pt-3 flex flex-col gap-1">
+
+                 {lastReceipt?.taxComplianceEnabled && (
+                    <div className="border-t border-[#e4eae4] border-dashed pt-2 space-y-1 text-[10px] text-[#6d7a73]">
+                       <div className="flex justify-between">
+                          <span>Store PIN:</span>
+                          <span className="font-black text-[#171d1a]">{lastReceipt.kraPin || "N/A"}</span>
+                       </div>
+                       {lastReceipt.customerPin && (
+                          <div className="flex justify-between">
+                             <span>Buyer PIN:</span>
+                             <span className="font-black text-[#171d1a]">{lastReceipt.customerPin}</span>
+                          </div>
+                       )}
+                       <div className="flex justify-between">
+                          <span>VAT Collected (16%):</span>
+                          <span className="font-black text-[#171d1a]">
+                             KES {lastReceipt.items.reduce((s: number, item: any) => s + (item.vatAmount || 0), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          </span>
+                       </div>
+                    </div>
+                 )}
+
+                 <div className="border-t border-[#e4eae4] border-dashed pt-2 flex flex-col gap-1">
                     <div className="flex justify-between items-center text-[10px] text-[#6d7a73]">
                       <span>Payment Method:</span>
                       <span className="uppercase text-[#171d1a] font-black">{lastPaymentMethod}</span>
@@ -2261,7 +2716,7 @@ export function PosClientUI({
                  )}
 
                  <button 
-                   onClick={() => window.print()}
+                   onClick={() => lastReceipt && printInvoice(lastReceipt)}
                    className="w-full h-11 bg-[#171d1a] hover:bg-black text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-colors"
                  >
                     <span className="material-symbols-outlined text-[18px]">print</span>

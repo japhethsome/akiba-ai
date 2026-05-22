@@ -12,6 +12,7 @@ export async function addProduct(data: {
   buyingPrice: number;
   stock: number;
   reorderLevel: number;
+  vatRate?: number;
   supplierId?: string;
 }) {
   try {
@@ -33,6 +34,7 @@ export async function addProduct(data: {
         buying_price: data.buyingPrice,
         stock_quantity: data.stock,
         reorder_level: data.reorderLevel,
+        vat_rate: data.vatRate !== undefined ? data.vatRate : 16,
         supplier_id: data.supplierId || null,
         store_id: user.store_id,
       },
@@ -116,6 +118,7 @@ export async function updateProduct(
     buyingPrice: number;
     stock: number;
     reorderLevel: number;
+    vatRate?: number;
     supplierId?: string;
   }
 ) {
@@ -144,6 +147,7 @@ export async function updateProduct(
         buying_price: data.buyingPrice,
         stock_quantity: data.stock,
         reorder_level: data.reorderLevel,
+        vat_rate: data.vatRate !== undefined ? data.vatRate : 16,
         supplier_id: data.supplierId || null,
       },
     });

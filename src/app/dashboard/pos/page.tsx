@@ -52,6 +52,7 @@ export default async function PosPage() {
       <PosClientUI 
         initialProducts={plainProducts} 
         currentUser={{ name: user.name, role: user.role }} 
+        store={user.store}
       />
     </DashboardLayoutWrapper>
   );
