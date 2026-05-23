@@ -12,12 +12,9 @@ interface SettingsClientUIProps {
     userRole: string;
     storeName: string;
     storeCategory: string | null;
-    kraPin?: string | null;
     storeAddress?: string | null;
-    etimsSerial?: string | null;
     storePhone?: string | null;
     storeEmail?: string | null;
-    taxComplianceEnabled?: boolean | null;
   };
 }
 
@@ -28,12 +25,9 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
   const [userEmail, setUserEmail] = useState(initialData.userEmail);
   const [userPhone, setUserPhone] = useState(initialData.userPhone);
 
-  const [kraPin, setKraPin] = useState(initialData.kraPin || "");
   const [storeAddress, setStoreAddress] = useState(initialData.storeAddress || "");
-  const [etimsSerial, setEtimsSerial] = useState(initialData.etimsSerial || "");
   const [storePhone, setStorePhone] = useState(initialData.storePhone || "");
   const [storeEmail, setStoreEmail] = useState(initialData.storeEmail || "");
-  const [taxComplianceEnabled, setTaxComplianceEnabled] = useState(!!initialData.taxComplianceEnabled);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,12 +60,9 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
       storeCategory,
       userEmail,
       userPhone,
-      kraPin,
       storeAddress,
-      etimsSerial,
       storePhone,
       storeEmail,
-      taxComplianceEnabled,
     });
 
     setLoading(false);
@@ -284,65 +275,14 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
               <div className="border-t border-[#e4eae4] pt-6 mt-6 space-y-6">
                 <div>
                   <h3 className="text-sm font-black text-[#171d1a] tracking-tight">
-                    KRA Tax &amp; eTIMS Compliance
+                    KRA Tax Compliance
                   </h3>
                   <p className="text-xs font-semibold text-[#6d7a73] mt-1">
-                    Configure your VAT rate settings and tax identification info to enable compliant eTIMS invoice generation.
+                    Configure your VAT rate settings and tax identification info to enable compliant tax invoice generation.
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[#f8faf9] border border-[#e4eae4] rounded-2xl">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-black text-[#171d1a]">
-                      Enable KRA Tax Compliance
-                    </span>
-                    <span className="text-[11px] font-semibold text-[#6d7a73]">
-                      Automatically calculate VAT (inclusive) at checkout and log to KRA dashboard.
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={taxComplianceEnabled}
-                      onChange={(e) => setTaxComplianceEnabled(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-[#bccac1] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00694c]"></div>
-                  </label>
-                </div>
-
-                {taxComplianceEnabled && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                  >
-                    <div className="group col-span-1">
-                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
-                        Business KRA PIN
-                      </label>
-                      <input
-                        type="text"
-                        value={kraPin}
-                        onChange={(e) => setKraPin(e.target.value.toUpperCase())}
-                        placeholder="e.g. A001234567Z"
-                        maxLength={11}
-                        className="w-full h-12 px-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-xs font-semibold outline-none focus:border-[#00694c] focus:bg-white transition-all"
-                      />
-                    </div>
-
-                    <div className="group col-span-1">
-                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
-                        eTIMS Serial / Control Unit ID
-                      </label>
-                      <input
-                        type="text"
-                        value={etimsSerial}
-                        onChange={(e) => setEtimsSerial(e.target.value)}
-                        placeholder="e.g. ETM12345678"
-                        className="w-full h-12 px-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-xs font-semibold outline-none focus:border-[#00694c] focus:bg-white transition-all"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
 
                     <div className="group md:col-span-2">
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
@@ -382,8 +322,7 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
                         className="w-full h-12 px-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-xs font-semibold outline-none focus:border-[#00694c] focus:bg-white transition-all"
                       />
                     </div>
-                  </motion.div>
-                )}
+                  </div>
               </div>
             )}
 

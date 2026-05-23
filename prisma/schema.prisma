@@ -14,12 +14,9 @@ model Store {
   category           String?
   onboarded          Boolean             @default(false)
   createdAt          DateTime            @default(now())
-  kraPin                 String?
   storeAddress           String?
-  etimsSerial            String?
   storePhone             String?
   storeEmail             String?
-  taxComplianceEnabled   Boolean             @default(false)
   forecastResults    ForecastResult[]
   insights           Insight[]
   inventoryLogs      InventoryLog[]
@@ -72,7 +69,6 @@ model Product {
   buying_price    Decimal          @default(0)
   stock_quantity  Int              @default(0)
   reorder_level   Int              @default(10)
-  vat_rate        Decimal          @default(16)
   supplier_id     String?
   created_at      DateTime         @default(now())
   image_url       String?
@@ -93,7 +89,6 @@ model Transaction {
   quantity         Int
   total_price      Decimal
   total_profit     Decimal       @default(0)
-  vat_amount       Decimal       @default(0)
   customer_pin     String?
   payment_method   String        @default("CASH")
   status           String        @default("COMPLETED")

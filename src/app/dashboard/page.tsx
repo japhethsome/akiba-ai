@@ -53,7 +53,7 @@ export default async function DashboardPage() {
 
   // Fetch today's transactions for Revenue and Profit
   const transactions = await prisma.transaction.findMany({
-    where: { 
+    where: {
       store_id: user.store_id,
       status: { not: "VOIDED" },
       created_at: {
@@ -83,10 +83,10 @@ export default async function DashboardPage() {
   return (
     <DashboardLayoutWrapper>
       <main className="flex-1 p-4 md:p-10 max-w-[1500px] mx-auto w-full">
-        <DashboardClientUI 
-          userName={user.name} 
+        <DashboardClientUI
+          userName={user.name}
           storeCategory={user.store.category || "shop"}
-          kpis={kpis} 
+          kpis={kpis}
           lowStockCount={lowStockCount}
           priorityActions={priorityActions}
         />

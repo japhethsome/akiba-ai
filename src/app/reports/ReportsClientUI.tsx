@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getDailyPLReport, getTaxComplianceReport, sendReportEmail } from "@/lib/actions/reports";
+import { getDailyPLReport, sendReportEmail } from "@/lib/actions/reports";
 
 interface ReportsClientUIProps {
   initialSettings: {
@@ -14,16 +14,13 @@ interface ReportsClientUIProps {
     storeCategory: string | null;
     kraPin?: string | null;
     storeAddress?: string | null;
-    etimsSerial?: string | null;
     storePhone?: string | null;
     storeEmail?: string | null;
-    taxComplianceEnabled?: boolean | null;
   };
 }
 
 export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
-  // Tabs
-  const [activeTab, setActiveTab] = useState<"pl" | "tax">("pl");
+  const [activeTab, setActiveTab] = useState<"pl">("pl");
 
   // Date Pickers (Local time defaults)
   const getTodayString = () => {
@@ -41,16 +38,12 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
   const [plLoading, setPlLoading] = useState(true);
   const [plError, setPlError] = useState<string | null>(null);
 
-  const [taxStartDate, setTaxStartDate] = useState(getFirstOfMonthString());
-  const [taxEndDate, setTaxEndDate] = useState(getTodayString());
-  const [taxData, setTaxData] = useState<any>(null);
-  const [taxLoading, setTaxLoading] = useState(true);
-  const [taxError, setTaxError] = useState<string | null>(null);
+
 
   // Email Sharing States
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailAddress, setEmailAddress] = useState(initialSettings.userEmail || "");
-  const [emailTarget, setEmailTarget] = useState<"pl" | "tax">("pl");
+  const [emailTarget, setEmailTarget] = useState<"pl">("pl");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -74,31 +67,13 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
     }
   };
 
-  // Load Tax
-  const loadTax = async (start: string, end: string) => {
-    setTaxLoading(true);
-    setTaxError(null);
-    try {
-      const res = await getTaxComplianceReport(start, end);
-      if (res.success) {
-        setTaxData(res.data);
-      } else {
-        setTaxError(res.error || "Failed to load Tax report.");
-      }
-    } catch (e: any) {
-      setTaxError(e.message || "An unexpected error occurred.");
-    } finally {
-      setTaxLoading(false);
-    }
-  };
+
 
   useEffect(() => {
     loadPL(plDate);
   }, [plDate]);
 
-  useEffect(() => {
-    loadTax(taxStartDate, taxEndDate);
-  }, [taxStartDate, taxEndDate]);
+
 
   // Generate Email HTML string
   const generateEmailHtml = (type: "pl" | "tax", data: any) => {
@@ -203,8 +178,7 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
 
           <div style="background-color: #f8faf9; padding: 12px; border-radius: 8px; font-size: 12px; color: #3d4943;">
             <strong>Store Tax Details:</strong><br/>
-            KRA PIN: ${data.kraPin || "Not Configured"}<br/>
-            eTIMS Serial: ${data.etimsSerial || "Not Configured"}
+            KRA PIN: ${data.kraPin || "Not Configured"}
           </div>
           
           <p style="font-size: 11px; color: #6d7a73; text-align: center; margin-top: 30px;">Generated automatically by Akiba AI System</p>
@@ -259,7 +233,6 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
       body += `Period: ${data.startDate} to ${data.endDate}\n`;
       body += `Store: ${data.storeName}\n`;
       body += `KRA PIN: ${data.kraPin || "N/A"}\n`;
-      body += `eTIMS Serial: ${data.etimsSerial || "N/A"}\n`;
       body += `-------------------------------------------\n\n`;
       body += `- Gross Sales (VAT Inclusive): KES ${Number(data.metrics.grossSales).toFixed(2)}\n`;
       body += `- Taxable Sales (16% excl. VAT): KES ${Number(data.metrics.taxableSales).toFixed(2)}\n`;
@@ -480,7 +453,6 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
                   ${initialSettings.storePhone ? `<div>Tel: ${initialSettings.storePhone}</div>` : ""}
                   ${initialSettings.storeEmail ? `<div>Email: ${initialSettings.storeEmail}</div>` : ""}
                   ${initialSettings.kraPin ? `<div>KRA PIN: ${initialSettings.kraPin}</div>` : ""}
-                  ${initialSettings.etimsSerial ? `<div>eTIMS S/N: ${initialSettings.etimsSerial}</div>` : ""}
                 </div>
               </div>
               <div class="report-title">
@@ -774,7 +746,6 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
                   ${initialSettings.storePhone ? `<div>Tel: ${initialSettings.storePhone}</div>` : ""}
                   ${initialSettings.storeEmail ? `<div>Email: ${initialSettings.storeEmail}</div>` : ""}
                   ${initialSettings.kraPin ? `<div>KRA PIN: ${initialSettings.kraPin}</div>` : ""}
-                  ${initialSettings.etimsSerial ? `<div>eTIMS S/N: ${initialSettings.etimsSerial}</div>` : ""}
                 </div>
               </div>
               <div class="report-title">
@@ -786,7 +757,7 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
 
           ${!initialSettings.taxComplianceEnabled ? `
             <div class="alert-banner">
-              WARNING: Tax Compliance settings are disabled for this store. These figures are for advisory purposes only. Update settings to enable eTIMS.
+              WARNING: Tax Compliance settings are disabled for this store. These figures are for advisory purposes only. Update settings to enable compliance.
             </div>
           ` : ""}
 
@@ -862,37 +833,11 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
             Analytics & Reports
           </span>
           <h1 className="text-4xl font-black text-[#171d1a] tracking-tight mt-3">
-            Financial &amp; Tax Compliance
+            Financial Analytics
           </h1>
           <p className="text-sm font-semibold text-[#6d7a73] mt-2">
-            Generate and export End-of-Day statements, P&L reports, and compile VAT summaries for KRA filing.
+            Generate and export End-of-Day statements and Profit & Loss reports.
           </p>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="flex bg-[#f0fdf4] border border-[#e4eae4] p-1.5 rounded-2xl w-fit">
-          <button
-            onClick={() => setActiveTab("pl")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-              activeTab === "pl"
-                ? "bg-[#171d1a] text-white shadow-lg shadow-black/10"
-                : "text-[#6d7a73] hover:text-[#171d1a]"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">bar_chart</span>
-            Daily P&amp;L
-          </button>
-          <button
-            onClick={() => setActiveTab("tax")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-              activeTab === "tax"
-                ? "bg-[#584fbc] text-white shadow-lg shadow-[#584fbc]/10"
-                : "text-[#6d7a73] hover:text-[#171d1a]"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">gavel</span>
-            KRA Return
-          </button>
         </div>
       </div>
 
@@ -1089,204 +1034,6 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
               </>
             ) : null}
           </motion.div>
-        ) : (
-          <motion.div
-            key="tax-tab"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Filters Row */}
-            <div className="bg-white border border-[#e4eae4] rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-              <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <span className="material-symbols-outlined text-[#584fbc]">date_range</span>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-[#6d7a73] uppercase tracking-wider">Start Date</span>
-                    <input
-                      type="date"
-                      value={taxStartDate}
-                      max={taxEndDate}
-                      onChange={(e) => setTaxStartDate(e.target.value)}
-                      className="bg-transparent border-0 font-bold text-sm text-[#171d1a] focus:ring-0 p-0 cursor-pointer outline-none"
-                    />
-                  </div>
-                </div>
-                
-                <div className="hidden sm:block text-[#bccac1] font-black">→</div>
-
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <span className="material-symbols-outlined text-[#584fbc]">date_range</span>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-[#6d7a73] uppercase tracking-wider">End Date</span>
-                    <input
-                      type="date"
-                      value={taxEndDate}
-                      min={taxStartDate}
-                      max={getTodayString()}
-                      onChange={(e) => setTaxEndDate(e.target.value)}
-                      className="bg-transparent border-0 font-bold text-sm text-[#171d1a] focus:ring-0 p-0 cursor-pointer outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {taxData && (
-                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                  <button
-                    onClick={() => {
-                      setEmailTarget("tax");
-                      setEmailModalOpen(true);
-                    }}
-                    className="flex items-center justify-center gap-2 h-11 px-5 bg-white border border-[#e4eae4] hover:bg-[#f8faf9] text-[#171d1a] rounded-xl text-xs font-bold transition-all cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">mail</span>
-                    Email Return Summary
-                  </button>
-                  <button
-                    onClick={() => handlePrintTaxReport(taxData, taxStartDate, taxEndDate)}
-                    className="flex items-center justify-center gap-2 h-11 px-5 bg-[#584fbc] hover:bg-[#2b1c8f] text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">print</span>
-                    Print Tax Return
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Compliance Banner */}
-            {!initialSettings.taxComplianceEnabled ? (
-              <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[28px] text-amber-700">warning</span>
-                  <div>
-                    <span className="font-black block text-amber-900">Tax Compliance Settings Disabled</span>
-                    <span className="text-xs font-medium text-amber-800">
-                      Enable KRA Tax settings in the settings page to start calculating line-item VAT at checkout and producing eTIMS tax invoices.
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => window.location.href = "/settings"}
-                  className="px-4 py-2 bg-amber-800 text-white rounded-xl text-xs font-bold hover:bg-amber-900 transition-colors shrink-0 cursor-pointer"
-                >
-                  Configure Tax Settings
-                </button>
-              </div>
-            ) : (
-              <div className="p-4 rounded-2xl bg-[#f0fdf4] border border-[#00694c]/20 text-[#00694c] text-xs font-bold flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px]">verified</span>
-                  <span>Store eTIMS integration active. KRA PIN: {initialSettings.kraPin} | Serial: {initialSettings.etimsSerial}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Error Message */}
-            {taxError && (
-              <div className="p-5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-bold flex items-center gap-3">
-                <span className="material-symbols-outlined text-[24px]">error</span>
-                {taxError}
-              </div>
-            )}
-
-            {/* Tax Main State */}
-            {taxLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center text-[#6d7a73]">
-                <div className="w-10 h-10 border-4 border-[#584fbc] border-t-transparent rounded-full animate-spin mb-4" />
-                <span className="font-bold text-xs uppercase tracking-wider">Aggregating VAT transactions...</span>
-              </div>
-            ) : taxData ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Metrics Breakdown */}
-                <div className="lg:col-span-7 bg-white border border-[#e4eae4] rounded-[24px] p-6 shadow-sm space-y-6">
-                  <div>
-                    <h3 className="text-base font-black text-[#171d1a] tracking-tight">
-                      KRA Returns Form Mapping
-                    </h3>
-                    <p className="text-xs font-semibold text-[#6d7a73] mt-1">
-                      Use these aggregated figures when compiling your monthly VAT-3 return sheets on KRA iTax portal.
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="p-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-[#171d1a]">Taxable Sales (Standard Rate 16%)</span>
-                        <span className="text-[10px] font-semibold text-[#6d7a73] mt-0.5">Excludes VAT amount</span>
-                      </div>
-                      <span className="text-sm font-black text-[#171d1a]">
-                        KES {Number(taxData.metrics.taxableSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <div className="p-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-[#171d1a]">Exempt Sales (Zero Rated / Exempt 0%)</span>
-                        <span className="text-[10px] font-semibold text-[#6d7a73] mt-0.5">Products flagged with 0% VAT rate</span>
-                      </div>
-                      <span className="text-sm font-black text-[#171d1a]">
-                        KES {Number(taxData.metrics.exemptSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <div className="p-4 bg-[#f5f3ff] border border-[#584fbc]/20 rounded-xl flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-[#584fbc]">Output VAT Payable (16% Collected)</span>
-                        <span className="text-[10px] font-semibold text-[#584fbc]/80 mt-0.5">Total standard-rate tax collected</span>
-                      </div>
-                      <span className="text-base font-black text-[#584fbc]">
-                        KES {Number(taxData.metrics.vatPayable).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <hr className="border-[#e4eae4]" />
-
-                    <div className="p-4 bg-[#171d1a] text-white rounded-xl flex items-center justify-between">
-                      <span className="text-xs font-black">Gross Revenue (VAT Inclusive)</span>
-                      <span className="text-base font-black">
-                        KES {Number(taxData.metrics.grossSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tax Instructions / Info */}
-                <div className="lg:col-span-5 bg-white border border-[#e4eae4] rounded-[24px] p-6 shadow-sm flex flex-col justify-between">
-                  <div className="space-y-4">
-                    <h3 className="text-base font-black text-[#171d1a] tracking-tight flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#584fbc]">info</span>
-                      How to file KRA iTax Returns
-                    </h3>
-                    <ol className="list-decimal pl-4 text-xs font-semibold text-[#6d7a73] space-y-3">
-                      <li>
-                        Log in to your <strong>KRA iTax Portal</strong> using your PIN and password.
-                      </li>
-                      <li>
-                        Navigate to <strong>Returns &gt; File Return</strong> and select <strong>Value Added Tax (VAT)</strong>.
-                      </li>
-                      <li>
-                        Download the excel Return template and go to <strong>Section B (Sales details)</strong>.
-                      </li>
-                      <li>
-                        Copy the <strong>Taxable Sales</strong> and <strong>Output VAT Payable</strong> from the dashboard table and paste into the corresponding fields.
-                      </li>
-                      <li>
-                        Validate the spreadsheet, export it to zip, and upload to the iTax portal to submit.
-                      </li>
-                    </ol>
-                  </div>
-
-                  <div className="mt-8 p-4 bg-[#f8faf9] border border-[#e4eae4] rounded-2xl text-[11px] font-medium text-[#6d7a73] leading-relaxed">
-                    💡 <strong>Tip:</strong> You can download the full return summary sheet in PDF format by clicking the <strong>Print Tax Return</strong> button above. Maintain these records locally for audits.
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {/* Email Share Modal */}

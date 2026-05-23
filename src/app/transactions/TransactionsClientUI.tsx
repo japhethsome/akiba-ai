@@ -14,15 +14,12 @@ interface Transaction {
   quantity: number;
   total_price: number;
   total_profit: number;
-  vat_amount: number;
-  vat_rate: number;
   customer_pin: string | null;
   transaction_type: string;
   created_at: string;
   storeName: string;
   storeAddress: string | null;
   kraPin: string | null;
-  etimsSerial: string | null;
   storePhone: string | null;
   storeEmail: string | null;
   taxComplianceEnabled: boolean;
@@ -131,22 +128,6 @@ export function TransactionsClientUI({
   const receiptTotal = items.reduce((sum, item) => sum + item.total_price, 0);
   const receiptProfit = items.reduce((sum, item) => sum + item.total_profit, 0);
   
-  let totalExempt = 0;
-  let totalVat = 0;
-  let totalTaxable = 0;
-  
-  items.forEach((item) => {
-    const rate = Number(item.vat_rate || 0);
-    const itemTotal = Number(item.total_price);
-    if (rate === 0) {
-      totalExempt += itemTotal;
-    } else {
-      totalTaxable += itemTotal - Number(item.vat_amount || 0);
-      totalVat += Number(item.vat_amount || 0);
-    }
-  });
-  
-  const subtotal = totalExempt + totalTaxable;
 
   const printInvoice = () => {
     if (!selectedTx) return;
@@ -322,7 +303,6 @@ export function TransactionsClientUI({
                 <h2>TAX INVOICE</h2>
                 <p><strong>Invoice No:</strong> ${selectedTx.receipt_id || selectedTx.transaction_id}</p>
                 <p><strong>Date:</strong> ${new Date(selectedTx.created_at).toLocaleString()}</p>
-                ${selectedTx.etimsSerial ? `<div class="etims-badge">eTIMS Compliant: ${selectedTx.etimsSerial}</div>` : ""}
               </div>
             </div>
 
@@ -346,8 +326,6 @@ export function TransactionsClientUI({
                   <th>Description</th>
                   <th style="text-align: right;">Qty</th>
                   <th style="text-align: right;">Unit Price (KES)</th>
-                  <th style="text-align: center;">VAT %</th>
-                  <th style="text-align: right;">VAT Amount (KES)</th>
                   <th style="text-align: right;">Total (KES)</th>
                 </tr>
               </thead>
@@ -357,8 +335,6 @@ export function TransactionsClientUI({
                     <td>${item.product_name}</td>
                     <td style="text-align: right;">${item.quantity}</td>
                     <td style="text-align: right;">${(item.total_price / item.quantity).toLocaleString()}</td>
-                    <td style="text-align: center;">${item.vat_rate}%</td>
-                    <td style="text-align: right;">${item.vat_amount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                     <td style="text-align: right;">${item.total_price.toLocaleString()}</td>
                   </tr>
                 `).join("")}
@@ -367,18 +343,6 @@ export function TransactionsClientUI({
 
             <div class="summary-wrapper">
               <table class="summary-table">
-                <tr>
-                  <td>Subtotal (Excl. VAT):</td>
-                  <td style="text-align: right;">KES ${(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>VAT Total (16%):</td>
-                  <td style="text-align: right;">KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Exempt Sales (0%):</td>
-                  <td style="text-align: right;">KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
                 <tr class="total-row">
                   <td>Total Paid:</td>
                   <td style="text-align: right;">KES ${receiptTotal.toLocaleString()}</td>
@@ -420,17 +384,11 @@ export function TransactionsClientUI({
 
     items.forEach((item: any) => {
       message += `• ${item.quantity}x ${item.product_name}\n`;
-      message += `  @ KES ${(item.total_price / item.quantity).toLocaleString()} [VAT ${item.vat_rate}%]\n`;
+      message += `  @ KES ${(item.total_price / item.quantity).toLocaleString()}\n`;
     });
 
     message += `------------------------------\n`;
 
-    if (selectedTx.taxComplianceEnabled) {
-      message += `Subtotal (Excl. VAT): KES ${(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-      message += `VAT Total (16%): KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-      if (totalExempt > 0) message += `Exempt (0%): KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-      message += `------------------------------\n`;
-    }
 
     message += `💰 *TOTAL PAID: KES ${receiptTotal.toLocaleString()}*\n`;
     message += `💳 *Payment Method:* ${selectedTx.transaction_type.replace("SALE_", "")}\n`;
@@ -666,11 +624,6 @@ export function TransactionsClientUI({
                     <p className="text-[10px] text-[#6d7a73] font-bold mt-0.5">
                       Receipt Code: {(selectedTx.receipt_id || selectedTx.transaction_id).slice(0, 12).toUpperCase()}
                     </p>
-                    {selectedTx.etimsSerial && (
-                      <span className="inline-block bg-sky-50 text-sky-700 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-sky-100 mt-1">
-                        eTIMS: {selectedTx.etimsSerial}
-                      </span>
-                    )}
                   </div>
 
                   <div className="space-y-4 text-xs font-bold text-[#6d7a73]">

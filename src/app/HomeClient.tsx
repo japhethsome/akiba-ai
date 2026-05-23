@@ -43,6 +43,16 @@ const translations = {
         rec: "Recommended Restock",
         match: "AI Best Match",
         cost: "Estimated Cost"
+      },
+      aiFeatures: {
+        badge: "POWERED BY GEMINI AI",
+        title: "Intelligent tools to run your shop",
+        cards: [
+          { icon: "mic", title: "AI Voice POS", desc: "Just speak to sell. 'Uza chupa mbili za maji'. The AI automatically adds items to your cart." },
+          { icon: "monitoring", title: "Smart Demand Forecasting", desc: "AI analyzes weather, seasons, and trends to tell you exactly what to restock and when." },
+          { icon: "chat_bubble", title: "AI Business Coach", desc: "Ask questions like 'What made the most profit today?' and get instant, plain-language advice." },
+          { icon: "photo_camera", title: "AI Shelf Auditing", desc: "Take a photo of your shelves. The AI vision instantly counts products and reconciles stock." }
+        ]
       }
     }
   },
@@ -80,6 +90,16 @@ const translations = {
         rec: "Agizo Linalopendekezwa",
         match: "AI Inalingana Bora",
         cost: "Gharama Inayokadiriwa"
+      },
+      aiFeatures: {
+        badge: "INAENDESHWA NA GEMINI AI",
+        title: "Zana za akili kuendesha duka lako",
+        cards: [
+          { icon: "mic", title: "POS ya Sauti", desc: "Ongea tu kuuza. 'Uza chupa mbili za maji'. AI inaongeza bidhaa kwenye kikapu chako." },
+          { icon: "monitoring", title: "Utabiri Mahiri", desc: "AI inachanganua hali ya hewa na mienendo kukuambia nini cha kuagiza na lini." },
+          { icon: "chat_bubble", title: "Kocha wa Biashara", desc: "Uliza maswali kama 'Nini kilileta faida zaidi leo?' na upate ushauri wa papo hapo." },
+          { icon: "photo_camera", title: "Ukaguzi wa Rafu", desc: "Piga picha rafu zako. Maono ya AI huhesabu bidhaa na kusawazisha hisa papo hapo." }
+        ]
       }
     }
   }
@@ -416,6 +436,44 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
         </div>
       </section>
+
+      {/* AI FEATURES SHOWCASE */}
+      <section className="py-24 px-6 bg-[#f0fcf5] relative overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#00694c]/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <motion.span 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              className="text-[10px] text-[#00694c] font-black mb-4 block uppercase tracking-[0.3em]"
+            >
+              {t.features.aiFeatures.badge}
+            </motion.span>
+            <h2 className="text-3xl lg:text-4xl font-black text-[#171d1a] mb-5 tracking-tight">{t.features.aiFeatures.title}</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {t.features.aiFeatures.cards.map((c, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="bg-white p-8 rounded-[32px] border border-[#00694c]/10 shadow-xl shadow-[#00694c]/5 hover:border-[#584fbc]/30 hover:shadow-2xl hover:shadow-[#584fbc]/10 transition-all group relative overflow-hidden flex flex-col items-start"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#584fbc]/5 to-transparent rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                <div className="w-14 h-14 bg-[#f5f3ff] text-[#584fbc] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-inner">
+                  <span className="material-symbols-outlined text-[28px]">{c.icon}</span>
+                </div>
+                <h3 className="text-lg font-black text-[#171d1a] mb-3 tracking-tight">{c.title}</h3>
+                <p className="text-sm text-[#3d4943] leading-relaxed opacity-70 font-medium">{c.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
 
       {/* CTA BANNER */}
       <section className="py-24 px-6">

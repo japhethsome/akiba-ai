@@ -46,7 +46,6 @@ export default async function InventoryPage() {
     buyingPrice: Number(p.buying_price),
     stock: p.stock_quantity,
     reorderLevel: p.reorder_level,
-    vatRate: Number(p.vat_rate),
     lastUpdated: p.created_at.toISOString(),
     supplierId: p.supplier_id,
     supplierName: p.supplier?.name || null,

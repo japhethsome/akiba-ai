@@ -33,8 +33,6 @@ export async function processCheckout(
       quantity: number;
       unitPrice: number;
       totalPrice: number;
-      vatRate: number;
-      vatAmount: number;
     }[] = [];
     let receiptTotal = 0;
 
@@ -58,9 +56,6 @@ export async function processCheckout(
         const totalProfit = totalPrice - totalCost;
 
         // Calculate VAT inclusive amount
-        const vatRate = Number(product.vat_rate || 16);
-        const vatAmount = totalPrice * (vatRate / (100 + vatRate));
-
         // Deduct Stock
         await tx.product.update({
           where: { product_id: product.product_id },
@@ -90,7 +85,6 @@ export async function processCheckout(
             quantity: item.quantity,
             total_price: totalPrice,
             total_profit: totalProfit,
-            vat_amount: vatAmount,
             customer_pin: customerPin || null,
             payment_method: paymentMethod,
             status: "COMPLETED",
@@ -117,8 +111,6 @@ export async function processCheckout(
           quantity: item.quantity,
           unitPrice: Number(product.selling_price),
           totalPrice,
-          vatRate,
-          vatAmount,
         });
         receiptTotal += totalPrice;
       }
@@ -139,7 +131,6 @@ export async function processCheckout(
         storeName: user.store.name,
         storeAddress: user.store.storeAddress,
         kraPin: user.store.kraPin,
-        etimsSerial: user.store.etimsSerial,
         storePhone: user.store.storePhone,
         storeEmail: user.store.storeEmail,
         taxComplianceEnabled: user.store.taxComplianceEnabled,
@@ -201,9 +192,6 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
           const totalProfit = totalPrice - totalCost;
 
           // Calculate VAT
-          const vatRate = Number(product.vat_rate || 16);
-          const vatAmount = totalPrice * (vatRate / (100 + vatRate));
-
           // Deduct Stock
           await tx.product.update({
             where: { product_id: product.product_id },
@@ -233,7 +221,6 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
               quantity: item.quantity,
               total_price: totalPrice,
               total_profit: totalProfit,
-              vat_amount: vatAmount,
               customer_pin: checkout.customerPin || null,
               transaction_type: transactionType,
             },

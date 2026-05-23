@@ -25,12 +25,9 @@ export async function getSettingsData() {
         userRole: user.role,
         storeName: user.store.name,
         storeCategory: user.store.category,
-        kraPin: user.store.kraPin,
         storeAddress: user.store.storeAddress,
-        etimsSerial: user.store.etimsSerial,
         storePhone: user.store.storePhone,
         storeEmail: user.store.storeEmail,
-        taxComplianceEnabled: user.store.taxComplianceEnabled,
       },
     };
   } catch (error: any) {
@@ -45,12 +42,9 @@ export async function updateSettings(data: {
   storeCategory: string;
   userEmail: string;
   userPhone: string;
-  kraPin?: string;
   storeAddress?: string;
-  etimsSerial?: string;
   storePhone?: string;
   storeEmail?: string;
-  taxComplianceEnabled?: boolean;
 }) {
   const session = await getSession();
   if (!session) return { success: false, error: "Unauthorized" };
@@ -119,12 +113,9 @@ export async function updateSettings(data: {
           data: {
             name: data.storeName,
             category: data.storeCategory,
-            kraPin: data.kraPin || null,
-            storeAddress: data.storeAddress || null,
-            etimsSerial: data.etimsSerial || null,
-            storePhone: data.storePhone || null,
-            storeEmail: data.storeEmail || null,
-            taxComplianceEnabled: !!data.taxComplianceEnabled,
+            storeAddress: data.storeAddress,
+            storePhone: data.storePhone,
+            storeEmail: data.storeEmail,
           },
         });
       }, {

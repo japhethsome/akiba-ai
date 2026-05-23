@@ -58,7 +58,6 @@ export function PosClientUI({
     category?: string | null;
     kraPin?: string | null;
     storeAddress?: string | null;
-    etimsSerial?: string | null;
     storePhone?: string | null;
     storeEmail?: string | null;
     taxComplianceEnabled: boolean;
@@ -492,7 +491,6 @@ export function PosClientUI({
         storeName: store?.name || "My Store",
         storeAddress: store?.storeAddress || "Nairobi, Kenya",
         kraPin: store?.kraPin || null,
-        etimsSerial: store?.etimsSerial || null,
         storePhone: store?.storePhone || null,
         storeEmail: store?.storeEmail || null,
         taxComplianceEnabled: store?.taxComplianceEnabled || false,
@@ -500,19 +498,15 @@ export function PosClientUI({
         servedBy: currentUser.name,
         createdAt: new Date().toISOString(),
         items: cart.map(i => {
-          const rate = 16; // default fallback
           const price = i.price;
           const qty = i.cartQuantity;
           const total = price * qty;
-          const vat = total * (rate / (100 + rate));
           return {
             productId: i.id,
             name: i.name,
             quantity: qty,
             unitPrice: price,
-            totalPrice: total,
-            vatRate: rate,
-            vatAmount: vat
+            totalPrice: total
           };
         }),
         total: finalTotal,
@@ -873,28 +867,11 @@ export function PosClientUI({
 
     lastReceipt.items.forEach((item: any) => {
       message += `• ${item.quantity}x ${item.name}\n`;
-      message += `  @ KES ${item.unitPrice.toLocaleString()} [VAT ${item.vatRate}%]\n`;
+      message += `  @ KES ${item.unitPrice.toLocaleString()}\n`;
     });
 
     message += `------------------------------\n`;
 
-    // Calculate tax summaries
-    let totalExempt = 0;
-    let totalVat = 0;
-    lastReceipt.items.forEach((item: any) => {
-      if (Number(item.vatRate) === 0) {
-        totalExempt += Number(item.totalPrice);
-      } else {
-        totalVat += Number(item.vatAmount || 0);
-      }
-    });
-
-    if (lastReceipt.taxComplianceEnabled) {
-      message += `Subtotal (Excl. VAT): KES ${(lastReceipt.total - totalVat).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-      message += `VAT Total (16%): KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-      if (totalExempt > 0) message += `Exempt (0%): KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
-      message += `------------------------------\n`;
-    }
 
     message += `💰 *TOTAL PAID: KES ${lastReceipt.total.toLocaleString()}*\n`;
     message += `💳 *Payment Method:* ${lastReceipt.paymentMethod}\n`;
@@ -919,26 +896,10 @@ export function PosClientUI({
     if (!printWindow) return;
 
     let totalExempt = 0;
-    let totalTaxable = 0;
-    let totalVat = 0;
-
-    receipt.items.forEach((item: any) => {
-      const rate = Number(item.vatRate || 0);
-      const itemTotal = Number(item.totalPrice);
-      if (rate === 0) {
-        totalExempt += itemTotal;
-      } else {
-        totalTaxable += itemTotal - Number(item.vatAmount || 0);
-        totalVat += Number(item.vatAmount || 0);
-      }
-    });
-
-    const subtotal = totalExempt + totalTaxable;
-
     printWindow.document.write(`
       <html>
         <head>
-          <title>Tax Invoice - ${receipt.id}</title>
+          <title>Invoice - ${receipt.id}</title>
           <style>
             body {
               font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -1104,7 +1065,6 @@ export function PosClientUI({
                 <h2>TAX INVOICE</h2>
                 <p><strong>Invoice No:</strong> ${receipt.id}</p>
                 <p><strong>Date:</strong> ${new Date(receipt.createdAt).toLocaleString()}</p>
-                ${receipt.etimsSerial ? `<div class="etims-badge">eTIMS Compliant: ${receipt.etimsSerial}</div>` : ""}
               </div>
             </div>
 
@@ -1125,12 +1085,9 @@ export function PosClientUI({
 
             <table class="items-table">
               <thead>
-                <tr>
                   <th>Description</th>
                   <th style="text-align: right;">Qty</th>
                   <th style="text-align: right;">Unit Price (KES)</th>
-                  <th style="text-align: center;">VAT %</th>
-                  <th style="text-align: right;">VAT Amount (KES)</th>
                   <th style="text-align: right;">Total (KES)</th>
                 </tr>
               </thead>
@@ -1140,8 +1097,6 @@ export function PosClientUI({
                     <td>${item.name}</td>
                     <td style="text-align: right;">${item.quantity}</td>
                     <td style="text-align: right;">${item.unitPrice.toLocaleString()}</td>
-                    <td style="text-align: center;">${item.vatRate}%</td>
-                    <td style="text-align: right;">${item.vatAmount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                     <td style="text-align: right;">${item.totalPrice.toLocaleString()}</td>
                   </tr>
                 `).join("")}
@@ -1150,18 +1105,6 @@ export function PosClientUI({
 
             <div class="summary-wrapper">
               <table class="summary-table">
-                <tr>
-                  <td>Subtotal (Excl. VAT):</td>
-                  <td style="text-align: right;">KES ${(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>VAT Total (16%):</td>
-                  <td style="text-align: right;">KES ${totalVat.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
-                <tr>
-                  <td>Exempt Sales (0%):</td>
-                  <td style="text-align: right;">KES ${totalExempt.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                </tr>
                 <tr class="total-row">
                   <td>Total Paid:</td>
                   <td style="text-align: right;">KES ${receipt.total.toLocaleString()}</td>
@@ -2673,12 +2616,7 @@ export function PosClientUI({
                              <span className="font-black text-[#171d1a]">{lastReceipt.customerPin}</span>
                           </div>
                        )}
-                       <div className="flex justify-between">
-                          <span>VAT Collected (16%):</span>
-                          <span className="font-black text-[#171d1a]">
-                             KES {lastReceipt.items.reduce((s: number, item: any) => s + (item.vatAmount || 0), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                          </span>
-                       </div>
+
                     </div>
                  )}
 

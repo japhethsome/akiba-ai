@@ -15,7 +15,6 @@ interface Product {
   buyingPrice: number;
   stock: number;
   reorderLevel: number;
-  vatRate?: number;
   lastUpdated: string;
   supplierId?: string | null;
   supplierName?: string | null;
@@ -159,7 +158,6 @@ export function InventoryClient({
       buyingPrice: product.buyingPrice,
       stock: product.stock,
       reorderLevel: product.reorderLevel,
-      vatRate: product.vatRate || 16,
       supplierId: product.supplierId || "",
     });
     setIsAddModalOpen(true);
@@ -256,7 +254,6 @@ export function InventoryClient({
                   buyingPrice: 0,
                   stock: 0,
                   reorderLevel: 5,
-                  vatRate: 16,
                   supplierId: "",
                 });
                 setIsAddModalOpen(true);
@@ -707,34 +704,16 @@ export function InventoryClient({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Reorder Level Alert Threshold</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={formData.reorderLevel}
-                      onChange={(e) => handleNumberChange("reorderLevel", e.target.value)}
-                      className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">VAT Rate</label>
-                    <div className="relative">
-                      <select
-                        value={formData.vatRate}
-                        onChange={(e) => setFormData({ ...formData, vatRate: Number(e.target.value) })}
-                        className="w-full h-12 pl-4 pr-10 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] outline-none text-[#171d1a] appearance-none"
-                      >
-                        <option value={16}>Standard (16%)</option>
-                        <option value={0}>Exempt / Zero Rated (0%)</option>
-                      </select>
-                      <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#bccac1] pointer-events-none text-[20px]">
-                        keyboard_arrow_down
-                      </span>
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-2">Reorder Level Alert Threshold</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={formData.reorderLevel}
+                    onChange={(e) => handleNumberChange("reorderLevel", e.target.value)}
+                    className="w-full h-12 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold focus:border-[#00694c] focus:ring-2 focus:ring-[#00694c]/20 outline-none transition-all"
+                  />
                 </div>
 
                 <div>
