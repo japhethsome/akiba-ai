@@ -59,7 +59,6 @@ export function InventoryClient({
     buyingPrice: 0,
     stock: 0,
     reorderLevel: 5,
-    vatRate: 16,
     supplierId: "",
   });
   const [restockAmount, setRestockAmount] = useState(0);
@@ -137,7 +136,6 @@ export function InventoryClient({
         buyingPrice: 0,
         stock: 0,
         reorderLevel: 5,
-        vatRate: 16,
         supplierId: "",
       });
     });

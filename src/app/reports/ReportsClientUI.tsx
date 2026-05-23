@@ -43,7 +43,6 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
   // Email Sharing States
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailAddress, setEmailAddress] = useState(initialSettings.userEmail || "");
-  const [emailTarget, setEmailTarget] = useState<"pl">("pl");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -76,168 +75,111 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
 
 
   // Generate Email HTML string
-  const generateEmailHtml = (type: "pl" | "tax", data: any) => {
-    if (type === "pl") {
-      const costOfSales = data.stats.totalSales - data.stats.totalProfit;
-      const formattedDate = new Date(data.date).toLocaleDateString("en-KE", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+  const generateEmailHtml = (data: any) => {
+    const costOfSales = data.stats.totalSales - data.stats.totalProfit;
+    const formattedDate = new Date(data.date).toLocaleDateString("en-KE", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
-      return `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #171d1a; padding: 20px; border: 1px solid #e4eae4; border-radius: 16px;">
-          <h2 style="color: #00694c; margin-bottom: 5px;">${data.storeName}</h2>
-          <p style="color: #6d7a73; font-size: 12px; margin-top: 0;">Daily Sales & Profit/Loss Statement</p>
-          <hr style="border: 0; border-top: 2px solid #00694c; margin: 20px 0;" />
-          <h3 style="margin-top: 0; font-size: 16px;">Summary for ${formattedDate}</h3>
-          
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Total Revenue (Sales)</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(data.stats.totalSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Cost of Sales</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(costOfSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #00694c;">Gross Profit</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold; color: #00694c;">KES ${Number(data.stats.totalProfit).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #ba1a1a;">Operating Expenses</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold; color: #ba1a1a;">- KES ${Number(data.stats.totalExpenses).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #171d1a;">Net Cash P&L</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold; color: ${data.stats.netPL >= 0 ? "#00694c" : "#ba1a1a"};">KES ${Number(data.stats.netPL).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 2px solid #00694c;">
-              <td style="padding: 10px 0; font-weight: bold; color: #171d1a;">True Net Profit (Margin)</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold; color: ${data.stats.netProfitMargin >= 0 ? "#00694c" : "#ba1a1a"};">KES ${Number(data.stats.netProfitMargin).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-          </table>
+    return `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #171d1a; padding: 20px; border: 1px solid #e4eae4; border-radius: 16px;">
+        <h2 style="color: #00694c; margin-bottom: 5px;">${data.storeName}</h2>
+        <p style="color: #6d7a73; font-size: 12px; margin-top: 0;">Daily Sales & Profit/Loss Statement</p>
+        <hr style="border: 0; border-top: 2px solid #00694c; margin: 20px 0;" />
+        <h3 style="margin-top: 0; font-size: 16px;">Summary for ${formattedDate}</h3>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+          <tr style="border-bottom: 1px solid #e4eae4;">
+            <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Total Revenue (Sales)</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(data.stats.totalSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e4eae4;">
+            <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Cost of Sales</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(costOfSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e4eae4;">
+            <td style="padding: 10px 0; font-weight: bold; color: #00694c;">Gross Profit</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold; color: #00694c;">KES ${Number(data.stats.totalProfit).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e4eae4;">
+            <td style="padding: 10px 0; font-weight: bold; color: #ba1a1a;">Operating Expenses</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold; color: #ba1a1a;">- KES ${Number(data.stats.totalExpenses).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e4eae4;">
+            <td style="padding: 10px 0; font-weight: bold; color: #171d1a;">Net Cash P&L</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold; color: ${data.stats.netPL >= 0 ? "#00694c" : "#ba1a1a"};">KES ${Number(data.stats.netPL).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 2px solid #00694c;">
+            <td style="padding: 10px 0; font-weight: bold; color: #171d1a;">True Net Profit (Margin)</td>
+            <td style="padding: 10px 0; text-align: right; font-weight: bold; color: ${data.stats.netProfitMargin >= 0 ? "#00694c" : "#ba1a1a"};">KES ${Number(data.stats.netProfitMargin).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </table>
 
-          <h4 style="margin-bottom: 10px;">Itemized Items Sold</h4>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <thead>
-              <tr style="background-color: #f8faf9;">
-                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #e4eae4;">Item Name</th>
-                <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">Qty</th>
-                <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.itemsSold.length === 0 
-                ? '<tr><td colspan="3" style="padding: 10px; text-align: center; color: #6d7a73;">No items sold today.</td></tr>' 
-                : data.itemsSold.map((item: any) => `
-                  <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #e4eae4;">${item.name}</td>
-                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">${item.quantity}</td>
-                    <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">KES ${Number(item.revenue).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-                  </tr>
-                `).join("")}
-            </tbody>
-          </table>
-          
-          <p style="font-size: 11px; color: #6d7a73; text-align: center; margin-top: 30px;">Generated automatically by Akiba AI System</p>
-        </div>
-      `;
-    } else {
-      const formatD = (dStr: string) => new Date(dStr).toLocaleDateString("en-KE", {
-        year: "numeric", month: "long", day: "numeric"
-      });
-
-      return `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #171d1a; padding: 20px; border: 1px solid #e4eae4; border-radius: 16px;">
-          <h2 style="color: #584fbc; margin-bottom: 5px;">${data.storeName}</h2>
-          <p style="color: #6d7a73; font-size: 12px; margin-top: 0;">KRA VAT Compliance Report Summary</p>
-          <hr style="border: 0; border-top: 2px solid #584fbc; margin: 20px 0;" />
-          <h3 style="margin-top: 0; font-size: 16px;">Report Period: ${formatD(data.startDate)} to ${formatD(data.endDate)}</h3>
-          
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Gross Sales (VAT Inclusive)</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(data.metrics.grossSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+        <h4 style="margin-bottom: 10px;">Itemized Items Sold</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background-color: #f8faf9;">
+              <th style="padding: 8px; text-align: left; border-bottom: 1px solid #e4eae4;">Item Name</th>
+              <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">Qty</th>
+              <th style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">Revenue</th>
             </tr>
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Taxable Sales (16% excl. VAT)</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(data.metrics.taxableSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e4eae4;">
-              <td style="padding: 10px 0; font-weight: bold; color: #6d7a73;">Exempt Sales (0% VAT)</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold;">KES ${Number(data.metrics.exemptSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-            <tr style="border-bottom: 2px solid #584fbc;">
-              <td style="padding: 10px 0; font-weight: bold; color: #584fbc;">VAT Output Payable (16% collected)</td>
-              <td style="padding: 10px 0; text-align: right; font-weight: bold; color: #584fbc; font-size: 16px;">KES ${Number(data.metrics.vatPayable).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-            </tr>
-          </table>
-
-          <div style="background-color: #f8faf9; padding: 12px; border-radius: 8px; font-size: 12px; color: #3d4943;">
-            <strong>Store Tax Details:</strong><br/>
-            KRA PIN: ${data.kraPin || "Not Configured"}
-          </div>
-          
-          <p style="font-size: 11px; color: #6d7a73; text-align: center; margin-top: 30px;">Generated automatically by Akiba AI System</p>
-        </div>
-      `;
-    }
+          </thead>
+          <tbody>
+            ${data.itemsSold.length === 0 
+              ? '<tr><td colspan="3" style="padding: 10px; text-align: center; color: #6d7a73;">No items sold today.</td></tr>' 
+              : data.itemsSold.map((item: any) => `
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e4eae4;">${item.name}</td>
+                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">${item.quantity}</td>
+                  <td style="padding: 8px; text-align: right; border-bottom: 1px solid #e4eae4;">KES ${Number(item.revenue).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
+                </tr>
+              `).join("")}
+          </tbody>
+        </table>
+        
+        <p style="font-size: 11px; color: #6d7a73; text-align: center; margin-top: 30px;">Generated automatically by Akiba AI System</p>
+      </div>
+    `;
   };
 
   // Generate plain-text for mailto link fallback
-  const getMailtoLink = (type: "pl" | "tax", data: any) => {
-    let subject = "";
-    let body = "";
-
-    if (type === "pl") {
-      const formattedDate = new Date(data.date).toLocaleDateString("en-KE", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric"
-      });
-      subject = `${data.storeName} - EOD Sales & P&L Summary [${data.date}]`;
-      
-      const costOfSales = data.stats.totalSales - data.stats.totalProfit;
-      body = `DAILY SALES & P&L REPORT - ${formattedDate}\n`;
-      body += `Store: ${data.storeName}\n`;
-      body += `-------------------------------------------\n\n`;
-      body += `FINANCIAL METRICS:\n`;
-      body += `- Total Sales Revenue: KES ${Number(data.stats.totalSales).toFixed(2)}\n`;
-      body += `- Cost of Goods Sold: KES ${Number(costOfSales).toFixed(2)}\n`;
-      body += `- Gross Profit Margin: KES ${Number(data.stats.totalProfit).toFixed(2)}\n`;
-      body += `- Total Cash Out/Expenses: KES ${Number(data.stats.totalExpenses).toFixed(2)}\n`;
-      body += `- Net Cash Flow (Sales - Expenses): KES ${Number(data.stats.netPL).toFixed(2)}\n`;
-      body += `- True Net Profit (Gross Profit - Expenses): KES ${Number(data.stats.netProfitMargin).toFixed(2)}\n\n`;
-      
-      body += `ITEMIZED BREAKDOWN OF ITEMS SOLD:\n`;
-      if (data.itemsSold.length === 0) {
-        body += `No items sold on this day.\n`;
-      } else {
-        data.itemsSold.forEach((item: any) => {
-          body += `- ${item.name}: Qty ${item.quantity} | Revenue KES ${Number(item.revenue).toFixed(2)} | VAT KES ${Number(item.vat).toFixed(2)}\n`;
-        });
-      }
-      body += `\n`;
-      body += `OPERATING EXPENSES / CASH DRAWER OUTS:\n`;
-      if (data.expenses.length === 0) {
-        body += `No operating expenses logged on this day.\n`;
-      } else {
-        data.expenses.forEach((e: any) => {
-          body += `- KES ${Number(e.amount).toFixed(2)} | Reason: ${e.reason}\n`;
-        });
-      }
+  const getMailtoLink = (data: any) => {
+    const formattedDate = new Date(data.date).toLocaleDateString("en-KE", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
+    });
+    const subject = `${data.storeName} - EOD Sales & P&L Summary [${data.date}]`;
+    
+    const costOfSales = data.stats.totalSales - data.stats.totalProfit;
+    let body = `DAILY SALES & P&L REPORT - ${formattedDate}\n`;
+    body += `Store: ${data.storeName}\n`;
+    body += `-------------------------------------------\n\n`;
+    body += `FINANCIAL METRICS:\n`;
+    body += `- Total Sales Revenue: KES ${Number(data.stats.totalSales).toFixed(2)}\n`;
+    body += `- Cost of Goods Sold: KES ${Number(costOfSales).toFixed(2)}\n`;
+    body += `- Gross Profit Margin: KES ${Number(data.stats.totalProfit).toFixed(2)}\n`;
+    body += `- Total Cash Out/Expenses: KES ${Number(data.stats.totalExpenses).toFixed(2)}\n`;
+    body += `- Net Cash Flow (Sales - Expenses): KES ${Number(data.stats.netPL).toFixed(2)}\n`;
+    body += `- True Net Profit (Gross Profit - Expenses): KES ${Number(data.stats.netProfitMargin).toFixed(2)}\n\n`;
+    
+    body += `ITEMIZED BREAKDOWN OF ITEMS SOLD:\n`;
+    if (data.itemsSold.length === 0) {
+      body += `No items sold on this day.\n`;
     } else {
-      subject = `${data.storeName} - KRA VAT Return Summary [${data.startDate} to ${data.endDate}]`;
-      body = `KRA VAT RETURN SUMMARY\n`;
-      body += `Period: ${data.startDate} to ${data.endDate}\n`;
-      body += `Store: ${data.storeName}\n`;
-      body += `KRA PIN: ${data.kraPin || "N/A"}\n`;
-      body += `-------------------------------------------\n\n`;
-      body += `- Gross Sales (VAT Inclusive): KES ${Number(data.metrics.grossSales).toFixed(2)}\n`;
-      body += `- Taxable Sales (16% excl. VAT): KES ${Number(data.metrics.taxableSales).toFixed(2)}\n`;
-      body += `- Exempt Sales (0% VAT): KES ${Number(data.metrics.exemptSales).toFixed(2)}\n`;
-      body += `- VAT Output Payable (16% collected): KES ${Number(data.metrics.vatPayable).toFixed(2)}\n\n`;
+      data.itemsSold.forEach((item: any) => {
+        body += `- ${item.name}: Qty ${item.quantity} | Revenue KES ${Number(item.revenue).toFixed(2)}\n`;
+      });
+    }
+    body += `\n`;
+    body += `OPERATING EXPENSES / CASH DRAWER OUTS:\n`;
+    if (data.expenses.length === 0) {
+      body += `No operating expenses logged on this day.\n`;
+    } else {
+      data.expenses.forEach((e: any) => {
+        body += `- KES ${Number(e.amount).toFixed(2)} | Reason: ${e.reason}\n`;
+      });
     }
 
     body += `\nGenerated via Akiba AI System.`;
@@ -251,18 +193,16 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
     setEmailSuccess(false);
     setShowMailtoFallback(false);
 
-    const reportData = emailTarget === "pl" ? plData : taxData;
+    const reportData = plData;
     if (!reportData) {
       setEmailError("No report data loaded to send.");
       setSendingEmail(false);
       return;
     }
 
-    const subject = emailTarget === "pl" 
-      ? `EOD Sales & P&L Statement for ${new Date(plDate).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })} - ${reportData.storeName}`
-      : `KRA Tax Return Compliance Summary [${taxStartDate} to ${taxEndDate}] - ${reportData.storeName}`;
+    const subject = `EOD Sales & P&L Statement for ${new Date(plDate).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })} - ${reportData.storeName}`;
 
-    const html = generateEmailHtml(emailTarget, reportData);
+    const html = generateEmailHtml(reportData);
 
     try {
       const res = await sendReportEmail(emailAddress, subject, html);
@@ -559,270 +499,7 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
     printWindow.document.close();
   };
 
-  const handlePrintTaxReport = (data: any, startDate: string, endDate: string) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Please allow popups to print/download the report");
-      return;
-    }
 
-    const formatD = (dStr: string) => new Date(dStr).toLocaleDateString("en-KE", {
-      year: "numeric", month: "long", day: "numeric",
-    });
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>KRA VAT Return Summary - ${startDate} to ${endDate}</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-            body {
-              font-family: 'Inter', sans-serif;
-              color: #171d1a;
-              padding: 40px;
-              margin: 0;
-              background-color: #ffffff;
-              font-size: 13px;
-              line-height: 1.5;
-            }
-            .header {
-              border-bottom: 2px solid #584fbc;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .header-top {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-            }
-            .store-name {
-              font-size: 24px;
-              font-weight: 800;
-              color: #584fbc;
-              margin: 0 0 5px 0;
-            }
-            .store-info {
-              color: #6d7a73;
-              font-size: 11px;
-              font-weight: 600;
-              line-height: 1.4;
-            }
-            .report-title {
-              text-align: right;
-              margin: 0;
-            }
-            .report-title h1 {
-              font-size: 20px;
-              font-weight: 800;
-              color: #171d1a;
-              margin: 0 0 5px 0;
-            }
-            .report-title p {
-              font-size: 12px;
-              font-weight: 600;
-              color: #6d7a73;
-              margin: 0;
-            }
-            .grid-stats {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 15px;
-              margin-bottom: 40px;
-            }
-            .stat-card {
-              background-color: #f8faf9;
-              border: 1px solid #e4eae4;
-              border-radius: 12px;
-              padding: 18px;
-            }
-            .stat-card.highlight {
-              background-color: #f5f3ff;
-              border-color: #584fbc/20;
-            }
-            .stat-label {
-              font-size: 10px;
-              font-weight: 800;
-              text-transform: uppercase;
-              letter-spacing: 0.1em;
-              color: #6d7a73;
-              margin-bottom: 5px;
-            }
-            .stat-val {
-              font-size: 22px;
-              font-weight: 800;
-              color: #171d1a;
-            }
-            .stat-val.tax {
-              color: #584fbc;
-            }
-            .section-title {
-              font-size: 14px;
-              font-weight: 800;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              color: #171d1a;
-              border-bottom: 1px solid #e4eae4;
-              padding-bottom: 8px;
-              margin-top: 30px;
-              margin-bottom: 15px;
-            }
-            .table-summary {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 40px;
-            }
-            .table-summary tr {
-              border-bottom: 1px solid #e4eae4;
-            }
-            .table-summary td {
-              padding: 12px 15px;
-              font-size: 13px;
-            }
-            .table-summary td.label {
-              font-weight: 800;
-              color: #3d4943;
-              width: 60%;
-            }
-            .table-summary td.value {
-              font-weight: 800;
-              color: #171d1a;
-              text-align: right;
-            }
-            .table-summary td.highlight-value {
-              color: #584fbc;
-              font-size: 15px;
-            }
-            .alert-banner {
-              background-color: #fffbeb;
-              border: 1px solid #fef3c7;
-              color: #b45309;
-              padding: 15px;
-              border-radius: 12px;
-              font-weight: 600;
-              margin-bottom: 30px;
-              font-size: 12px;
-            }
-            .signature-section {
-              margin-top: 80px;
-              display: flex;
-              justify-content: space-between;
-            }
-            .sig-line {
-              width: 200px;
-              border-top: 1px solid #6d7a73;
-              margin-top: 50px;
-              text-align: center;
-              font-size: 10px;
-              font-weight: 800;
-              color: #6d7a73;
-              text-transform: uppercase;
-              padding-top: 5px;
-            }
-            .footer {
-              margin-top: 60px;
-              border-top: 1px solid #e4eae4;
-              padding-top: 20px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              font-size: 10px;
-              font-weight: 600;
-              color: #bccac1;
-            }
-            @media print {
-              body {
-                padding: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="header-top">
-              <div>
-                <h2 class="store-name">${data.storeName}</h2>
-                <div class="store-info">
-                  ${initialSettings.storeAddress ? `<div>${initialSettings.storeAddress}</div>` : ""}
-                  ${initialSettings.storePhone ? `<div>Tel: ${initialSettings.storePhone}</div>` : ""}
-                  ${initialSettings.storeEmail ? `<div>Email: ${initialSettings.storeEmail}</div>` : ""}
-                  ${initialSettings.kraPin ? `<div>KRA PIN: ${initialSettings.kraPin}</div>` : ""}
-                </div>
-              </div>
-              <div class="report-title">
-                <h1>KRA VAT RETURN SUMMARY</h1>
-                <p>Period: ${formatD(startDate)} - ${formatD(endDate)}</p>
-              </div>
-            </div>
-          </div>
-
-          ${!initialSettings.taxComplianceEnabled ? `
-            <div class="alert-banner">
-              WARNING: Tax Compliance settings are disabled for this store. These figures are for advisory purposes only. Update settings to enable compliance.
-            </div>
-          ` : ""}
-
-          <div class="grid-stats">
-            <div class="stat-card">
-              <div class="stat-label">Gross Sales (VAT Incl.)</div>
-              <div class="stat-val">KES ${Number(data.metrics.grossSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</div>
-            </div>
-            <div class="stat-card highlight">
-              <div class="stat-label">VAT Payable (16% Collected)</div>
-              <div class="stat-val tax">KES ${Number(data.metrics.vatPayable).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</div>
-            </div>
-          </div>
-
-          <div class="section-title">KRA iTax Return Fields Map</div>
-          <table class="table-summary">
-            <tbody>
-              <tr>
-                <td class="label">Taxable Sales (Standard Rate 16% - Net of VAT)</td>
-                <td class="value">KES ${Number(data.metrics.taxableSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-              </tr>
-              <tr>
-                <td class="label">Exempt Sales (Zero Rated / Exempt 0%)</td>
-                <td class="value">KES ${Number(data.metrics.exemptSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-              </tr>
-              <tr>
-                <td class="label">Total Taxable Sales (Excluding VAT)</td>
-                <td class="value">KES ${Number(data.metrics.taxableSales + data.metrics.exemptSales).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-              </tr>
-              <tr>
-                <td class="label" style="border-top: 2px solid #e4eae4;">Output VAT (16% VAT Collected)</td>
-                <td class="value highlight-value" style="border-top: 2px solid #e4eae4;">KES ${Number(data.metrics.vatPayable).toLocaleString("en-KE", { minimumFractionDigits: 2 })}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="section-title">Declaration & Signature</div>
-          <p style="font-size: 11px; color: #6d7a73; font-weight: 500; max-width: 500px;">
-            I declare that the information provided in this report has been compiled from the transaction logs of ${data.storeName} and is, to the best of my knowledge, correct and complete.
-          </p>
-
-          <div class="signature-section">
-            <div class="sig-line">Prepared By (Signature)</div>
-            <div class="sig-line">Approved By (Signature)</div>
-          </div>
-
-          <div class="footer">
-            <div>Generated by Akiba AI System</div>
-            <div>Page 1 of 1</div>
-            <div>Date Generated: ${new Date().toLocaleString("en-KE")}</div>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
 
   return (
     <div className="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto w-full">
@@ -843,8 +520,7 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
 
       {/* Main Content Area */}
       <AnimatePresence mode="wait">
-        {activeTab === "pl" ? (
-          <motion.div
+        <motion.div
             key="pl-tab"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -872,7 +548,6 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
                 <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                   <button
                     onClick={() => {
-                      setEmailTarget("pl");
                       setEmailModalOpen(true);
                     }}
                     className="flex items-center justify-center gap-2 h-11 px-5 bg-white border border-[#e4eae4] hover:bg-[#f8faf9] text-[#171d1a] rounded-xl text-xs font-bold transition-all cursor-pointer"
@@ -1048,7 +723,7 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-black text-[#171d1a]">
-                  Email {emailTarget === "pl" ? "Daily P&L" : "VAT Return"} Report
+                  Email Daily P&L Report
                 </h3>
                 <button
                   onClick={() => setEmailModalOpen(false)}
@@ -1077,7 +752,7 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
                   </div>
 
                   <a
-                    href={getMailtoLink(emailTarget, emailTarget === "pl" ? plData : taxData)}
+                    href={getMailtoLink(plData)}
                     onClick={() => setEmailModalOpen(false)}
                     className="flex items-center justify-center gap-2 w-full h-12 bg-[#00694c] hover:bg-[#00573e] text-white rounded-xl text-xs font-bold transition-all shadow-md text-center"
                   >

@@ -10,14 +10,16 @@ type Language = "en" | "sw";
 
 const translations = {
   en: {
-    nav: { home: "Home", features: "Features", pricing: "Pricing" },
+    nav: { home: "Home", features: "Features", aiFeatures: "AI Features", pricing: "Pricing" },
     hero: {
       badge: "AI-POWERED INVENTORY",
+      aiBadge: "🔥 NEW AI FEATURES: VOICE POS & DEMAND FORECASTING",
       title1: "Your Business.",
       title2: "Smarter.",
       title3: "Stronger.",
       desc: "Help SMEs in Uasin Gishu never run out of stock, never lose sales, and always know what to reorder — in English or Kiswahili.",
       cta: "Start Your Free Trial",
+      aiCta: "Explore AI Features",
       demo: "Watch Demo",
       salesLabel: "Daily Sales"
     },
@@ -57,14 +59,16 @@ const translations = {
     }
   },
   sw: {
-    nav: { home: "Mwanzo", features: "Vipengele", pricing: "Bei" },
+    nav: { home: "Mwanzo", features: "Vipengele", aiFeatures: "Vipengele vya AI", pricing: "Bei" },
     hero: {
       badge: "INVENTORI YA AI",
+      aiBadge: "🔥 VIPENGELE VYA AI: POS YA SAUTI & UTABIRI MAHIRI",
       title1: "Biashara Yako.",
       title2: "Werevu Zaidi.",
       title3: "Imara Zaidi.",
       desc: "Saidia biashara ndogo ndogo katika Uasin Gishu wasiishiwe na bidhaa, wasipoteze mauzo, na wajue cha kuagiza — kwa Kiingereza au Kiswahili.",
       cta: "Anza Jaribio la Bure",
+      aiCta: "Vinjari Zana za AI",
       demo: "Tazama Maonyesho",
       salesLabel: "Mauzo ya Kila Siku"
     },
@@ -165,6 +169,10 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-[#00694c] font-bold text-sm">{t.nav.home}</Link>
             <Link href="#features" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">{t.nav.features}</Link>
+            <Link href="#ai-features" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm flex items-center gap-1 group">
+              <span className="material-symbols-outlined text-[16px] text-[#584fbc] group-hover:animate-pulse">auto_awesome</span>
+              <span className="text-[#584fbc] font-bold">{t.nav.aiFeatures}</span>
+            </Link>
             <Link href="#pricing" className="text-[#3d4943] hover:text-[#00694c] transition-colors text-sm">{t.nav.pricing}</Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -216,17 +224,23 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 bg-[#00694c]/10 text-[#00694c] text-[10px] px-3 py-1.5 rounded-full mb-6 font-black uppercase tracking-[0.2em] border border-[#00694c]/10"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00694c] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00694c]"></span>
-              </span>
-              {t.hero.badge}
-            </motion.div>
+            <div className="flex flex-col items-start">
+              <Link href="#ai-features">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.03 }}
+                  className="inline-flex items-center gap-2 bg-[#584fbc]/10 text-[#584fbc] text-[10px] px-4 py-2 rounded-full mb-6 font-black uppercase tracking-wider border border-[#584fbc]/20 cursor-pointer shadow-sm shadow-[#584fbc]/5 group"
+                >
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#584fbc] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#584fbc]"></span>
+                  </span>
+                  <span className="material-symbols-outlined text-[16px] group-hover:rotate-12 transition-transform">auto_awesome</span>
+                  {t.hero.aiBadge}
+                </motion.div>
+              </Link>
+            </div>
             <h1 className="text-4xl lg:text-6xl font-black leading-[1] mb-6 text-[#171d1a] tracking-tight">
               {t.hero.title1} <br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00694c] to-[#00a87a]">{t.hero.title2}</span> <br/>
@@ -240,9 +254,10 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
                 <span className="material-symbols-outlined text-[24px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
-              <button className="bg-white text-[#171d1a] h-16 px-10 rounded-2xl font-black active:scale-[0.95] hover:bg-[#f8fff9] transition-all border border-[#00694c]/10">
-                {t.hero.demo}
-              </button>
+              <Link href="#ai-features" className="bg-white text-[#171d1a] h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-[0.95] hover:bg-[#f8fff9] transition-all border border-[#00694c]/10 shadow-sm cursor-pointer group">
+                <span className="material-symbols-outlined text-[#584fbc] group-hover:animate-bounce">auto_awesome</span>
+                {t.hero.aiCta}
+              </Link>
             </div>
           </motion.div>
 
@@ -438,16 +453,17 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
       </section>
 
       {/* AI FEATURES SHOWCASE */}
-      <section className="py-24 px-6 bg-[#f0fcf5] relative overflow-hidden">
+      <section id="ai-features" className="py-24 px-6 bg-gradient-to-b from-[#f8fff9] via-[#f5f3ff]/40 to-[#f8fff9] relative overflow-hidden scroll-mt-20">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#00694c]/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-[20%] right-[-10%] w-[45%] h-[45%] bg-[#584fbc]/10 rounded-full blur-[140px] pointer-events-none" />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-16 max-w-3xl mx-auto">
             <motion.span 
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
-              className="text-[10px] text-[#00694c] font-black mb-4 block uppercase tracking-[0.3em]"
+              className="text-[10px] text-[#584fbc] font-black mb-4 block uppercase tracking-[0.3em] bg-[#f5f3ff] border border-[#584fbc]/10 rounded-full py-1.5 px-4 w-fit mx-auto shadow-sm animate-pulse"
             >
-              {t.features.aiFeatures.badge}
+              ✨ {t.features.aiFeatures.badge}
             </motion.span>
             <h2 className="text-3xl lg:text-4xl font-black text-[#171d1a] mb-5 tracking-tight">{t.features.aiFeatures.title}</h2>
           </div>
@@ -460,14 +476,19 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="bg-white p-8 rounded-[32px] border border-[#00694c]/10 shadow-xl shadow-[#00694c]/5 hover:border-[#584fbc]/30 hover:shadow-2xl hover:shadow-[#584fbc]/10 transition-all group relative overflow-hidden flex flex-col items-start"
+                className="bg-white p-8 rounded-[32px] border border-[#00694c]/10 shadow-xl shadow-[#00694c]/5 hover:border-[#584fbc] hover:shadow-2xl hover:shadow-[#584fbc]/15 transition-all group relative overflow-hidden flex flex-col items-start"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#584fbc]/5 to-transparent rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                <div className="w-14 h-14 bg-[#f5f3ff] text-[#584fbc] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-inner">
-                  <span className="material-symbols-outlined text-[28px]">{c.icon}</span>
+                <div className="flex w-full items-center justify-between mb-6 z-10">
+                  <div className="w-14 h-14 bg-[#f5f3ff] text-[#584fbc] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                    <span className="material-symbols-outlined text-[28px]">{c.icon}</span>
+                  </div>
+                  <span className="text-[9px] font-black text-[#584fbc] bg-[#584fbc]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Gemini AI
+                  </span>
                 </div>
-                <h3 className="text-lg font-black text-[#171d1a] mb-3 tracking-tight">{c.title}</h3>
-                <p className="text-sm text-[#3d4943] leading-relaxed opacity-70 font-medium">{c.desc}</p>
+                <h3 className="text-lg font-black text-[#171d1a] mb-3 tracking-tight z-10">{c.title}</h3>
+                <p className="text-sm text-[#3d4943] leading-relaxed opacity-70 font-medium z-10">{c.desc}</p>
               </motion.div>
             ))}
           </div>

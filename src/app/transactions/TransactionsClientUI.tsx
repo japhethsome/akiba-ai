@@ -662,24 +662,6 @@ export function TransactionsClientUI({
                       </span>
                     </div>
 
-                    {selectedTx.taxComplianceEnabled && (
-                      <div className="space-y-1.5 pt-2 border-t border-[#e4eae4] text-[11px]">
-                        <div className="flex justify-between">
-                          <span>Subtotal (Excl. VAT):</span>
-                          <span>KES {(subtotal - totalVat).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>VAT Amount (16%):</span>
-                          <span>KES {totalVat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                        </div>
-                        {totalExempt > 0 && (
-                          <div className="flex justify-between">
-                            <span>Exempt Sales (0%):</span>
-                            <span>KES {totalExempt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     <div className="flex justify-between border-t border-[#e4eae4] pt-4 text-sm">
                       <span className="font-black text-[#171d1a]">Total Paid:</span>

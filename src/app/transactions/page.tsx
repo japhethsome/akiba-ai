@@ -45,7 +45,6 @@ export default async function TransactionsPage() {
       product: {
         select: {
           name: true,
-          vat_rate: true,
           selling_price: true,
         },
       },
@@ -53,11 +52,9 @@ export default async function TransactionsPage() {
       store: {
         select: {
           name: true,
-          kraPin: true,
           storeAddress: true,
           storePhone: true,
           storeEmail: true,
-          taxComplianceEnabled: true,
         },
       },
     },
@@ -121,17 +118,17 @@ export default async function TransactionsPage() {
     quantity: t.quantity,
     total_price: Number(t.total_price),
     total_profit: Number(t.total_profit),
-    vat_amount: Number(t.vat_amount || 0),
-    vat_rate: Number(t.product.vat_rate || 0),
+    vat_amount: 0,
+    vat_rate: 0,
     customer_pin: t.customer_pin,
     transaction_type: t.payment_method, // payment_method maps to transaction_type in TransactionsClientUI
     created_at: t.created_at.toISOString(),
     storeName: t.store.name,
     storeAddress: t.store.storeAddress,
-    kraPin: t.store.kraPin,
+    kraPin: null,
     storePhone: t.store.storePhone,
     storeEmail: t.store.storeEmail,
-    taxComplianceEnabled: t.store.taxComplianceEnabled,
+    taxComplianceEnabled: false,
   }));
 
   return (

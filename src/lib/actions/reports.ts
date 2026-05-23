@@ -67,7 +67,7 @@ export async function getDailyPLReport(dateStr: string) {
       const prodName = t.product.name;
       const qty = t.quantity;
       const price = Number(t.total_price);
-      const vat = Number(t.vat_amount || 0);
+      const vat = 0;
 
       const existing = itemsSoldMap.get(t.product_id);
       if (existing) {
