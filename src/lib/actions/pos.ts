@@ -5,6 +5,7 @@ import { getSession } from "@/lib/session";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
+import { getSafeErrorMessage } from "@/lib/error";
 
 export async function processCheckout(
   cart: { productId: string, quantity: number }[],
@@ -146,7 +147,7 @@ export async function processCheckout(
     };
   } catch (error) {
     console.error("POS Checkout failed:", error);
-    return { error: error instanceof Error ? error.message : "Failed to process checkout" };
+    return { error: getSafeErrorMessage(error, "Failed to process checkout. Please try again.") };
   }
 }
 
@@ -251,7 +252,7 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
     return { success: true };
   } catch (error: any) {
     console.error("POS Bulk Checkout Sync failed:", error);
-    return { error: error.message || "Failed to sync offline checkouts" };
+    return { error: getSafeErrorMessage(error, "Failed to sync offline checkouts. Please try again.") };
   }
 }
 
@@ -283,10 +284,112 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
       },
     });
 
+    // Fetch the store owner's email dynamically
+    const storeOwner = await prisma.user.findFirst({
+      where: { store_id: user.store_id, role: "owner" },
+    });
+    const ownerEmail = storeOwner?.email || "akibaai.eh@gmail.com";
+
+    // Send an email to the owner
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+      const itemsHtml = items.map(i => `
+        <tr style="border-bottom: 1px solid #e4eae4;">
+          <td style="padding: 12px; font-weight: bold; color: #171d1a; font-size: 14px;">${i.name}</td>
+          <td style="padding: 12px; color: #ba1a1a; font-weight: bold; text-align: right; font-size: 14px;">${i.stock} left</td>
+        </tr>
+      `).join("");
+
+      const emailHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #171d1a; padding: 24px; border: 1px solid #e4eae4; border-radius: 20px; background-color: #ffffff;">
+          <div style="margin-bottom: 20px;">
+            <span style="background-color: #fef2f2; color: #ba1a1a; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase; tracking-spacing: 0.5px;">🚨 POS Stockout Warning</span>
+          </div>
+          <h2 style="color: #171d1a; margin-top: 0; font-size: 20px; font-weight: 800; tracking: -0.5px;">Low Stock Alert: ${user.store.name}</h2>
+          <p style="color: #6d7a73; font-size: 13px; line-height: 1.5; font-weight: 500;">
+            Attendant <strong>${user.name}</strong> just triggered a stock warning from the POS cash register. The following items have depleted below their threshold and require immediate restocking:
+          </p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background-color: #fcfdfe; border: 1px solid #e4eae4; border-radius: 12px; overflow: hidden;">
+            <thead>
+              <tr style="background-color: #fef2f2; border-bottom: 1px solid #e4eae4;">
+                <th style="padding: 12px; text-align: left; font-size: 11px; font-weight: bold; color: #ba1a1a; text-transform: uppercase;">Product Name</th>
+                <th style="padding: 12px; text-align: right; font-size: 11px; font-weight: bold; color: #ba1a1a; text-transform: uppercase;">Current Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 28px; text-align: center;">
+            <a href="http://localhost:3000/dashboard/inventory" style="background-color: #00694c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-size: 13px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(0, 105, 76, 0.15);">
+              Open Reorder & Supplier Center
+            </a>
+          </div>
+          <hr style="border: 0; border-top: 1px solid #e4eae4; margin: 24px 0;" />
+          <p style="color: #bccac1; font-size: 10px; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">
+            Powered by Akiba AI • Smart Retail Sourcing System
+          </p>
+        </div>
+      `;
+
+      // Try sending to the store owner
+      const verifiedSenderEmail = "akibaai.eh@gmail.com";
+      let recipientEmail = ownerEmail;
+
+      let res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "Akiba AI POS <onboarding@resend.dev>",
+          to: recipientEmail,
+          subject: `🚨 [Low Stock Alert] Critical Stock Shortage in ${user.store.name}`,
+          html: emailHtml,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const isSandboxError = errorData.message?.toLowerCase().includes("sandbox") || 
+                               errorData.message?.toLowerCase().includes("restricted") ||
+                               errorData.message?.toLowerCase().includes("can only send");
+
+        if (isSandboxError && recipientEmail.toLowerCase() !== verifiedSenderEmail.toLowerCase()) {
+          recipientEmail = verifiedSenderEmail;
+
+          const sandboxNotice = `
+            <div style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 16px; margin-bottom: 24px; border-radius: 12px; font-family: sans-serif; font-size: 13px; line-height: 1.5;">
+              <strong style="font-size: 14px; display: block; margin-bottom: 4px;">⚠️ Sandbox Redirect Notice</strong>
+              This low stock notice was originally addressed to the owner at <strong>${ownerEmail}</strong>. 
+              Due to Resend API sandbox constraints, we redirected it to your verified account email <strong>${verifiedSenderEmail}</strong> so you can inspect the notification.
+            </div>
+          `;
+          
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Akiba AI POS <onboarding@resend.dev>",
+              to: recipientEmail,
+              subject: `🚨 [Redirected Alert] Low Stock in ${user.store.name}`,
+              html: sandboxNotice + emailHtml,
+            }),
+          });
+        }
+      }
+    }
+
     return { success: true };
   } catch (error: any) {
     console.error("Failed to notify owner:", error);
-    return { error: error.message || "Failed to notify owner" };
+    return { error: getSafeErrorMessage(error, "Failed to notify owner. Please try again.") };
   }
 }
 
@@ -312,7 +415,7 @@ export async function recordExpense(amount: number, reason: string) {
     return { success: true };
   } catch (error: any) {
     console.error("Failed to record expense:", error);
-    return { error: error.message || "Failed to record expense" };
+    return { error: getSafeErrorMessage(error, "Failed to record expense. Please try again.") };
   }
 }
 

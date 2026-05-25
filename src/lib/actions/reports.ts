@@ -141,7 +141,7 @@ export async function sendReportEmail(recipientEmail: string, subject: string, r
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Akiba AI Reports <reports@resend.dev>",
+        from: "Akiba AI Reports <onboarding@resend.dev>",
         to: recipientEmail,
         subject: subject,
         html: reportHtml,
@@ -149,12 +149,100 @@ export async function sendReportEmail(recipientEmail: string, subject: string, r
     });
 
     if (!res.ok) {
-      const errorData = await res.json();
+      const errorData = await res.json().catch(() => ({}));
       console.error("Resend API error:", errorData);
+
+      const isSandboxError = errorData.message?.toLowerCase().includes("sandbox") || 
+                             errorData.message?.toLowerCase().includes("restricted") ||
+                             errorData.message?.toLowerCase().includes("can only send");
+
+      if (isSandboxError) {
+        const user = await prisma.user.findUnique({
+          where: { user_id: session.userId },
+          include: { store: { include: { users: { where: { role: "owner" } } } } },
+        });
+        const storeOwner = user?.store?.users[0];
+        const ownerEmail = storeOwner?.email || user?.email || "akibaai.eh@gmail.com";
+
+        if (recipientEmail.toLowerCase() !== ownerEmail.toLowerCase()) {
+          console.log(`Sandbox mode detected. Redirecting report email from ${recipientEmail} to owner email ${ownerEmail}`);
+
+          const sandboxWarning = `
+            <div style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 16px; margin-bottom: 24px; border-radius: 12px; font-family: sans-serif; font-size: 13px; line-height: 1.5;">
+              <strong style="font-size: 14px; display: block; margin-bottom: 4px;">⚠️ Resend Sandbox Mode Notice</strong>
+              This EOD Sales & P&L Statement was originally sent to <strong>${recipientEmail}</strong>. 
+              Since your Resend API key is in <strong>Sandbox Mode</strong>, emails can only be sent to the verified owner's email address. 
+              We have automatically redirected it to you at <strong>${ownerEmail}</strong> so you can inspect the output.
+            </div>
+          `;
+          const updatedHtml = sandboxWarning + reportHtml;
+
+          const retryRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Akiba AI Reports <onboarding@resend.dev>",
+              to: ownerEmail,
+              subject: `[Redirected] ${subject}`,
+              html: updatedHtml,
+            }),
+          });
+
+          if (retryRes.ok) {
+            return { 
+              success: true, 
+              redirected: true, 
+              redirectedTo: ownerEmail 
+            };
+          } else {
+            const retryErr = await retryRes.json().catch(() => ({}));
+            console.error("Resend API retry error:", retryErr);
+            
+            // If the retry also fails because the store owner email is not verified,
+            // attempt a final retry to the primary verified email (akibaai.eh@gmail.com)
+            const fallbackSenderEmail = "akibaai.eh@gmail.com";
+            if (ownerEmail.toLowerCase() !== fallbackSenderEmail.toLowerCase()) {
+              console.log(`Retrying final fallback to verified sandbox account email: ${fallbackSenderEmail}`);
+              const finalNotice = `
+                <div style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 16px; margin-bottom: 24px; border-radius: 12px; font-family: sans-serif; font-size: 13px; line-height: 1.5;">
+                  <strong style="font-size: 14px; display: block; margin-bottom: 4px;">⚠️ Sandbox Redirection Fallback</strong>
+                  This report was originally addressed to <strong>${recipientEmail}</strong> and failed dynamic redirect to owner <strong>${ownerEmail}</strong>. 
+                  We routed it to the primary verified sandbox email <strong>${fallbackSenderEmail}</strong>.
+                </div>
+              `;
+              const finalRes = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${apiKey}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  from: "Akiba AI Reports <onboarding@resend.dev>",
+                  to: fallbackSenderEmail,
+                  subject: `[Redirected Fallback] ${subject}`,
+                  html: finalNotice + reportHtml,
+                }),
+              });
+
+              if (finalRes.ok) {
+                return { 
+                  success: true, 
+                  redirected: true, 
+                  redirectedTo: fallbackSenderEmail 
+                };
+              }
+            }
+          }
+        }
+      }
+
       return {
         success: false,
         error: errorData.message || "Failed to send email via Resend.",
-        fallback: true
+        fallback: false
       };
     }
 

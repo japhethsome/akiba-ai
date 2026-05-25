@@ -297,9 +297,17 @@ export function SuppliersClientUI({
         </div>
       )}
 
-      {/* ── REORDER CENTER TAB ─────────────────────────────────────────────── */}
-      {activeTab === "reorder" && (
-        <div className="space-y-5">
+      <AnimatePresence mode="wait">
+        {/* ── REORDER CENTER TAB ─────────────────────────────────────────────── */}
+        {activeTab === "reorder" && (
+          <motion.div
+            key="reorder-tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-5"
+          >
           {totalLowStock === 0 ? (
             <div className="bg-white border border-dashed border-[#bccac1] rounded-[28px] py-20 text-center">
               <span className="material-symbols-outlined text-6xl text-[#00694c] block mb-4">check_circle</span>
@@ -472,12 +480,19 @@ export function SuppliersClientUI({
               </div>
             </>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* ── SUPPLIERS TAB ──────────────────────────────────────────────────── */}
       {activeTab === "suppliers" && (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <motion.div
+          key="suppliers-tab"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ duration: 0.25 }}
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+        >
 
         <AnimatePresence>
           {initialSuppliers.length === 0 ? (
@@ -670,8 +685,9 @@ export function SuppliersClientUI({
             })
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
       )}
+      </AnimatePresence>
       </div>
 
       {/* Add / Edit Supplier Modal */}

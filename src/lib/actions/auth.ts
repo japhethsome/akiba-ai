@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { setSession } from "@/lib/session";
 import crypto from "crypto";
+import { getSafeErrorMessage } from "@/lib/error";
 
 export async function registerOwner(formData: FormData) {
   const name = formData.get("name") as string;
@@ -70,7 +71,7 @@ export async function registerOwner(formData: FormData) {
     return { success: true, user: result.user };
   } catch (error: any) {
     console.error("Registration error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: getSafeErrorMessage(error, "An unexpected error occurred during registration. Please try again.") };
   }
 }
 
@@ -120,7 +121,8 @@ export async function registerAttendant(formData: FormData) {
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error("Attendant registration error:", error);
+    return { success: false, error: getSafeErrorMessage(error, "An unexpected error occurred during attendant registration. Please try again.") };
   }
 }
 
@@ -161,7 +163,7 @@ export async function loginUser(formData: FormData) {
     };
   } catch (error: any) {
     console.error("Login error details:", error);
-    return { error: error.message || "An unexpected error occurred during login" };
+    return { error: getSafeErrorMessage(error, "An unexpected error occurred on our server. Please try again in a few moments or contact support.") };
   }
 }
 
@@ -200,6 +202,6 @@ export async function loginUserWithGoogle(email: string) {
     };
   } catch (error: any) {
     console.error("Google login error details:", error);
-    return { error: error.message || "An unexpected error occurred during Google login" };
+    return { error: getSafeErrorMessage(error, "An unexpected error occurred during Google login. Please try again in a few moments.") };
   }
 }

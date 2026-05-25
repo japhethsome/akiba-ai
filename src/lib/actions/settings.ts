@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import { getSafeErrorMessage } from "@/lib/error";
 
 export async function getSettingsData() {
   const session = await getSession();
@@ -28,11 +29,12 @@ export async function getSettingsData() {
         storeAddress: user.store.storeAddress,
         storePhone: user.store.storePhone,
         storeEmail: user.store.storeEmail,
+        managerPin: user.store.managerPin || "1234",
       },
     };
   } catch (error: any) {
     console.error("Failed to load settings data:", error);
-    return { success: false, error: error.message || "Failed to load settings" };
+    return { success: false, error: getSafeErrorMessage(error, "Failed to load settings. Please try again.") };
   }
 }
 
@@ -45,6 +47,7 @@ export async function updateSettings(data: {
   storeAddress?: string;
   storePhone?: string;
   storeEmail?: string;
+  managerPin?: string;
 }) {
   const session = await getSession();
   if (!session) return { success: false, error: "Unauthorized" };
@@ -116,6 +119,7 @@ export async function updateSettings(data: {
             storeAddress: data.storeAddress,
             storePhone: data.storePhone,
             storeEmail: data.storeEmail,
+            managerPin: data.managerPin || "1234",
           },
         });
       }, {
@@ -129,6 +133,6 @@ export async function updateSettings(data: {
     return { success: true };
   } catch (error: any) {
     console.error("Failed to update settings:", error);
-    return { success: false, error: error.message || "Failed to save settings" };
+    return { success: false, error: getSafeErrorMessage(error, "Failed to save settings. Please try again.") };
   }
 }

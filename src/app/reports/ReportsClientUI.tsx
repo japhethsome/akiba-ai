@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getDailyPLReport, sendReportEmail } from "@/lib/actions/reports";
+import { recordExpense } from "@/lib/actions/pos";
 
 interface ReportsClientUIProps {
   initialSettings: {
@@ -46,7 +47,46 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailRedirected, setEmailRedirected] = useState(false);
+  const [emailRedirectedTo, setEmailRedirectedTo] = useState("");
   const [showMailtoFallback, setShowMailtoFallback] = useState(false);
+
+  // Operating Expense States
+  const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [expenseReason, setExpenseReason] = useState("");
+  const [recordingExpense, setRecordingExpense] = useState(false);
+  const [expenseError, setExpenseError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleLogExpense = () => {
+    const amountNum = Number(expenseAmount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setExpenseError("Please enter a valid expense amount greater than 0.");
+      return;
+    }
+    if (!expenseReason.trim()) {
+      setExpenseError("Please enter a reason or description for this expense.");
+      return;
+    }
+
+    setRecordingExpense(true);
+    setExpenseError(null);
+
+    startTransition(async () => {
+      const res = await recordExpense(amountNum, expenseReason);
+      setRecordingExpense(false);
+      if (res.success) {
+        setExpenseModalOpen(false);
+        setExpenseAmount("");
+        setExpenseReason("");
+        // Reload P&L report so it instantly updates
+        loadPL(plDate);
+      } else {
+        setExpenseError(res.error || "Failed to record expense. Please try again.");
+      }
+    });
+  };
 
   // Load P&L
   const loadPL = async (date: string) => {
@@ -208,10 +248,19 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
       const res = await sendReportEmail(emailAddress, subject, html);
       if (res.success) {
         setEmailSuccess(true);
+        if (res.redirected) {
+          setEmailRedirected(true);
+          setEmailRedirectedTo(res.redirectedTo || "");
+        } else {
+          setEmailRedirected(false);
+          setEmailRedirectedTo("");
+        }
         setTimeout(() => {
           setEmailModalOpen(false);
           setEmailSuccess(false);
-        }, 2000);
+          setEmailRedirected(false);
+          setEmailRedirectedTo("");
+        }, res.redirected ? 7000 : 2500);
       } else {
         if (res.fallback) {
           setShowMailtoFallback(true);
@@ -679,10 +728,19 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
 
                   {/* Expenses List */}
                   <div className="lg:col-span-5 bg-white border border-[#e4eae4] rounded-[24px] p-6 shadow-sm">
-                    <h3 className="text-base font-black text-[#171d1a] tracking-tight mb-4 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#ba1a1a]">payments</span>
-                      Cash Drawer Payouts / Expenses Ledger
-                    </h3>
+                    <div className="flex items-center justify-between mb-4 gap-2">
+                      <h3 className="text-base font-black text-[#171d1a] tracking-tight flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#ba1a1a]">payments</span>
+                        Cash Drawer Payouts / Expenses Ledger
+                      </h3>
+                      <button
+                        onClick={() => setExpenseModalOpen(true)}
+                        className="flex items-center gap-1 bg-[#ba1a1a]/10 hover:bg-[#ba1a1a]/20 text-[#ba1a1a] px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">add</span>
+                        Log Expense
+                      </button>
+                    </div>
                     <div className="space-y-3">
                       {plData.expenses.length === 0 ? (
                         <div className="py-12 text-center text-[#bccac1] font-bold text-xs">
@@ -740,9 +798,14 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
               )}
 
               {emailSuccess ? (
-                <div className="py-8 text-center flex flex-col items-center">
-                  <span className="material-symbols-outlined text-[48px] text-emerald-600 mb-3">check_circle</span>
+                <div className="py-6 text-center flex flex-col items-center px-4">
+                  <span className="material-symbols-outlined text-[48px] text-emerald-600 mb-3 animate-bounce">check_circle</span>
                   <span className="text-sm font-bold text-emerald-800">Report sent successfully!</span>
+                  {emailRedirected && (
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-xl text-[11px] text-amber-700 font-semibold leading-relaxed text-left">
+                      ⚠️ <strong>Sandbox Mode Redirection:</strong> In Resend sandbox mode, emails can only be sent to the verified owner address. We have automatically redirected this report to <strong>{emailRedirectedTo}</strong> (originally addressed to {emailAddress}) so you can receive and test it.
+                    </div>
+                  )}
                 </div>
               ) : showMailtoFallback ? (
                 <div className="space-y-4">
@@ -794,6 +857,86 @@ export function ReportsClientUI({ initialSettings }: ReportsClientUIProps) {
                   </button>
                 </div>
               )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Log Operating Expense Modal */}
+      <AnimatePresence>
+        {expenseModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white border border-[#e4eae4] rounded-[32px] max-w-md w-full p-6 shadow-2xl overflow-hidden relative"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-black text-[#171d1a]">
+                  Log Operating Expense
+                </h3>
+                <button
+                  onClick={() => setExpenseModalOpen(false)}
+                  className="material-symbols-outlined text-[#bccac1] hover:text-[#171d1a] cursor-pointer"
+                >
+                  close
+                </button>
+              </div>
+
+              {expenseError && (
+                <div className="p-3 mb-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs font-bold">
+                  {expenseError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="group">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#ba1a1a] transition-colors">
+                    Expense Amount (KES)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={expenseAmount}
+                    onChange={(e) => setExpenseAmount(e.target.value)}
+                    placeholder="e.g. 1500"
+                    className="w-full h-12 px-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-xs font-semibold outline-none focus:border-[#ba1a1a] focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#ba1a1a] transition-colors">
+                    Reason / Description
+                  </label>
+                  <input
+                    type="text"
+                    value={expenseReason}
+                    onChange={(e) => setExpenseReason(e.target.value)}
+                    placeholder="e.g. Electricity bill or shop supplies"
+                    className="w-full h-12 px-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-xs font-semibold outline-none focus:border-[#ba1a1a] focus:bg-white transition-all"
+                  />
+                </div>
+
+                <button
+                  onClick={handleLogExpense}
+                  disabled={recordingExpense || !expenseAmount || !expenseReason.trim()}
+                  className="w-full h-12 rounded-2xl font-black text-xs text-white bg-[#ba1a1a] hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {recordingExpense ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[16px]">save</span>
+                      Log Expense
+                    </>
+                  )}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

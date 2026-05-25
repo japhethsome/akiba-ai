@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import prisma from "@/lib/prisma";
+import { getForecastData } from "@/lib/actions/forecasts";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
 // Limits each user to 20 AI chat requests per 60 minutes.
@@ -191,6 +192,10 @@ export async function POST(req: Request) {
           include: { supplier: { select: { name: true, contact: true, whatsapp_number: true } } },
         },
         suppliers: true,
+        expenses: {
+          orderBy: { created_at: "desc" },
+          take: 10,
+        },
         transactions: {
           take: 20,
           orderBy: { created_at: "desc" },
@@ -207,7 +212,47 @@ export async function POST(req: Request) {
     todayStart.setHours(0, 0, 0, 0);
     const todayTransactions = store?.transactions.filter(t => new Date(t.created_at) >= todayStart) || [];
     const todayRevenue = todayTransactions.reduce((s, t) => s + Number(t.total_price), 0);
+    const todayProfit = todayTransactions.reduce((s, t) => s + Number(t.total_profit), 0);
+    const todayExpenses = store?.expenses.filter(e => new Date(e.created_at) >= todayStart).reduce((s, e) => s + Number(e.amount), 0) || 0;
+    const todayNetPL = todayRevenue - todayExpenses;
+    const todayNetProfitMargin = todayProfit - todayExpenses;
     const todaySalesCount = todayTransactions.length;
+
+    // ─── Fetch Forecast intelligence ──────────────────────────────────────
+    let forecastContext = "";
+    try {
+      const forecastResult = await getForecastData();
+      if (forecastResult && forecastResult.success) {
+        const activeEvent = forecastResult.upcomingEvent || "None";
+        const eventDesc = forecastResult.eventDescription || "";
+        const factor = forecastResult.seasonalFactor ?? 1.0;
+        const alerts = forecastResult.reorderAlerts || [];
+        const marketFeed = forecastResult.marketFeed || [];
+        
+        const criticalReorders = alerts
+          .filter((a: any) => a.urgency === "CRITICAL" || a.urgency === "HIGH")
+          .map((a: any) => `  - Product: ${a.name} | Stock: ${a.stock_quantity} units | Daily Consumption: ${a.daily_velocity}/day | Depletion: ${a.days_remaining} days | Suggested Restock: ${a.suggested_qty} units | Supplier: ${a.supplier_name}`)
+          .join("\n") || "  - No critical or high stockout risk alerts.";
+
+        const marketFeedContext = marketFeed.length > 0
+          ? marketFeed.map((item: any) => `  - [${item.type}] ${item.title}: Metric is "${item.metric}". Impact: ${item.impact} (${item.details})`).join("\n")
+          : "  - No dynamic outside-world metrics available.";
+
+        forecastContext = `
+🔮 PREDICTIVE DEMAND FORECASTS:
+• Active Seasonal Event: ${activeEvent}
+• Event Impact: ${eventDesc}
+• Seasonal Multiplier: +${Math.round((factor - 1) * 100)}% (Factor: x${factor.toFixed(2)})
+• Critical & High Urgency Stockout Alerts:
+${criticalReorders}
+
+🌍 LIVE OUTSIDE-WORLD MARKET INTELLIGENCE FEED:
+${marketFeedContext}
+`;
+      }
+    } catch (err) {
+      console.warn("Could not fetch forecast data for AI assistant context:", err);
+    }
 
     // ─── Handle Offline Mode ───────────────────────────────────────────────
     if (offlineReason) {
@@ -258,9 +303,13 @@ export async function POST(req: Request) {
       )
       .join("\n") || "No transactions yet.";
 
-    const systemPrompt = `You are Akiba AI, a smart business intelligence assistant for a Kenyan SME retail store named "${store?.name || "this store"}" (Category: ${store?.category || "Retail"}).
+    const loggedExpenses = store?.expenses
+      .map(e => `• KES ${Number(e.amount).toLocaleString()} for "${e.reason}" on ${new Date(e.created_at).toLocaleDateString("en-KE")}`)
+      .join("\n") || "No operating expenses logged recently.";
 
-You have access to the store's LIVE database data right now:
+    const systemPrompt = `You are Akiba AI, an advanced, highly intelligent business intelligence assistant and financial coach for a Kenyan SME retail store named "${store?.name || "this store"}" (Category: ${store?.category || "Retail"}).
+
+You have access to the store's LIVE, multi-dimensional database data:
 
 📦 FULL INVENTORY (${store?.products?.length || 0} products):
 ${allProducts}
@@ -268,24 +317,31 @@ ${allProducts}
 🚨 LOW STOCK ALERTS:
 ${lowStockList}
 
-🤝 SUPPLIERS (${store?.suppliers?.length || 0} on file):
+🤝 Registered SUPPLIERS (${store?.suppliers?.length || 0} on file):
 ${allSuppliers}
 
 💳 RECENT TRANSACTIONS (last 20):
 ${recentSales}
 
-📊 TODAY'S PERFORMANCE:
-• Sales transactions today: ${todaySalesCount}
-• Revenue today: KES ${todayRevenue.toLocaleString()}
+💸 RECENT EXPENSES LEDGER (last 10):
+${loggedExpenses}
 
-You help the owner and staff with:
-- Identifying which items are critically low and which supplier to contact (with their phone/WhatsApp)
-- Calculating profit margins, optimizing prices, and designing discount bundles
-- Reviewing sales trends and advising on restocking priorities
-- Drafting professional WhatsApp reorder messages to suppliers
-- Any business strategy question tailored to Kenyan SME context
+📊 TODAY'S FINANCIAL PERFORMANCE:
+• Sales Transactions: ${todaySalesCount} sale(s)
+• Total Revenue (Sales): KES ${todayRevenue.toLocaleString()}
+• Total Gross Profit (Markup Margins): KES ${todayProfit.toLocaleString()}
+• Operating Expenses Cash Out: KES ${todayExpenses.toLocaleString()}
+• Net Cash Flow (Revenue - Expenses): KES ${todayNetPL.toLocaleString()}
+• True Net Profit (Gross Profit - Expenses): KES ${todayNetProfitMargin.toLocaleString()}
+${forecastContext}
 
-Keep responses concise, actionable, and structured. Use bullet points, bold text for key numbers, and headings for long answers. Always use KES for currency. If asked to draft a reorder message, use formal but friendly Kenyan business language.`;
+You help the owner and staff with extremely high-intellect retail advice:
+1. **Dynamic Financial Analysis:** Analyze their true net profit, identify if expenses are eating up gross profits, explain if their profit margins (Gross profit / Revenue) are healthy, and suggest expense optimization.
+2. **Predictive Analytics & clearance:** If the user asks about dead stock, reorders, or clearance, reference their low stock items, calculate optimal restock quantities (suggesting supplier contact info), or design a 10-15% markdown strategy to free up frozen capital.
+3. **Draft WhatsApp Reorders:** Draft formal, friendly reorder messages in a localized mix of Swahili and English (Sheng/Kenyan style) referencing specific supplier details.
+4. **Kiswahili/English bilingual support:** Auto-detect and reply matching their language style.
+
+Always use KES for currency. Keep responses concise, actionable, and structured using bold figures and clean markdown tables for tables.`;
 
     // ─── Call Gemini API ───────────────────────────────────────────────────
     const formattedContents = messages

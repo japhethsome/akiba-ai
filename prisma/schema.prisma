@@ -17,6 +17,7 @@ model Store {
   storeAddress           String?
   storePhone             String?
   storeEmail             String?
+  managerPin         String              @default("1234")
   forecastResults    ForecastResult[]
   insights           Insight[]
   inventoryLogs      InventoryLog[]

@@ -72,8 +72,8 @@ export default function ContactClient() {
             Akiba<span className="text-[#00694c]">AI</span>
           </span>
         </Link>
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="text-xs font-black uppercase tracking-wider text-[#3d4943] hover:text-[#00694c] transition-colors flex items-center gap-1.5"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -96,7 +96,7 @@ export default function ContactClient() {
                 Get in Touch
               </span>
               <h1 className="text-3xl sm:text-4xl font-black text-[#171d1a] tracking-tight mt-6 mb-4">
-                Let&apos;s build <br className="hidden md:block"/>something great.
+                Let&apos;s build <br className="hidden md:block" />something great.
               </h1>
               <p className="text-sm font-medium text-[#6d7a73] leading-relaxed">
                 Have questions about how Akiba AI can automate your shop&apos;s inventory, predict stockouts, or sync dynamic payment methods? Our team is here to assist.
@@ -113,14 +113,14 @@ export default function ContactClient() {
                 <div>
                   <h4 className="text-[10px] font-black uppercase tracking-wider text-[#6d7a73]">Call or WhatsApp Us</h4>
                   <div className="mt-1 space-y-1">
-                    <a 
-                      href="tel:07086633288" 
+                    <a
+                      href="tel:07086633288"
                       className="block text-sm font-black text-[#171d1a] hover:text-[#00694c] transition-colors"
                     >
-                      07086633288
+                      0708663288
                     </a>
-                    <a 
-                      href="tel:0708992882" 
+                    <a
+                      href="tel:0708992882"
                       className="block text-sm font-black text-[#171d1a] hover:text-[#00694c] transition-colors"
                     >
                       0708992882
@@ -136,8 +136,8 @@ export default function ContactClient() {
                 </div>
                 <div>
                   <h4 className="text-[10px] font-black uppercase tracking-wider text-[#6d7a73]">Email Support</h4>
-                  <a 
-                    href="mailto:akibaai.eh@gmail.com" 
+                  <a
+                    href="mailto:akibaai.eh@gmail.com"
                     className="block text-sm font-black text-[#171d1a] hover:text-[#00694c] transition-colors mt-1"
                   >
                     akibaai.eh@gmail.com

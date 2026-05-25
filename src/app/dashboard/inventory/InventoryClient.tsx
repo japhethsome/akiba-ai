@@ -43,6 +43,10 @@ export function InventoryClient({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isPending, startTransition] = useTransition();
 
+  // Inline Restocking States
+  const [inlineRestockProductId, setInlineRestockProductId] = useState<string | null>(null);
+  const [inlineRestockAmount, setInlineRestockAmount] = useState<string>("10");
+
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
@@ -197,6 +201,14 @@ export function InventoryClient({
       await restockProduct(restockTarget.id, restockAmount);
       setRestockTarget(null);
       setRestockAmount(0);
+    });
+  };
+
+  const handleInlineRestock = (productId: string, amount: number) => {
+    if (amount <= 0) return;
+    startTransition(async () => {
+      await restockProduct(productId, amount);
+      setInlineRestockProductId(null);
     });
   };
 
@@ -460,22 +472,75 @@ export function InventoryClient({
                       <div className="flex justify-between items-end">
                         <div>
                           <div className="text-[8px] sm:text-[9px] font-black text-[#6d7a73] uppercase tracking-wider mb-0.5">Stock</div>
-                          <div className="flex items-baseline gap-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className={`text-lg sm:text-xl font-black ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
                               {product.stock}
                             </span>
                             <span className="text-[9px] font-medium text-[#bccac1]">units</span>
+                            {hasPermission(userRole, "inventory_edit") && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setInlineRestockProductId(inlineRestockProductId === product.id ? null : product.id);
+                                  setInlineRestockAmount("10");
+                                }}
+                                className="w-5 h-5 rounded-full bg-[#f0fdf4] border border-[#d1ebd7] text-[#00694c] flex items-center justify-center hover:bg-[#00694c] hover:text-white transition-all cursor-pointer shadow-sm text-xs font-black"
+                                title="Quick In-line Restock"
+                              >
+                                <span className="material-symbols-outlined text-[12px] font-black">add</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="h-1.5 w-full bg-[#f8faf9] rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min((product.stock / Math.max(product.reorderLevel * 2, 1)) * 100, 100)}%` }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                          className={`h-full rounded-full ${product.stock <= product.reorderLevel ? "bg-[#e11d48]" : "bg-[#00a87a]"}`}
-                        />
-                      </div>
+                      
+                      <AnimatePresence mode="wait">
+                        {inlineRestockProductId === product.id ? (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="bg-[#f8faf9] border border-[#e4eae4] rounded-xl p-2.5 space-y-2 mt-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex gap-1 justify-between">
+                              {["+5", "+10", "+20"].map((label) => (
+                                <button
+                                  key={label}
+                                  onClick={() => handleInlineRestock(product.id, parseInt(label))}
+                                  className="flex-1 bg-white hover:bg-[#00694c] hover:text-white border border-[#e4eae4] text-[#00694c] font-black text-[9px] py-1.5 rounded-lg transition-all cursor-pointer shadow-sm"
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="flex gap-1.5 items-center">
+                              <input
+                                type="number"
+                                min="1"
+                                value={inlineRestockAmount}
+                                onChange={(e) => setInlineRestockAmount(e.target.value)}
+                                className="w-full h-8 bg-white border border-[#e4eae4] rounded-lg px-2 text-xs font-bold text-[#171d1a] focus:border-[#00694c] focus:outline-none"
+                              />
+                              <button
+                                onClick={() => handleInlineRestock(product.id, parseInt(inlineRestockAmount) || 10)}
+                                className="h-8 w-8 bg-[#00694c] text-white rounded-lg flex items-center justify-center hover:bg-[#00573e] transition-colors shrink-0 cursor-pointer shadow-md"
+                              >
+                                <span className="material-symbols-outlined text-[16px] font-black">check</span>
+                              </button>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="h-1.5 w-full bg-[#f8faf9] rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min((product.stock / Math.max(product.reorderLevel * 2, 1)) * 100, 100)}%` }}
+                              transition={{ duration: 1, ease: "easeOut" }}
+                              className={`h-full rounded-full ${product.stock <= product.reorderLevel ? "bg-[#e11d48]" : "bg-[#00a87a]"}`}
+                            />
+                          </div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     {/* Mobile Stock & Restock button row */}
@@ -564,9 +629,62 @@ export function InventoryClient({
                             {product.price.toLocaleString()}
                           </td>
                           <td className="p-4">
-                            <span className={`font-black text-lg ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
-                              {product.stock}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`font-black text-lg ${product.stock <= product.reorderLevel ? "text-[#e11d48]" : "text-[#171d1a]"}`}>
+                                {product.stock}
+                              </span>
+                              {hasPermission(userRole, "inventory_edit") && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setInlineRestockProductId(inlineRestockProductId === product.id ? null : product.id);
+                                    setInlineRestockAmount("10");
+                                  }}
+                                  className="w-5 h-5 rounded-full bg-[#f0fdf4] border border-[#d1ebd7] text-[#00694c] flex items-center justify-center hover:bg-[#00694c] hover:text-white transition-all cursor-pointer shadow-sm text-xs font-black"
+                                  title="Quick In-line Restock"
+                                >
+                                  <span className="material-symbols-outlined text-[12px] font-black">add</span>
+                                </button>
+                              )}
+                            </div>
+                            <AnimatePresence>
+                              {inlineRestockProductId === product.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -5, height: 0 }}
+                                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                                  exit={{ opacity: 0, y: -5, height: 0 }}
+                                  className="mt-2 bg-[#f8faf9] border border-[#e4eae4] rounded-xl p-2 space-y-1.5 w-40"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex gap-1 justify-between">
+                                    {["+5", "+10", "+20"].map((label) => (
+                                      <button
+                                        key={label}
+                                        onClick={() => handleInlineRestock(product.id, parseInt(label))}
+                                        className="flex-1 bg-white hover:bg-[#00694c] hover:text-white border border-[#e4eae4] text-[#00694c] font-black text-[9px] py-1 rounded-md transition-all cursor-pointer shadow-sm"
+                                      >
+                                        {label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div className="flex gap-1.5 items-center">
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={inlineRestockAmount}
+                                      onChange={(e) => setInlineRestockAmount(e.target.value)}
+                                      className="w-full h-7 bg-white border border-[#e4eae4] rounded-md px-1.5 text-xs font-bold text-[#171d1a] focus:border-[#00694c] focus:outline-none"
+                                    />
+                                    <button
+                                      onClick={() => handleInlineRestock(product.id, parseInt(inlineRestockAmount) || 10)}
+                                      className="h-7 w-7 bg-[#00694c] text-white rounded-md flex items-center justify-center hover:bg-[#00573e] transition-colors shrink-0 cursor-pointer shadow-sm"
+                                    >
+                                      <span className="material-symbols-outlined text-[14px] font-black">check</span>
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </td>
                           <td className="p-4">
                             {product.stock <= product.reorderLevel ? (

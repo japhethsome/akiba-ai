@@ -15,6 +15,7 @@ interface SettingsClientUIProps {
     storeAddress?: string | null;
     storePhone?: string | null;
     storeEmail?: string | null;
+    managerPin?: string | null;
   };
 }
 
@@ -28,6 +29,7 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
   const [storeAddress, setStoreAddress] = useState(initialData.storeAddress || "");
   const [storePhone, setStorePhone] = useState(initialData.storePhone || "");
   const [storeEmail, setStoreEmail] = useState(initialData.storeEmail || "");
+  const [managerPin, setManagerPin] = useState(initialData.managerPin || "1234");
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
       storeAddress,
       storePhone,
       storeEmail,
+      managerPin,
     });
 
     setLoading(false);
@@ -275,10 +278,10 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
               <div className="border-t border-[#e4eae4] pt-6 mt-6 space-y-6">
                 <div>
                   <h3 className="text-sm font-black text-[#171d1a] tracking-tight">
-                    KRA Tax Compliance
+                    Store Invoice Details
                   </h3>
                   <p className="text-xs font-semibold text-[#6d7a73] mt-1">
-                    Configure your VAT rate settings and tax identification info to enable compliant tax invoice generation.
+                    Configure your physical address and contact details shown on printed customer receipts.
                   </p>
                 </div>
 
@@ -323,6 +326,35 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
                       />
                     </div>
                   </div>
+
+                {/* Security Section for Clearance PIN */}
+                <div className="border-t border-[#e4eae4] pt-6 mt-6 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-black text-[#171d1a] tracking-tight">
+                      Store Security Credentials
+                    </h3>
+                    <p className="text-xs font-semibold text-[#6d7a73] mt-1">
+                      Define the 4-digit numeric code required for high-risk actions (custom POS register discounts, voiding sales, register cash outs, and shift closures).
+                    </p>
+                  </div>
+
+                  <div className="group max-w-xs">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
+                      Manager Clearance PIN
+                    </label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      value={managerPin}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, ""); // Allow digits only
+                        setManagerPin(val);
+                      }}
+                      placeholder="e.g. 1234"
+                      className="w-full h-12 px-4 bg-[#f8faf9] border-2 border-[#e4eae4] rounded-2xl text-center font-black tracking-widest text-sm outline-none focus:border-[#00694c] focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 

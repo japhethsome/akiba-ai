@@ -30,10 +30,6 @@ interface Message {
 export default function AIInsightsPage() {
   const [messages, setMessages] = useState<Message[]>([
     { role: "ai", text: "Habari! Mimi ni Akiba AI. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!", time: "Just now" },
-    { role: "user", text: "What was my best-selling item this week?", time: "2 min ago" },
-    { role: "ai", type: "analysis", text: "Your top performer this week was Sugar 1kg with 96 units sold, generating KES 12,480 in revenue. This is 23% higher than last week — consider ordering an extra 50 units before the weekend rush.", time: "2 min ago", data: { label: "Sugar 1kg", progress: 85 } },
-    { role: "user", text: "Je, kuna bidhaa zinazoisha hivi sasa?", time: "1 min ago" },
-    { role: "ai", type: "warning", text: "Ndiyo! Kuna bidhaa 3 zinazohitaji restock haraka:\n• Cooking Oil 2L — imekwisha kabisa (0 units)\n• Nails 4-inch — units 5 zimebaki\n• Broiler Feed 50kg — units 3 zimebaki\nNapendekeza uagize leo ili usipoteze mauzo ya kesho.", time: "1 min ago" },
   ]);
 
   const [input, setInput] = useState("");
@@ -41,22 +37,93 @@ export default function AIInsightsPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const response = await fetch("/api/ai/chat");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.messages && data.messages.length > 0) {
+            const formatted = data.messages.map((m: any) => {
+              const isTable = m.content.includes("Product") && (m.content.includes("Value") || m.content.includes("Stock"));
+              const isAnalysis = m.content.includes("Sugar 1kg") || m.content.includes("AI Analysis") || m.content.includes("Profit") || m.content.includes("margin");
+              return {
+                role: m.role === "assistant" ? "ai" : "user",
+                text: m.content,
+                type: isTable ? "table" : isAnalysis ? "analysis" : undefined,
+                time: m.savedAt ? new Date(m.savedAt).toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" }) : "Saved"
+              };
+            });
+            setMessages([
+              { role: "ai", text: "Welcome back! Here is your saved analysis and Business Intelligence assistant history:", time: "Just now" },
+              ...formatted
+            ]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isThinking]);
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     if (!text.trim()) return;
-    setMessages(prev => [...prev, { role: "user", text, time: "Just now" }]);
+    const newMsg: Message = { role: "user", text, time: new Date().toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" }) };
+    setMessages(prev => [...prev, newMsg]);
     setInput("");
     setIsThinking(true);
-    setTimeout(() => {
+
+    try {
+      // Build full chat payload to send to Gemini
+      const chatPayload = [
+        ...messages.map(m => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: m.text
+        })),
+        { role: "user", content: text }
+      ];
+
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: chatPayload }),
+      });
+
       setIsThinking(false);
-      let aiResponse: Message = { role: "ai", text: "I'm analyzing your data now. Based on your recent transactions, everything looks stable. Would you like a detailed P&L breakdown?", time: "Just now" };
-      if (text.toLowerCase().includes("dead") || text.toLowerCase().includes("slow")) {
-        aiResponse = { role: "ai", type: "table", text: "Here are products that haven't sold in the last 90+ days:", time: "Just now", data: [{ p: "Wire Mesh 1m", l: "97 days ago", s: "32 units", c: "27,200" }, { p: "Cement 50kg", l: "112 days ago", s: "8 units", c: "32,000" }] };
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiReply = data.choices?.[0]?.message?.content || "No response received.";
+        
+        // Check if reply format is tables or recommendations
+        const isTable = aiReply.includes("Product") && (aiReply.includes("Value") || aiReply.includes("Stock"));
+        const isAnalysis = aiReply.includes("AI Analysis") || aiReply.includes("Analysis") || aiReply.includes("profit") || aiReply.includes("margin");
+
+        setMessages(prev => [...prev, {
+          role: "ai",
+          text: aiReply,
+          type: isTable ? "table" : isAnalysis ? "analysis" : undefined,
+          time: new Date().toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: "ai",
+          text: "I encountered an issue communicating with the AI server. Please check your internet connection and try again.",
+          time: new Date().toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })
+        }]);
       }
-      setMessages(prev => [...prev, aiResponse]);
-    }, 2000);
+    } catch (err) {
+      setIsThinking(false);
+      setMessages(prev => [...prev, {
+        role: "ai",
+        text: "An unexpected error occurred. Please try again.",
+        time: new Date().toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })
+      }]);
+    }
   };
 
   return (

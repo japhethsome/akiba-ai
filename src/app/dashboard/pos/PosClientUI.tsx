@@ -4,6 +4,7 @@ import React, { useState, useMemo, useTransition, useEffect, useRef } from "reac
 import { motion, AnimatePresence } from "framer-motion";
 import { processCheckout, processBulkCheckouts, notifyOwnerLowStock, recordExpense } from "@/lib/actions/pos";
 import { cleanWhatsAppNumber } from "@/lib/phone";
+import Link from "next/link";
 
 interface Product {
   id: string;
@@ -60,6 +61,7 @@ export function PosClientUI({
     storeAddress?: string | null;
     storePhone?: string | null;
     storeEmail?: string | null;
+    managerPin?: string | null;
   } | null;
 }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -113,6 +115,7 @@ export function PosClientUI({
   const [cashOutReason, setCashOutReason] = useState("");
   const [showCloseDrawerModal, setShowCloseDrawerModal] = useState(false);
   const [actualCashInDrawer, setActualCashInDrawer] = useState("");
+  const [discrepancyNote, setDiscrepancyNote] = useState("");
   const [drawerCloseReport, setDrawerCloseReport] = useState<any | null>(null);
   const [drawerSessionHistory, setDrawerSessionHistory] = useState<any[]>([]);
 
@@ -787,6 +790,7 @@ export function PosClientUI({
       actualVal,
       discrepancy,
       status: discrepancy === 0 ? "Balanced" : discrepancy > 0 ? "Overage" : "Shortage",
+      note: discrepancyNote,
     };
 
     setDrawerCloseReport(newReport);
@@ -801,11 +805,12 @@ export function PosClientUI({
     setCart([]);
     setStartingFloat(0);
     setActualCashInDrawer("");
+    setDiscrepancyNote("");
     setShowCloseDrawerModal(false);
   };
 
   const verifyManagerPinForClose = () => {
-    if (clearancePin === "1234") {
+    if (clearancePin === (store?.managerPin || "1234")) {
       setIsClearedAsManager(true);
       closeDrawerSessionConfirmed();
     } else {
@@ -825,7 +830,7 @@ export function PosClientUI({
 
   // Manager clearance pin discount handler
   const handleVerifyCustomDiscount = () => {
-    if (clearancePin === "1234") {
+    if (clearancePin === (store?.managerPin || "1234")) {
       setIsClearedAsManager(true);
       setDiscount(Number(customDiscountInput) / 100);
       setCustomDiscountOpen(false);
@@ -845,6 +850,28 @@ export function PosClientUI({
       setPinError("");
       setCustomDiscountOpen(true);
     }
+  };
+
+  const generateShiftWhatsAppLink = (report: any) => {
+    if (!report) return "";
+    let message = `*============================*\n`;
+    message += `*🏪 ${store?.name?.toUpperCase() || "STORE"} - SHIFT REPORT*\n`;
+    message += `*============================*\n`;
+    message += `📅 Date: ${new Date().toLocaleDateString("en-KE")}\n`;
+    message += `⏰ Duration: ${report.sessionStarted} - ${report.sessionEnded}\n`;
+    message += `💼 Cash Sales: ${report.salesCount} sale(s) (KES ${report.cashSalesTotal.toLocaleString()})\n`;
+    message += `➕ Float/Cash In: KES ${report.cashInTotal.toLocaleString()}\n`;
+    message += `➖ Expenses Paid Out: KES ${report.cashOutTotal.toLocaleString()}\n`;
+    message += `🧮 Expected Cash: KES ${report.expectedVal.toLocaleString()}\n`;
+    message += `💵 Counted Cash: KES ${report.actualVal.toLocaleString()}\n`;
+    message += `*----------------------------*\n`;
+    message += `📊 Audited Status: *${report.status.toUpperCase()}*\n`;
+    if (report.discrepancy !== 0) {
+      message += `⚠️ Discrepancy: KES ${report.discrepancy.toLocaleString()}\n`;
+      if (report.note) message += `📝 Reason: "${report.note}"\n`;
+    }
+    message += `*============================*\n`;
+    return `https://wa.me/?text=${encodeURIComponent(message)}`;
   };
 
   // Digital Web WhatsApp text receipt URL helper
@@ -1337,24 +1364,39 @@ export function PosClientUI({
                     </div>
                     
                     <div className="shrink-0 flex items-center gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleNotifyOwner}
-                        disabled={notifyingOwner || notifySuccess}
-                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm ${
-                          notifySuccess 
-                            ? "bg-emerald-600 text-white" 
-                            : "bg-[#e11d48] text-white hover:bg-[#be123c]"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          {notifySuccess ? "check_circle" : "mail"}
-                        </span>
-                        <span>
-                          {notifyingOwner ? "Sending..." : notifySuccess ? "Owner Notified" : "Notify Owner"}
-                        </span>
-                      </motion.button>
+                      {currentUser?.role?.toLowerCase() === "owner" ? (
+                        <Link href="/dashboard/suppliers?tab=reorder" passHref legacyBehavior>
+                          <motion.a
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm bg-[#e11d48] text-white hover:bg-[#be123c] cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">
+                              local_mall
+                            </span>
+                            <span>Reorder Stock</span>
+                          </motion.a>
+                        </Link>
+                      ) : (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleNotifyOwner}
+                          disabled={notifyingOwner || notifySuccess}
+                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm ${
+                            notifySuccess 
+                              ? "bg-emerald-600 text-white" 
+                              : "bg-[#e11d48] text-white hover:bg-[#be123c]"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            {notifySuccess ? "check_circle" : "mail"}
+                          </span>
+                          <span>
+                            {notifyingOwner ? "Sending..." : notifySuccess ? "Owner Notified" : "Notify Owner"}
+                          </span>
+                        </motion.button>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -2536,11 +2578,11 @@ export function PosClientUI({
                   {pinError && <p className="text-[10px] text-rose-600 font-bold text-center mt-1">{pinError}</p>}
                 </div>
 
-                <div className="text-center text-[9px] text-[#bccac1] font-bold">Use default PIN "1234" to clear validation.</div>
+                <div className="text-center text-[9px] text-[#bccac1] font-bold">Use dynamic security PIN configured in store settings to clear validation.</div>
 
                 <button 
                   onClick={activeTab === "register" ? handleVerifyCustomDiscount : () => {
-                    if (clearancePin === "1234") {
+                    if (clearancePin === (store?.managerPin || "1234")) {
                       setIsClearedAsManager(true);
                       setCustomDiscountOpen(false);
                     } else {
@@ -2807,7 +2849,7 @@ export function PosClientUI({
                   </div>
                 )}
 
-                <div className="space-y-1">
+                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-[#6d7a73]">Actual Cash Counted (KES)</label>
                   <input 
                     type="number" required placeholder="e.g. 8300" value={actualCashInDrawer}
@@ -2815,6 +2857,44 @@ export function PosClientUI({
                     className="w-full h-11 px-3 border border-[#e4eae4] rounded-xl text-sm font-black focus:border-[#00694c] outline-none"
                   />
                 </div>
+
+                {isClearedAsManager && actualCashInDrawer && (
+                  <div className={`p-4 rounded-2xl text-xs font-bold flex flex-col gap-1.5 ${
+                    Number(actualCashInDrawer) === expectedCash
+                      ? "bg-[#f0fdf4] border border-[#d1ebd7] text-[#00694c]"
+                      : Number(actualCashInDrawer) < expectedCash
+                      ? "bg-rose-50 border border-rose-100 text-rose-700"
+                      : "bg-amber-50 border border-amber-100 text-amber-700"
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <span>Expected Cash:</span>
+                      <span>KES {expectedCash.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center font-black">
+                      <span>Audited Discrepancy:</span>
+                      <span>
+                        {Number(actualCashInDrawer) === expectedCash 
+                          ? "Balanced" 
+                          : Number(actualCashInDrawer) < expectedCash 
+                          ? `- KES ${(expectedCash - Number(actualCashInDrawer)).toLocaleString()} (Shortage)` 
+                          : `+ KES ${(Number(actualCashInDrawer) - expectedCash).toLocaleString()} (Overage)`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {isClearedAsManager && actualCashInDrawer && Number(actualCashInDrawer) !== expectedCash && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-rose-700">Variance Explanation *</label>
+                    <textarea 
+                      required
+                      placeholder="e.g. Spent KES 150 for minor shop cleaning supplies or attendant calculations discrepancy..."
+                      value={discrepancyNote}
+                      onChange={(e) => setDiscrepancyNote(e.target.value)}
+                      className="w-full pl-3 pr-3 py-2 bg-white border border-[#e4eae4] rounded-xl text-xs font-semibold focus:border-rose-500 outline-none resize-none h-16"
+                    />
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <button 
@@ -2825,9 +2905,14 @@ export function PosClientUI({
                   </button>
                   <button 
                     onClick={!isClearedAsManager ? verifyManagerPinForClose : closeDrawerSessionConfirmed}
-                    className="flex-1 h-11 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-all shadow-md"
+                    disabled={
+                      !isClearedAsManager 
+                        ? !clearancePin 
+                        : !actualCashInDrawer || (Number(actualCashInDrawer) !== expectedCash && !discrepancyNote.trim())
+                    }
+                    className="flex-1 h-11 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-all shadow-md disabled:opacity-50"
                   >
-                    Submit & Close Session
+                    {!isClearedAsManager ? "Verify & Close" : "Submit & Close Session"}
                   </button>
                 </div>
               </div>
@@ -2836,6 +2921,102 @@ export function PosClientUI({
         )}
       </AnimatePresence>
 
+      {/* MODAL 9: SHIFT CLOSE REPORT SUMMARY MODAL */}
+      <AnimatePresence>
+        {drawerCloseReport && (
+          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-[#171d1a]/85 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[32px] p-6 lg:p-8 w-full max-w-md relative z-10 shadow-2xl space-y-6"
+            >
+              <div className="text-center space-y-2 border-b border-[#e4eae4] pb-4">
+                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full flex items-center justify-center mx-auto shadow-md">
+                  <span className="material-symbols-outlined text-[32px] font-black animate-bounce">check_circle</span>
+                </div>
+                <h3 className="text-lg font-black text-[#171d1a]">Shift Reconciled & Closed</h3>
+                <p className="text-xs text-[#6d7a73]">
+                  Register session has been successfully logged. Review your shift summary below.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-[#f8faf9] border border-[#e4eae4] rounded-2xl p-4 space-y-2 text-xs font-bold text-[#171d1a]">
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2">
+                    <span className="text-[#6d7a73]">Shift Duration:</span>
+                    <span>{drawerCloseReport.sessionStarted} - {drawerCloseReport.sessionEnded}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2">
+                    <span className="text-[#6d7a73]">Cash Sales Count:</span>
+                    <span>{drawerCloseReport.salesCount} sale(s)</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2">
+                    <span className="text-[#6d7a73]">Starting Float:</span>
+                    <span>KES {drawerCloseReport.startingFloat.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2">
+                    <span className="text-[#6d7a73]">Total Cash Injected:</span>
+                    <span>KES {drawerCloseReport.cashInTotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2 font-semibold">
+                    <span className="text-[#6d7a73]">Paid Out Expenses:</span>
+                    <span className="text-rose-600">- KES {drawerCloseReport.cashOutTotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2 font-black">
+                    <span className="text-[#6d7a73]">Expected Register Cash:</span>
+                    <span>KES {drawerCloseReport.expectedVal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#e4eae4]/50 pb-2 font-black">
+                    <span className="text-[#6d7a73]">Actual Counted Cash:</span>
+                    <span>KES {drawerCloseReport.actualVal.toLocaleString()}</span>
+                  </div>
+                  <div className={`flex justify-between items-center pt-2 font-black ${
+                    drawerCloseReport.status === "Balanced" 
+                      ? "text-emerald-600" 
+                      : drawerCloseReport.status === "Overage" 
+                      ? "text-amber-600" 
+                      : "text-rose-600"
+                  }`}>
+                    <span>Discrepancy Status:</span>
+                    <span className="px-2 py-0.5 rounded-lg bg-current/10 uppercase text-[10px] tracking-wider">
+                      {drawerCloseReport.status} ({drawerCloseReport.discrepancy >= 0 ? "+" : ""}{drawerCloseReport.discrepancy.toLocaleString()})
+                    </span>
+                  </div>
+                </div>
+
+                {drawerCloseReport.note && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-xs font-bold text-rose-800">
+                    <span className="text-[10px] uppercase text-[#6d7a73] block mb-1">Variance Explanation</span>
+                    &ldquo;{drawerCloseReport.note}&rdquo;
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <a
+                    href={generateShiftWhatsAppLink(drawerCloseReport)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-12 bg-[#25d366] hover:bg-[#128c7e] text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md shadow-[#25d366]/10 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">chat</span>
+                    WhatsApp Report to Store Owner
+                  </a>
+
+                  <button
+                    onClick={() => setDrawerCloseReport(null)}
+                    className="w-full h-12 bg-[#171d1a] hover:bg-black text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-black/10 cursor-pointer"
+                  >
+                    Done & Return to POS
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -34,6 +34,15 @@ interface ClerkTarget {
   daily_target: number;
 }
 
+interface MarketFeedItem {
+  id: string;
+  title: string;
+  metric: string;
+  impact: string;
+  type: "WEATHER" | "AGRICULTURE" | "EPRA" | "HOLIDAY" | "MACRO";
+  details: string;
+}
+
 interface ForecastsClientUIProps {
   upcomingEvent: string;
   eventDescription: string;
@@ -43,6 +52,7 @@ interface ForecastsClientUIProps {
   clerkTargets: ClerkTarget[];
   products: { id: string; name: string }[];
   storeName: string;
+  marketFeed?: MarketFeedItem[];
 }
 
 export function ForecastsClientUI({
@@ -54,6 +64,7 @@ export function ForecastsClientUI({
   clerkTargets,
   products,
   storeName,
+  marketFeed = [],
 }: ForecastsClientUIProps) {
   // Session lock to prevent multiple tabs
   useEffect(() => {
@@ -522,6 +533,29 @@ export function ForecastsClientUI({
           ))}
         </div>
       </motion.div>
+
+      {/* Floating Sparkles 'Ask Akiba AI Coach' Button */}
+      <div className="fixed bottom-24 right-6 z-[160] pointer-events-auto">
+        <motion.button
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            const customEvent = new CustomEvent("open-ai-chat", {
+              detail: {
+                prompt: "Help me analyze my store's predictive demand forecasts, seasonal multipliers, and critical restocking alerts."
+              }
+            });
+            window.dispatchEvent(customEvent);
+          }}
+          className="flex items-center gap-2 px-5 h-12 bg-gradient-to-r from-[#584fbc] to-[#00694c] hover:from-[#493ea6] hover:to-[#00573e] text-white rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#584fbc]/20 border border-white/20 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-4 h-4 text-amber-300 animate-pulse shrink-0">
+            <path d="M11.5 2C11.5 2 12.3 5.7 14 7.4C15.7 9.1 19.4 9.9 19.4 9.9C19.4 9.9 15.7 10.7 14 12.4C12.3 14.1 11.5 17.8 11.5 17.8C11.5 17.8 10.7 14.1 9 12.4C7.3 10.7 3.6 9.9 3.6 9.9C3.6 9.9 7.3 9.1 9 7.4C10.7 5.7 11.5 2 11.5 2Z" />
+            <path d="M19 14C19 14 19.4 15.8 20.2 16.6C21 17.4 22.8 17.8 22.8 17.8C22.8 17.8 21 18.2 20.2 19C19.4 19.8 19 21.6 19 21.6C19 21.6 18.6 19.8 17.8 19C17 18.2 15.2 17.8 15.2 17.8C15.2 17.8 17 17.4 17.8 16.6C18.6 15.8 19 14 19 14Z" />
+          </svg>
+          <span>Ask Akiba AI Coach</span>
+        </motion.button>
+      </div>
     </motion.div>
   );
 }

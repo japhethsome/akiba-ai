@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
+import { getSafeErrorMessage } from "@/lib/error";
 
 export async function addProduct(data: {
   name: string;
@@ -55,7 +56,7 @@ export async function addProduct(data: {
     return { success: true };
   } catch (error: any) {
     console.error("Failed to add product:", error);
-    return { error: error.message || "Failed to add product" };
+    return { error: getSafeErrorMessage(error, "Failed to add product. Please try again.") };
   }
 }
 
@@ -103,7 +104,7 @@ export async function restockProduct(productId: string, additionalStock: number)
     return { success: true };
   } catch (error: any) {
     console.error("Failed to restock product:", error);
-    return { error: error.message || "Failed to restock product" };
+    return { error: getSafeErrorMessage(error, "Failed to restock product. Please try again.") };
   }
 }
 
@@ -153,6 +154,6 @@ export async function updateProduct(
     return { success: true };
   } catch (error: any) {
     console.error("Failed to update product:", error);
-    return { error: error.message || "Failed to update product" };
+    return { error: getSafeErrorMessage(error, "Failed to update product. Please try again.") };
   }
 }
