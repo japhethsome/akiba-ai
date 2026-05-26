@@ -27,69 +27,17 @@ function checkRateLimit(userId: string): { allowed: boolean; remaining: number }
   return { allowed: true, remaining: RATE_LIMIT - entry.count };
 }
 
-// ─── GET — Load conversation history from Insight table ──────────────────────
+// ─── GET — Load conversation history from Insight table (Disabled for privacy & ephemerality)
 export async function GET() {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const store = await prisma.store.findFirst({
-      where: { users: { some: { user_id: session.userId } } },
-      select: { id: true },
-    });
-
-    if (!store) {
-      return NextResponse.json({ messages: [] });
-    }
-
-    // Load the last 20 insight records (10 user/AI pairs) from the DB
-    const savedInsights = await prisma.insight.findMany({
-      where: { store_id: store.id },
-      orderBy: { created_at: "asc" },
-      take: 20,
-    });
-
-    // Convert DB records back to message pairs
-    const messages: { role: "user" | "assistant"; content: string; savedAt?: string }[] = [];
-    for (const insight of savedInsights) {
-      messages.push({ role: "user", content: insight.query });
-      messages.push({ role: "assistant", content: insight.response, savedAt: insight.created_at.toISOString() });
-    }
-
-    return NextResponse.json({ messages });
-  } catch (error: any) {
-    console.error("AI Chat GET Error:", error);
-    return NextResponse.json({ messages: [] });
-  }
+  return NextResponse.json({ messages: [] });
 }
 
-// ─── DELETE — Clear conversation history ─────────────────────────────────────
+// ─── DELETE — Clear conversation history (Disabled/Cleaned for privacy & ephemerality)
 export async function DELETE() {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const store = await prisma.store.findFirst({
-      where: { users: { some: { user_id: session.userId } } },
-      select: { id: true },
-    });
-
-    if (store) {
-      await prisma.insight.deleteMany({ where: { store_id: store.id } });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("AI Chat DELETE Error:", error);
-    return NextResponse.json({ error: "Failed to clear history" }, { status: 500 });
-  }
+  return NextResponse.json({ success: true });
 }
 
-// ─── Local Offline/Fallback Chatbot Response Generator ──────────────────────
+// ─── Local Offline/Fallback Chatbot Response Generator (Cleaned of emojis) ──────────────────────
 function getLocalFallbackResponse(query: string, store: any, todaySalesCount: number, todayRevenue: number): string {
   const q = query.toLowerCase().trim();
 
@@ -102,7 +50,7 @@ function getLocalFallbackResponse(query: string, store: any, todaySalesCount: nu
     const list = lowStockProducts.map((p: any) => 
       `• **${p.name}** — ${p.stock_quantity} left (min: ${p.reorder_level})${p.supplier ? `, Supplier: ${p.supplier.name} (${p.supplier.whatsapp_number || p.supplier.contact})` : ", Unassigned"}`
     ).join("\n");
-    return `🚨 **Low Stock Alerts:**\n\nThe following ${lowStockProducts.length} item(s) are at or below critical reorder levels:\n\n${list}\n\nWould you like me to draft a purchase order to any of these suppliers?`;
+    return `**Low Stock Alerts:**\n\nThe following ${lowStockProducts.length} item(s) are at or below critical reorder levels:\n\n${list}\n\nWould you like me to draft a purchase order to any of these suppliers?`;
   }
 
   // 2. Suppliers list and contacts
@@ -114,7 +62,7 @@ function getLocalFallbackResponse(query: string, store: any, todaySalesCount: nu
     const list = suppliers.map((s: any) => 
       `• **${s.name}**${s.company_name ? ` (${s.company_name})` : ""} — Phone: ${s.contact}${s.whatsapp_number ? `, WhatsApp: ${s.whatsapp_number}` : ""}, Lead time: ${s.lead_time_days} days`
     ).join("\n");
-    return `🤝 **Registered Suppliers:**\n\nHere are your store's vendors:\n\n${list}`;
+    return `**Registered Suppliers:**\n\nHere are your store's vendors:\n\n${list}`;
   }
 
   // 3. Sales / Revenue / Performance
@@ -122,7 +70,7 @@ function getLocalFallbackResponse(query: string, store: any, todaySalesCount: nu
     const recent = store?.transactions.slice(0, 5).map((t: any) => 
       `• ${t.quantity}x **${t.product?.name || "Product"}** — KES ${Number(t.total_price).toLocaleString()} (${t.transaction_type.replace("SALE_", "")})`
     ).join("\n") || "No transactions recorded.";
-    return `📊 **Today's Performance & Recent Sales:**\n\n• **Sales Transactions Today:** ${todaySalesCount}\n• **Total Revenue Today:** KES ${todayRevenue.toLocaleString()}\n\n**Last 5 Transactions:**\n${recent}`;
+    return `**Today's Performance & Recent Sales:**\n\n• **Sales Transactions Today:** ${todaySalesCount}\n• **Total Revenue Today:** KES ${todayRevenue.toLocaleString()}\n\n**Last 5 Transactions:**\n${recent}`;
   }
 
   // 4. Products / Prices / Margins
@@ -136,7 +84,7 @@ function getLocalFallbackResponse(query: string, store: any, todaySalesCount: nu
       return `• **${p.name}**: Selling KES ${Number(p.selling_price).toLocaleString()} | Cost KES ${Number(p.buying_price).toLocaleString()} (Margin: **${margin}%**) | Stock: ${p.stock_quantity}`;
     }).join("\n");
     const countNote = store?.products.length > 10 ? `\n\n*(Showing top 10 of ${store.products.length} products)*` : "";
-    return `📦 **Product Catalog & Margins:**\n\nHere is a list of your products and price details:\n\n${list}${countNote}`;
+    return `**Product Catalog & Margins:**\n\nHere is a list of your products and price details:\n\n${list}${countNote}`;
   }
 
   // 5. PO / Draft message
@@ -150,11 +98,11 @@ function getLocalFallbackResponse(query: string, store: any, todaySalesCount: nu
     const supplierName = firstLow.supplier?.name || "[Supplier Name]";
     const restockQty = Math.max(firstLow.reorder_level * 2 - firstLow.stock_quantity, firstLow.reorder_level);
     const draftMsg = `*RESTOCK ORDER — ${store?.name || "Store"}*\nDate: ${new Date().toLocaleDateString("en-KE")}\n\nHabari ${supplierName},\n\nPlease supply the following items:\n• *${firstLow.name}* x${restockQty} units\n\nPlease confirm delivery date. Shukran!`;
-    return `📝 **Draft Purchase Order Message:**\n\nHere is a draft reorder template for **${supplierName}** based on low stock:\n\n---\n${draftMsg}\n---`;
+    return `**Draft Purchase Order Message:**\n\nHere is a draft reorder template for **${supplierName}** based on low stock:\n\n---\n${draftMsg}\n---`;
   }
 
   // 6. Help / Greeting / Fallback default
-  return `Jambo! I am **Akiba AI**, your smart retail assistant.\n\nI am currently running in **offline backup mode** because the Gemini API connection is busy or unavailable. However, I still have direct access to your local store records!\n\nYou can ask me about:\n1. 🚨 **Low stock alerts** (e.g. *"what is low in stock?"*)\n2. 🤝 **Supplier contacts** (e.g. *"list my suppliers"*)\n3. 📊 **Today's sales** (e.g. *"how much did we sell today?"*)\n4. 📦 **Product details & margins** (e.g. *"show my inventory margins"*)\n5. 📝 **Drafting orders** (e.g. *"draft a reorder message"*)\n\nWhat would you like to check?`;
+  return `Jambo! I am **Akiba AI**, your smart retail assistant.\n\nI am currently running in **offline backup mode** because the Gemini API connection is busy or unavailable. However, I still have direct access to your local store records!\n\nYou can ask me about:\n1. **Low stock alerts** (e.g. *"what is low in stock?"*)\n2. **Supplier contacts** (e.g. *"list my suppliers"*)\n3. **Today's sales** (e.g. *"how much did we sell today?"*)\n4. **Product details & margins** (e.g. *"show my inventory margins"*)\n5. **Drafting orders** (e.g. *"draft a reorder message"*)\n\nWhat would you like to check?`;
 }
 
 // ─── POST — Main AI chat handler ─────────────────────────────────────────────
@@ -259,15 +207,7 @@ ${marketFeedContext}
       const fallbackText = getLocalFallbackResponse(lastUserMessage, store, todaySalesCount, todayRevenue) + 
         `\n\n*(Note: ${offlineReason})*`;
 
-      if (store && lastUserMessage && fallbackText) {
-        await prisma.insight.create({
-          data: {
-            store_id: store.id,
-            query: lastUserMessage,
-            response: fallbackText,
-          },
-        });
-      }
+      // Database persistence disabled for privacy and automatic clear-on-refresh control
 
       return NextResponse.json({
         choices: [
@@ -379,15 +319,7 @@ Always use KES for currency. Keep responses concise, actionable, and structured 
       const fallbackText = getLocalFallbackResponse(lastUserMessage, store, todaySalesCount, todayRevenue) + 
         `\n\n*(Note: Gemini API returned status ${response.status}. Switched to offline backup mode.)*`;
 
-      if (store && lastUserMessage && fallbackText) {
-        await prisma.insight.create({
-          data: {
-            store_id: store.id,
-            query: lastUserMessage,
-            response: fallbackText,
-          },
-        });
-      }
+      // Database persistence disabled for privacy and automatic clear-on-refresh control
 
       return NextResponse.json({
         choices: [
@@ -407,15 +339,7 @@ Always use KES for currency. Keep responses concise, actionable, and structured 
       "No response received from Gemini. Please try again.";
 
     // ─── Persist this exchange to the Insight table ────────────────────────
-    if (store && lastUserMessage && aiReply) {
-      await prisma.insight.create({
-        data: {
-          store_id: store.id,
-          query: lastUserMessage,
-          response: aiReply,
-        },
-      });
-    }
+    // Database persistence disabled for privacy and automatic clear-on-refresh control
 
     return NextResponse.json({
       choices: [

@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "900"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "Akiba AI - AI-Powered Inventory",
   description: "Smart inventory intelligence for your business growth.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -19,8 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
+          rel="stylesheet"
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"

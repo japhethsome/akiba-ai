@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const navItems = [
@@ -27,13 +28,22 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed?: boolean
 
         {/* Brand */}
         <div className={`h-[72px] flex items-center px-6 border-b border-[#e4eae4] gap-3 ${collapsed ? 'justify-center px-0' : ''}`}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-tr from-[#00694c] to-[#00a87a] shadow-sm">
-            <span className="material-symbols-outlined text-[18px] text-white">account_balance_wallet</span>
-          </div>
-          {!collapsed && (
-            <span className="font-black text-xl text-[#171d1a] tracking-tight">
-              Akiba<span className="text-[#00a87a]">AI</span>
-            </span>
+          {collapsed ? (
+            <Image
+              src="/logo.png"
+              alt="Akiba AI Icon"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          ) : (
+            <Image
+              src="/main.png"
+              alt="Akiba AI Logo"
+              width={120}
+              height={35}
+              className="object-contain"
+            />
           )}
         </div>
 

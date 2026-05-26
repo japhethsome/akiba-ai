@@ -13,7 +13,7 @@ const translations = {
     nav: { home: "Home", features: "Features", aiFeatures: "AI Features", pricing: "Pricing" },
     hero: {
       badge: "AI-POWERED INVENTORY",
-      aiBadge: "🔥 NEW AI FEATURES: VOICE POS & DEMAND FORECASTING",
+      aiBadge: "NEW AI FEATURES: VOICE POS & DEMAND FORECASTING",
       title1: "Your Business.",
       title2: "Smarter.",
       title3: "Stronger.",
@@ -47,7 +47,7 @@ const translations = {
         cost: "Estimated Cost"
       },
       aiFeatures: {
-        badge: "POWERED BY GEMINI AI",
+        badge: "AI-POWERED TOOLS",
         title: "Intelligent tools to run your shop",
         cards: [
           { icon: "mic", title: "AI Voice POS", desc: "Just speak to sell. 'Uza chupa mbili za maji'. The AI automatically adds items to your cart." },
@@ -62,7 +62,7 @@ const translations = {
     nav: { home: "Mwanzo", features: "Vipengele", aiFeatures: "Vipengele vya AI", pricing: "Bei" },
     hero: {
       badge: "INVENTORI YA AI",
-      aiBadge: "🔥 VIPENGELE VYA AI: POS YA SAUTI & UTABIRI MAHIRI",
+      aiBadge: "VIPENGELE VYA AI: POS YA SAUTI & UTABIRI MAHIRI",
       title1: "Biashara Yako.",
       title2: "Werevu Zaidi.",
       title3: "Imara Zaidi.",
@@ -96,7 +96,7 @@ const translations = {
         cost: "Gharama Inayokadiriwa"
       },
       aiFeatures: {
-        badge: "INAENDESHWA NA GEMINI AI",
+        badge: "ZANA ZA AI",
         title: "Zana za akili kuendesha duka lako",
         cards: [
           { icon: "mic", title: "POS ya Sauti", desc: "Ongea tu kuuza. 'Uza chupa mbili za maji'. AI inaongeza bidhaa kwenye kikapu chako." },
@@ -159,12 +159,16 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-xl font-black tracking-tighter flex items-center gap-2"
+            className="flex items-center gap-2"
           >
-            <div className="w-7 h-7 bg-[#00694c] rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg">A</span>
-            </div>
-            <span className="text-[#171d1a]">Akiba<span className="text-[#00694c]">AI</span></span>
+            <Image
+              src="/main.png"
+              alt="Akiba AI Logo"
+              width={120}
+              height={35}
+              className="object-contain"
+              priority
+            />
           </motion.div>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-[#00694c] font-bold text-sm">{t.nav.home}</Link>
@@ -463,7 +467,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               whileInView={{ opacity: 1 }}
               className="text-[10px] text-[#584fbc] font-black mb-4 block uppercase tracking-[0.3em] bg-[#f5f3ff] border border-[#584fbc]/10 rounded-full py-1.5 px-4 w-fit mx-auto shadow-sm animate-pulse"
             >
-              ✨ {t.features.aiFeatures.badge}
+              {t.features.aiFeatures.badge}
             </motion.span>
             <h2 className="text-3xl lg:text-4xl font-black text-[#171d1a] mb-5 tracking-tight">{t.features.aiFeatures.title}</h2>
           </div>
@@ -484,7 +488,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     <span className="material-symbols-outlined text-[28px]">{c.icon}</span>
                   </div>
                   <span className="text-[9px] font-black text-[#584fbc] bg-[#584fbc]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    Gemini AI
+                    Akiba AI
                   </span>
                 </div>
                 <h3 className="text-lg font-black text-[#171d1a] mb-3 tracking-tight z-10">{c.title}</h3>

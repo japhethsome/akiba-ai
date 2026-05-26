@@ -369,10 +369,16 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
                       </label>
                     ))}
                   </div>
+                  {selectedPermissions.length === 0 && (
+                    <p className="text-[11px] text-rose-500 font-bold mt-1.5 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      At least one permission must remain active.
+                    </p>
+                  )}
                 </div>
 
                 <button
-                  disabled={isPending || !formData.name || !formData.email || !formData.password}
+                  disabled={isPending || !formData.name || !formData.email || !formData.password || selectedPermissions.length === 0}
                   onClick={async () => {
                     setIsPending(true);
                     setError("");
@@ -473,10 +479,16 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
                       </label>
                     ))}
                   </div>
+                  {editPermissions.length === 0 && (
+                    <p className="text-[11px] text-rose-500 font-bold mt-1.5 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      At least one permission must remain active.
+                    </p>
+                  )}
                 </div>
 
                 <button
-                  disabled={isEditPending}
+                  disabled={isEditPending || editPermissions.length === 0}
                   onClick={async () => {
                     setIsEditPending(true);
                     setEditError("");

@@ -37,33 +37,7 @@ export default function AIInsightsPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        const response = await fetch("/api/ai/chat");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.messages && data.messages.length > 0) {
-            const formatted = data.messages.map((m: any) => {
-              const isTable = m.content.includes("Product") && (m.content.includes("Value") || m.content.includes("Stock"));
-              const isAnalysis = m.content.includes("Sugar 1kg") || m.content.includes("AI Analysis") || m.content.includes("Profit") || m.content.includes("margin");
-              return {
-                role: m.role === "assistant" ? "ai" : "user",
-                text: m.content,
-                type: isTable ? "table" : isAnalysis ? "analysis" : undefined,
-                time: m.savedAt ? new Date(m.savedAt).toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" }) : "Saved"
-              };
-            });
-            setMessages([
-              { role: "ai", text: "Welcome back! Here is your saved analysis and Business Intelligence assistant history:", time: "Just now" },
-              ...formatted
-            ]);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load chat history:", err);
-      }
-    };
-    loadHistory();
+    // Ephemeral in-memory chat session: history is not persisted/loaded from DB
   }, []);
 
   useEffect(() => {

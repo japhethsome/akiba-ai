@@ -303,7 +303,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
       const emailHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #171d1a; padding: 24px; border: 1px solid #e4eae4; border-radius: 20px; background-color: #ffffff;">
           <div style="margin-bottom: 20px;">
-            <span style="background-color: #fef2f2; color: #ba1a1a; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase; tracking-spacing: 0.5px;">🚨 POS Stockout Warning</span>
+            <span style="background-color: #fef2f2; color: #ba1a1a; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase; tracking-spacing: 0.5px;">POS Stockout Warning</span>
           </div>
           <h2 style="color: #171d1a; margin-top: 0; font-size: 20px; font-weight: 800; tracking: -0.5px;">Low Stock Alert: ${user.store.name}</h2>
           <p style="color: #6d7a73; font-size: 13px; line-height: 1.5; font-weight: 500;">
@@ -335,7 +335,6 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
       `;
 
       // Try sending to the store owner
-      const verifiedSenderEmail = "akibaai.eh@gmail.com";
       let recipientEmail = ownerEmail;
 
       let res = await fetch("https://api.resend.com/emails", {
@@ -345,44 +344,16 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "Akiba AI POS <onboarding@resend.dev>",
+          from: "Akiba AI POS <akibaai.eh@gmail.com>",
           to: recipientEmail,
-          subject: `🚨 [Low Stock Alert] Critical Stock Shortage in ${user.store.name}`,
+          subject: `[Low Stock Alert] Critical Stock Shortage in ${user.store.name}`,
           html: emailHtml,
         }),
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        const isSandboxError = errorData.message?.toLowerCase().includes("sandbox") || 
-                               errorData.message?.toLowerCase().includes("restricted") ||
-                               errorData.message?.toLowerCase().includes("can only send");
-
-        if (isSandboxError && recipientEmail.toLowerCase() !== verifiedSenderEmail.toLowerCase()) {
-          recipientEmail = verifiedSenderEmail;
-
-          const sandboxNotice = `
-            <div style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 16px; margin-bottom: 24px; border-radius: 12px; font-family: sans-serif; font-size: 13px; line-height: 1.5;">
-              <strong style="font-size: 14px; display: block; margin-bottom: 4px;">⚠️ Sandbox Redirect Notice</strong>
-              This low stock notice was originally addressed to the owner at <strong>${ownerEmail}</strong>. 
-              Due to Resend API sandbox constraints, we redirected it to your verified account email <strong>${verifiedSenderEmail}</strong> so you can inspect the notification.
-            </div>
-          `;
-          
-          await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              from: "Akiba AI POS <onboarding@resend.dev>",
-              to: recipientEmail,
-              subject: `🚨 [Redirected Alert] Low Stock in ${user.store.name}`,
-              html: sandboxNotice + emailHtml,
-            }),
-          });
-        }
+        console.error("Resend Low Stock Alert API failed:", errorData);
       }
     }
 

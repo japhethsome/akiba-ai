@@ -61,6 +61,15 @@ export async function createStaffDirectly(data: {
          return { success: false, error: "Forbidden: Only owners can create staff." };
       }
 
+      // Ensure staff has at least one permission
+      const customRole = data.role || "";
+      if (customRole.startsWith("clerk:")) {
+         const perms = customRole.split(":")[1]?.split(",").filter(Boolean) || [];
+         if (perms.length === 0) {
+            return { success: false, error: "Cannot create clerk with zero permissions. At least one permission must remain active." };
+         }
+      }
+
       // Check if email already exists
       const existingEmail = await prisma.user.findUnique({
          where: { email: data.email }
@@ -151,6 +160,14 @@ export async function updateStaffPermissions(staffId: string, role: string) {
       }
       if (staffMember.role === "owner") {
          return { success: false, error: "Cannot modify owner role." };
+      }
+
+      // Ensure staff has at least one permission when updating
+      if (role.startsWith("clerk:")) {
+         const perms = role.split(":")[1]?.split(",").filter(Boolean) || [];
+         if (perms.length === 0) {
+            return { success: false, error: "Cannot remove all permissions. At least one permission must remain active." };
+         }
       }
 
       const updated = await prisma.user.update({

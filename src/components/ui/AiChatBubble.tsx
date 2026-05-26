@@ -212,24 +212,9 @@ export function AiChatBubble() {
     sendMessageRef.current = handleSendMessage;
   });
 
-  // Load conversation history on mount
+  // Load conversation history on mount (disabled for privacy & ephemerality)
   useEffect(() => {
-    if (historyLoaded) return;
     setHistoryLoaded(true);
-    fetch("/api/ai/chat")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.messages && data.messages.length > 0) {
-          setMessages([
-            {
-              role: "assistant",
-              content: "Mambo! I am Akiba AI. Here is our recent conversation history — feel free to continue where we left off!",
-            },
-            ...data.messages,
-          ]);
-        }
-      })
-      .catch(() => {/* silently fail — default greeting already set */});
   }, [historyLoaded]);
 
   useEffect(() => {

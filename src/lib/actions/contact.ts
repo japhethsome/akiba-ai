@@ -38,8 +38,8 @@ export async function sendContactEmail(formData: {
             Authorization: `Bearer ${resendKey}`,
           },
           body: JSON.stringify({
-            from: "Contact Form <onboarding@resend.dev>",
-            to: recipientEmail,
+            from: "Contact Form <akibaai.eh@gmail.com>",
+            to: "akibaai.eh@gmail.com",
             subject: `[Support Inquiry] ${name}`,
             html: `
               <h3>New Support Inquiry (Contact Form Submission)</h3>
@@ -51,84 +51,6 @@ export async function sendContactEmail(formData: {
             `,
           }),
         });
-
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const isSandboxError = errData.message?.toLowerCase().includes("sandbox") || 
-                                 errData.message?.toLowerCase().includes("restricted") ||
-                                 errData.message?.toLowerCase().includes("can only send");
-
-          if (isSandboxError) {
-            // Find current session email to retry sending to their verified sandbox email
-            const session = await getSession();
-            let sessionEmail = "";
-            if (session) {
-              const activeUser = await prisma.user.findUnique({
-                where: { user_id: session.userId }
-              });
-              sessionEmail = activeUser?.email || "";
-            }
-
-            if (sessionEmail && sessionEmail.toLowerCase() !== recipientEmail.toLowerCase()) {
-              console.log(`Sandbox error. Retrying with session email: ${sessionEmail}`);
-              recipientEmail = sessionEmail;
-
-              response = await fetch("https://api.resend.com/emails", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${resendKey}`,
-                },
-                body: JSON.stringify({
-                  from: "Contact Form <onboarding@resend.dev>",
-                  to: recipientEmail,
-                  subject: `[Redirected Support] ${name}`,
-                  html: `
-                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 12px; margin-bottom: 20px; border-radius: 8px; font-size: 12px; font-family: sans-serif;">
-                      <strong>[Sandbox Notice]</strong> This inquiry was originally routed to <strong>${ownerEmail}</strong> but failed due to sandbox constraints. We redirected it to your verified account email <strong>${sessionEmail}</strong>.
-                    </div>
-                    <h3>New Support Inquiry</h3>
-                    <p><strong>Name:</strong> ${name}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Phone:</strong> ${phone}</p>
-                    <p><strong>Message:</strong></p>
-                    <p>${message.replace(/\n/g, "<br/>")}</p>
-                  `,
-                }),
-              });
-            }
-
-            // If it still failed (or no session email), retry fallback support inbox: akibaai.eh@gmail.com
-            if (!response.ok && recipientEmail.toLowerCase() !== "akibaai.eh@gmail.com") {
-              recipientEmail = "akibaai.eh@gmail.com";
-              console.log(`Sandbox error. Final retry to akibaai.eh@gmail.com`);
-
-              response = await fetch("https://api.resend.com/emails", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${resendKey}`,
-                },
-                body: JSON.stringify({
-                  from: "Contact Form <onboarding@resend.dev>",
-                  to: recipientEmail,
-                  subject: `[Fallback Support] ${name}`,
-                  html: `
-                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 12px; margin-bottom: 20px; border-radius: 8px; font-size: 12px; font-family: sans-serif;">
-                      <strong>[Sandbox Notice]</strong> Retried fallback routing to <strong>akibaai.eh@gmail.com</strong>.
-                    </div>
-                    <h3>New Support Inquiry</h3>
-                    <p><strong>Name:</strong> ${name}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Phone:</strong> ${phone}</p>
-                    <p><strong>Message:</strong></p>
-                    <p>${message.replace(/\n/g, "<br/>")}</p>
-                  `,
-                }),
-              });
-            }
-          }
-        }
 
         if (response.ok) {
           emailSent = true;
