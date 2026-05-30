@@ -51,7 +51,7 @@ export default async function ForecastsPage() {
         chartDataByProduct={chartDataByProduct}
         clerkTargets={clerkTargets}
         products={products}
-        storeName={user.store.name}
+        storeName={user.store?.name || ""}
         marketFeed={forecastResult.marketFeed || []}
       />
     </DashboardLayoutWrapper>

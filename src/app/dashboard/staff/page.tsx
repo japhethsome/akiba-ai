@@ -17,6 +17,8 @@ export default async function StaffPage() {
   });
 
   if (!user) redirect("/auth");
+  if (session.role === "superadmin") redirect("/admin");
+  if (!user.store_id) redirect("/auth");
 
   const staffList = await prisma.user.findMany({
     where: { store_id: user.store_id },

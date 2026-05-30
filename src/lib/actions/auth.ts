@@ -135,6 +135,24 @@ export async function loginUser(formData: FormData) {
   }
 
   try {
+    // Check superadmin table first
+    const superAdmin = await prisma.superAdmin.findUnique({ where: { email } });
+    if (superAdmin) {
+      if (!superAdmin.is_active) return { error: "This admin account has been deactivated." };
+      const passwordMatch = await bcrypt.compare(password, superAdmin.password_hash);
+      if (!passwordMatch) return { error: "Incorrect password. Please try again." };
+
+      // Update last login
+      await prisma.superAdmin.update({
+        where: { id: superAdmin.id },
+        data: { last_login: new Date() }
+      });
+
+      await setSession(superAdmin.id, "superadmin", null);
+      return { success: true, user: { id: superAdmin.id, name: superAdmin.name, role: "superadmin", store: null } };
+    }
+
+    // Fall through to normal user lookup
     const user = await prisma.user.findUnique({
       where: { email },
       include: { store: true },
@@ -149,6 +167,12 @@ export async function loginUser(formData: FormData) {
     if (!passwordMatch) {
       return { error: "Incorrect password. Please try again." };
     }
+
+    // Update last login
+    await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: { last_login: new Date() }
+    });
 
     await setSession(user.user_id, user.role, user.store_id);
 

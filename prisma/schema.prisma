@@ -40,10 +40,22 @@ model User {
   password_hash String
   role          String
   created_at    DateTime       @default(now())
-  store_id      String
+  store_id      String?
+  last_login    DateTime?
   inventoryLogs InventoryLog[]
   transactions  Transaction[]
-  store         Store          @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  store         Store?         @relation(fields: [store_id], references: [id], onDelete: Cascade)
+}
+
+model SuperAdmin {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password_hash String
+  created_at    DateTime  @default(now())
+  last_login    DateTime?
+  is_active     Boolean   @default(true)
+  notes         String?
 }
 
 model Supplier {

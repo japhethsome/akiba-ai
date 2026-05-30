@@ -17,7 +17,7 @@ export async function getTransactionsData() {
 
     if (!user) return { success: false, error: "User not found" };
 
-    const storeId = user.store_id;
+    const storeId = user.store_id!;
 
     // Fetch transactions with related product and user
     const transactionsList = await prisma.transaction.findMany({
@@ -103,7 +103,7 @@ export async function voidTransaction(transactionId: string) {
       include: { product: true },
     });
 
-    if (!transaction || transaction.store_id !== user.store_id) {
+    if (!transaction || transaction.store_id !== user.store_id!) {
       throw new Error("Transaction not found.");
     }
 
@@ -121,7 +121,7 @@ export async function voidTransaction(transactionId: string) {
         data: {
           product_id: transaction.product_id,
           user_id: user.user_id,
-          store_id: user.store_id,
+          store_id: user.store_id!,
           change_type: "REFUNDED_STOCK",
           quantity_changed: transaction.quantity,
           reason: `Refund / void for receipt ${transaction.receipt_id || transaction.transaction_id}`,

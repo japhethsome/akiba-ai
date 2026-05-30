@@ -42,6 +42,11 @@ export async function searchAllResources(query: string): Promise<{ data?: Search
     const storeId = session.storeId;
     const term = query.trim().toLowerCase();
 
+    // Superadmin has no store — return empty results
+    if (!storeId) {
+      return { data: { products: [], suppliers: [], pages: [], help: [] } };
+    }
+
     // Query Products
     const products = await prisma.product.findMany({
       where: {
@@ -110,6 +115,9 @@ export async function getNotifications(): Promise<{ success: boolean; logs?: Arr
     }
 
     const storeId = session.storeId;
+    // Superadmin has no store
+    if (!storeId) return { success: true, logs: [] };
+
     const logs = await prisma.systemLog.findMany({
       where: { store_id: storeId },
       orderBy: { created_at: "desc" },

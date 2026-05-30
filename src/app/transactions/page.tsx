@@ -15,6 +15,7 @@ export default async function TransactionsPage() {
   });
 
   if (!user) redirect("/auth");
+  if (!user.store_id) redirect("/auth");
 
   const { hasPermission } = require("@/lib/permissions");
   if (!hasPermission(user.role, "transactions")) {
@@ -141,3 +142,4 @@ export default async function TransactionsPage() {
     </DashboardLayoutWrapper>
   );
 }
+

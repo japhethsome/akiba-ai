@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 export default async function InventoryPage() {
   const session = await getSession();
   if (!session) redirect("/auth");
+  if (session.role === "superadmin") redirect("/admin");
 
   const user = await prisma.user.findUnique({
     where: { user_id: session.userId },
@@ -14,6 +15,7 @@ export default async function InventoryPage() {
   });
 
   if (!user) redirect("/auth");
+  if (!user.store_id) redirect("/auth");
 
   const { hasPermission } = require("@/lib/permissions");
   if (!hasPermission(session.role, "inventory_view")) {
@@ -21,7 +23,7 @@ export default async function InventoryPage() {
   }
 
   // Owner must complete onboarding first
-  if (user.role === "owner" && !user.store.onboarded) {
+  if (user.role === "owner" && !user.store?.onboarded) {
     redirect("/dashboard/onboarding");
   }
 
@@ -64,8 +66,9 @@ export default async function InventoryPage() {
         userRole={session.role}
         initialProducts={plainProducts}
         suppliers={suppliers}
-        storeName={user.store.name}
+        storeName={user.store?.name || ""}
       />
     </DashboardLayoutWrapper>
   );
 }
+

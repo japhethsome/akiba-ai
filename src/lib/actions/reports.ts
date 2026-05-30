@@ -15,7 +15,7 @@ export async function getDailyPLReport(dateStr: string) {
     });
 
     if (!user) return { success: false, error: "User not found" };
-    const storeId = user.store_id;
+    const storeId = user.store_id!;
 
     // Parse date
     const startOfDay = new Date(dateStr);
@@ -95,7 +95,7 @@ export async function getDailyPLReport(dateStr: string) {
       success: true,
       data: {
         date: dateStr,
-        storeName: user.store.name,
+        storeName: user.store?.name,
         stats: {
           totalSales,
           totalProfit,

@@ -15,12 +15,12 @@ export default async function OnboardingPage() {
   if (!user || user.role !== "owner") redirect("/dashboard");
 
   // Already onboarded → skip straight to dashboard
-  if (user.store.onboarded) redirect("/dashboard");
+  if (user.store?.onboarded) redirect("/dashboard");
 
   return (
     <OnboardingClient
-      storeId={user.store_id}
-      storeName={user.store.name}
+      storeId={user.store_id!}
+      storeName={user.store?.name || "My Store"}
       ownerName={user.name}
     />
   );

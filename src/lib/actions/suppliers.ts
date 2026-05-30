@@ -44,7 +44,7 @@ export async function addSupplier(data: SupplierData) {
         lead_time_days: data.leadTimeDays,
         payment_terms: data.paymentTerms || null,
         notes: data.notes || null,
-        store_id: user.store_id,
+        store_id: user.store_id!,
       },
     });
 
@@ -63,7 +63,7 @@ export async function updateSupplier(supplierId: string, data: SupplierData) {
     await prisma.supplier.update({
       where: {
         supplier_id: supplierId,
-        store_id: user.store_id,
+        store_id: user.store_id!,
       },
       data: {
         name: data.name,
@@ -95,7 +95,7 @@ export async function deleteSupplier(supplierId: string) {
     const linkedProducts = await prisma.product.count({
       where: {
         supplier_id: supplierId,
-        store_id: user.store_id,
+        store_id: user.store_id!,
       },
     });
 
@@ -106,7 +106,7 @@ export async function deleteSupplier(supplierId: string) {
     await prisma.supplier.delete({
       where: {
         supplier_id: supplierId,
-        store_id: user.store_id,
+        store_id: user.store_id!,
       },
     });
 
@@ -129,7 +129,7 @@ export async function getSupplierWithProducts(supplierId: string) {
     if (!user) throw new Error("Unauthorized");
 
     const supplier = await prisma.supplier.findUnique({
-      where: { supplier_id: supplierId, store_id: user.store_id },
+      where: { supplier_id: supplierId, store_id: user.store_id! },
       include: {
         products: {
           select: {

@@ -44,7 +44,7 @@ export async function processCheckout(
           where: { product_id: item.productId },
         });
 
-        if (!product || product.store_id !== user.store_id) {
+        if (!product || product.store_id !== user.store_id!) {
           throw new Error(`Product ${item.productId} not found`);
         }
 
@@ -81,7 +81,7 @@ export async function processCheckout(
           data: {
             product_id: product.product_id,
             user_id: user.user_id,
-            store_id: user.store_id,
+            store_id: user.store_id!,
             receipt_id: receiptId,
             quantity: item.quantity,
             total_price: totalPrice,
@@ -98,7 +98,7 @@ export async function processCheckout(
           data: {
             product_id: product.product_id,
             user_id: user.user_id,
-            store_id: user.store_id,
+            store_id: user.store_id!,
             change_type: "sale",
             quantity_changed: -item.quantity,
             reason: reasonText,
@@ -129,11 +129,11 @@ export async function processCheckout(
       success: true,
       receipt: {
         id: receiptId,
-        storeName: user.store.name,
-        storeAddress: user.store.storeAddress,
+        storeName: user.store?.name,
+        storeAddress: user.store?.storeAddress,
         kraPin: null,
-        storePhone: user.store.storePhone,
-        storeEmail: user.store.storeEmail,
+        storePhone: user.store?.storePhone,
+        storeEmail: user.store?.storeEmail,
         taxComplianceEnabled: false,
         paymentMethod,
         servedBy: user.name,
@@ -180,7 +180,7 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
             where: { product_id: item.productId },
           });
 
-          if (!product || product.store_id !== user.store_id) {
+          if (!product || product.store_id !== user.store_id!) {
             throw new Error(`Product ${item.productId} not found in offline batch`);
           }
 
@@ -218,7 +218,7 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
             data: {
               product_id: product.product_id,
               user_id: user.user_id,
-              store_id: user.store_id,
+              store_id: user.store_id!,
               quantity: item.quantity,
               total_price: totalPrice,
               total_profit: totalProfit,
@@ -231,7 +231,7 @@ export async function processBulkCheckouts(checkouts: OfflineCheckout[]) {
             data: {
               product_id: product.product_id,
               user_id: user.user_id,
-              store_id: user.store_id,
+              store_id: user.store_id!,
               change_type: "sale",
               quantity_changed: -item.quantity,
               reason: reasonText,
@@ -272,7 +272,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
 
     await prisma.systemLog.create({
       data: {
-        store_id: user.store_id,
+        store_id: user.store_id!,
         type: "LOW_STOCK_ALERT",
         content: JSON.stringify({
           reportedBy: user.name,
@@ -286,7 +286,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
 
     // Fetch the store owner's email dynamically
     const storeOwner = await prisma.user.findFirst({
-      where: { store_id: user.store_id, role: "owner" },
+      where: { store_id: user.store_id!, role: "owner" },
     });
     const ownerEmail = storeOwner?.email || "akibaai.eh@gmail.com";
 
@@ -305,7 +305,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
           <div style="margin-bottom: 20px;">
             <span style="background-color: #fef2f2; color: #ba1a1a; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; text-transform: uppercase; tracking-spacing: 0.5px;">POS Stockout Warning</span>
           </div>
-          <h2 style="color: #171d1a; margin-top: 0; font-size: 20px; font-weight: 800; tracking: -0.5px;">Low Stock Alert: ${user.store.name}</h2>
+          <h2 style="color: #171d1a; margin-top: 0; font-size: 20px; font-weight: 800; tracking: -0.5px;">Low Stock Alert: ${user.store?.name}</h2>
           <p style="color: #6d7a73; font-size: 13px; line-height: 1.5; font-weight: 500;">
             Attendant <strong>${user.name}</strong> just triggered a stock warning from the POS cash register. The following items have depleted below their threshold and require immediate restocking:
           </p>
@@ -346,7 +346,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
         body: JSON.stringify({
           from: "Akiba AI POS <akibaai.eh@gmail.com>",
           to: recipientEmail,
-          subject: `[Low Stock Alert] Critical Stock Shortage in ${user.store.name}`,
+          subject: `[Low Stock Alert] Critical Stock Shortage in ${user.store?.name}`,
           html: emailHtml,
         }),
       });
@@ -379,7 +379,7 @@ export async function recordExpense(amount: number, reason: string) {
       data: {
         amount,
         reason,
-        store_id: user.store_id,
+        store_id: user.store_id!,
       },
     });
 

@@ -35,7 +35,7 @@ export async function addProduct(data: {
         stock_quantity: data.stock,
         reorder_level: data.reorderLevel,
         supplier_id: data.supplierId || null,
-        store_id: user.store_id,
+        store_id: user.store_id!,
       },
     });
 
@@ -44,7 +44,7 @@ export async function addProduct(data: {
       data: {
         product_id: newProduct.product_id,
         user_id: user.user_id,
-        store_id: user.store_id,
+        store_id: user.store_id!,
         change_type: "addition",
         quantity_changed: data.stock,
         reason: "Initial stock addition",
@@ -76,7 +76,7 @@ export async function restockProduct(productId: string, additionalStock: number)
       where: { product_id: productId },
     });
 
-    if (!product || product.store_id !== user.store_id) {
+    if (!product || product.store_id !== user.store_id!) {
       throw new Error("Product not found or unauthorized");
     }
 
@@ -92,7 +92,7 @@ export async function restockProduct(productId: string, additionalStock: number)
       data: {
         product_id: productId,
         user_id: user.user_id,
-        store_id: user.store_id,
+        store_id: user.store_id!,
         change_type: "restock",
         quantity_changed: additionalStock,
         reason: "Quick restock via dashboard",
@@ -136,7 +136,7 @@ export async function updateProduct(
     await prisma.product.update({
       where: { 
         product_id: productId,
-        store_id: user.store_id // Ensure they own it
+        store_id: user.store_id! // Ensure they own it
       },
       data: {
         name: data.name,

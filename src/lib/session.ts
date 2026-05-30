@@ -1,10 +1,8 @@
 import { cookies } from "next/headers";
 
-const ENCRYPTION_KEY = process.env.SESSION_SECRET || "akiba_ai_secret_key_32_chars_long!!"; 
-
-export async function setSession(userId: string, role: string, storeId: string) {
+export async function setSession(userId: string, role: string, storeId?: string | null) {
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-  const session = JSON.stringify({ userId, role, storeId, expires });
+  const session = JSON.stringify({ userId, role, storeId: storeId ?? null, expires });
   
   (await cookies()).set("session", session, { 
     expires, 
@@ -14,7 +12,7 @@ export async function setSession(userId: string, role: string, storeId: string) 
   });
 }
 
-export async function getSession() {
+export async function getSession(): Promise<{ userId: string; role: string; storeId: string | null; expires: string } | null> {
   const session = (await cookies()).get("session")?.value;
   if (!session) return null;
   return JSON.parse(session);

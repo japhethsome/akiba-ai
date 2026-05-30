@@ -18,7 +18,7 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
   const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  
+
   // Registration Form States
   const [formData, setFormData] = useState({
     name: "",
@@ -369,16 +369,10 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
                       </label>
                     ))}
                   </div>
-                  {selectedPermissions.length === 0 && (
-                    <p className="text-[11px] text-rose-500 font-bold mt-1.5 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">error</span>
-                      At least one permission must remain active.
-                    </p>
-                  )}
                 </div>
 
                 <button
-                  disabled={isPending || !formData.name || !formData.email || !formData.password || selectedPermissions.length === 0}
+                  disabled={isPending || !formData.name || !formData.email || !formData.password}
                   onClick={async () => {
                     setIsPending(true);
                     setError("");
@@ -479,16 +473,10 @@ export function StaffClientUI({ userRole, initialStaff = [] }: { userRole: strin
                       </label>
                     ))}
                   </div>
-                  {editPermissions.length === 0 && (
-                    <p className="text-[11px] text-rose-500 font-bold mt-1.5 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">error</span>
-                      At least one permission must remain active.
-                    </p>
-                  )}
                 </div>
 
                 <button
-                  disabled={isEditPending || editPermissions.length === 0}
+                  disabled={isEditPending}
                   onClick={async () => {
                     setIsEditPending(true);
                     setEditError("");

@@ -46,7 +46,7 @@ export async function getForecastData() {
       throw new Error("Unauthorized: Only owners can access forecasts");
     }
 
-    const storeId = user.store_id;
+    const storeId = user.store_id!;
 
     // 1. Fetch products and suppliers
     const products = await prisma.product.findMany({

@@ -10,7 +10,7 @@ export async function inviteStaff(storeId: string, method: "email" | "phone", va
       if (!session) return { success: false, error: "Unauthorized" };
 
       const user = await prisma.user.findUnique({ where: { user_id: session.userId }});
-      if (!user || user.role !== "owner" || user.store_id !== storeId) {
+      if (!user || user.role !== "owner" || user.store_id! !== storeId) {
          return { success: false, error: "Forbidden" };
       }
 
@@ -93,7 +93,7 @@ export async function createStaffDirectly(data: {
             phone: data.phone,
             password_hash: hashedPassword,
             role: data.role || "clerk",
-            store_id: ownerUser.store_id
+            store_id: ownerUser.store_id!
          }
       });
 
@@ -126,7 +126,7 @@ export async function removeStaff(staffId: string) {
       // Find staff to ensure they belong to the same store
       const staffMember = await prisma.user.findUnique({ where: { user_id: staffId }});
       if (!staffMember) return { success: false, error: "Staff member not found." };
-      if (staffMember.store_id !== ownerUser.store_id) {
+      if (staffMember.store_id !== ownerUser.store_id!) {
          return { success: false, error: "Forbidden: You do not own this staff member's store." };
       }
       if (staffMember.role === "owner") {
@@ -155,7 +155,7 @@ export async function updateStaffPermissions(staffId: string, role: string) {
 
       const staffMember = await prisma.user.findUnique({ where: { user_id: staffId }});
       if (!staffMember) return { success: false, error: "Staff member not found." };
-      if (staffMember.store_id !== ownerUser.store_id) {
+      if (staffMember.store_id !== ownerUser.store_id!) {
          return { success: false, error: "Forbidden: You do not own this staff member's store." };
       }
       if (staffMember.role === "owner") {

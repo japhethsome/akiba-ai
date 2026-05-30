@@ -24,12 +24,12 @@ export async function getSettingsData() {
         userEmail: user.email,
         userPhone: user.phone,
         userRole: user.role,
-        storeName: user.store.name,
-        storeCategory: user.store.category,
-        storeAddress: user.store.storeAddress,
-        storePhone: user.store.storePhone,
-        storeEmail: user.store.storeEmail,
-        managerPin: user.store.managerPin || "1234",
+        storeName: user.store?.name || "",
+        storeCategory: user.store?.category,
+        storeAddress: user.store?.storeAddress,
+        storePhone: user.store?.storePhone,
+        storeEmail: user.store?.storeEmail,
+        managerPin: user.store?.managerPin || "1234",
       },
     };
   } catch (error: any) {
@@ -112,7 +112,7 @@ export async function updateSettings(data: {
 
         // Update store details
         await tx.store.update({
-          where: { id: user.store_id },
+          where: { id: user.store_id! },
           data: {
             name: data.storeName,
             category: data.storeCategory,

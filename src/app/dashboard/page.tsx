@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/auth");
+  if (session.role === "superadmin") redirect("/admin");
 
   const user = await prisma.user.findUnique({
     where: { user_id: session.userId },
@@ -15,9 +16,11 @@ export default async function DashboardPage() {
   });
 
   if (!user) redirect("/auth");
+  if (!user.store_id) redirect("/auth");
+
 
   // Owner must complete onboarding first
-  if (user.role === "owner" && !user.store.onboarded) {
+  if (user.role === "owner" && !user.store?.onboarded) {
     redirect("/dashboard/onboarding");
   }
 
@@ -85,7 +88,7 @@ export default async function DashboardPage() {
       <main className="flex-1 p-4 md:p-10 max-w-[1500px] mx-auto w-full">
         <DashboardClientUI
           userName={user.name}
-          storeCategory={user.store.category || "shop"}
+          storeCategory={user.store?.category || "shop"}
           kpis={kpis}
           lowStockCount={lowStockCount}
           priorityActions={priorityActions}

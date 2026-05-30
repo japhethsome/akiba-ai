@@ -14,7 +14,9 @@ export default async function SuppliersPage() {
   });
 
   if (!user) redirect("/auth");
-  if (user.role === "owner" && !user.store.onboarded) redirect("/dashboard/onboarding");
+  if (!user.store_id) redirect("/auth");
+  if (session.role === "superadmin") redirect("/admin");
+  if (user.role === "owner" && !user.store?.onboarded) redirect("/dashboard/onboarding");
 
   const { hasPermission } = require("@/lib/permissions");
   if (!hasPermission(user.role, "suppliers")) {
@@ -57,8 +59,9 @@ export default async function SuppliersPage() {
       <SuppliersClientUI
         initialSuppliers={plainSuppliers}
         userRole={user.role}
-        storeName={user.store.name}
+        storeName={user.store?.name || ""}
       />
     </DashboardLayoutWrapper>
   );
 }
+

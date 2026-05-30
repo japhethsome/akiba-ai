@@ -15,7 +15,9 @@ export default async function PosPage() {
   });
 
   if (!user) redirect("/auth");
-  if (user.role === "owner" && !user.store.onboarded) redirect("/dashboard/onboarding");
+  if (!user.store_id) redirect("/auth");
+  if (session.role === "superadmin") redirect("/admin");
+  if (user.role === "owner" && !user.store?.onboarded) redirect("/dashboard/onboarding");
 
   if (!hasPermission(user.role, "pos")) {
     if (hasPermission(user.role, "inventory_view")) {
@@ -57,3 +59,4 @@ export default async function PosPage() {
     </DashboardLayoutWrapper>
   );
 }
+

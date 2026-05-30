@@ -23,8 +23,8 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
 export function hasPermission(userRole: string | null | undefined, permission: Permission): boolean {
   if (!userRole) return false;
   
-  // Owners have all permissions
-  if (userRole === "owner") return true;
+  // Superadmin and owners have all permissions
+  if (userRole === "superadmin" || userRole === "owner") return true;
 
   // Split role and custom permissions if formatted like role:perm1,perm2
   const parts = userRole.split(":");
@@ -47,7 +47,7 @@ export function hasPermission(userRole: string | null | undefined, permission: P
 
 export function getRolePermissions(userRole: string | null | undefined): Permission[] {
   if (!userRole) return [];
-  if (userRole === "owner") return [...ALL_PERMISSIONS];
+  if (userRole === "superadmin" || userRole === "owner") return [...ALL_PERMISSIONS];
 
   const parts = userRole.split(":");
   if (parts.length > 1) {

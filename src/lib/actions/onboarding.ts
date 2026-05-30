@@ -28,7 +28,7 @@ export async function completeOnboarding(
     return { success: false, error: "Only store owners can complete onboarding." };
   }
 
-  if (user.store.onboarded) {
+  if (user.store?.onboarded) {
     return { success: false, error: "Store is already onboarded." };
   }
 
@@ -40,7 +40,7 @@ export async function completeOnboarding(
     await prisma.$transaction(async (tx) => {
       // Mark store as onboarded with chosen category
       await tx.store.update({
-        where: { id: user.store_id },
+        where: { id: user.store_id! },
         data: {
           category: storeCategory,
           onboarded: true,
@@ -56,16 +56,16 @@ export async function completeOnboarding(
           buying_price: Math.floor(p.unit_price * 0.7),
           stock_quantity: p.stock_quantity,
           reorder_level: p.reorder_level,
-          store_id: user.store_id,
+          store_id: user.store_id!,
         })),
       });
 
       // Log the onboarding event
       await tx.systemLog.create({
         data: {
-          store_id: user.store_id,
+          store_id: user.store_id!,
           type: "STORE_ONBOARDED",
-          content: `Store "${user.store.name}" successfully onboarded as "${storeCategory}" with ${products.length} starter product(s).`,
+          content: `Store "${user.store?.name}" successfully onboarded as "${storeCategory}" with ${products.length} starter product(s).`,
         },
       });
     }, {
