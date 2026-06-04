@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.64",
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@prisma/client": "5.19.1",
     "@types/bcryptjs": "^2.4.6",
     "ai": "^6.0.185",

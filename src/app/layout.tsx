@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Akiba AI",
+  },
+};
+
+export const viewport = {
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
