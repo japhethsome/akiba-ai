@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**',
+        port: '',
       },
     ],
   },
@@ -22,7 +23,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev", "localhost:3000"]
     }
-  }
+  },
+  turbopack: {}
 };
 
 export default withPWA(nextConfig);
