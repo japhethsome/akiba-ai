@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://akiba-ai.vercel.app"
+  ),
   title: "Akiba AI - AI-Powered Inventory",
   description: "Smart inventory intelligence for your business growth.",
   icons: {
