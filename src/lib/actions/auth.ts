@@ -229,3 +229,24 @@ export async function loginUserWithGoogle(email: string) {
     return { error: getSafeErrorMessage(error, "An unexpected error occurred during Google login. Please try again in a few moments.") };
   }
 }
+
+export async function requestPasswordReset(email: string) {
+  if (!email || !email.trim()) {
+    return { error: "Email address is required." };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email.trim() },
+    });
+
+    if (!user) {
+      return { error: "No account found with this email address. Please check your spelling or register a new account." };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Password reset request error:", error);
+    return { error: getSafeErrorMessage(error, "Failed to process password reset request. Please try again.") };
+  }
+}

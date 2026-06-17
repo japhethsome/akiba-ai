@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { registerOwner, loginUser, registerAttendant, loginUserWithGoogle } from "@/lib/actions/auth";
+import { registerOwner, loginUser, registerAttendant, loginUserWithGoogle, requestPasswordReset } from "@/lib/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Language = "en" | "sw";
@@ -111,8 +111,14 @@ export default function AuthClient() {
   const [emailVal, setEmailVal] = useState("");
   const [googleEmail, setGoogleEmail] = useState("");
   const [googleInfoMsg, setGoogleInfoMsg] = useState<string | null>(null);
-
   const [password, setPassword] = useState("");
+
+  // Forgot Password modal states
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState<string | null>(null);
 
   // Parse JWT token safely
   function parseJwt(token: string) {
@@ -147,7 +153,12 @@ export default function AuthClient() {
       try {
         const res = await loginUserWithGoogle(email);
         if (res.error) {
-          setError(res.error);
+          setMode("register");
+          setNameVal(name || "");
+          setEmailVal(email || "");
+          setGoogleEmail(email || "");
+          setGoogleInfoMsg("Google Account connected! Please enter your M-Pesa phone number and Store Name to complete registration.");
+          setError(null);
         } else if (res.success) {
           router.push("/dashboard");
         }
@@ -188,7 +199,7 @@ export default function AuthClient() {
       if (!g) return;
 
       g.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "1036071473667-27bblb266m502s5i9vsqbdf5iicq53f6.apps.googleusercontent.com",
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "1071292558524-hv3hp072d6q57oe7lh05uftv5s4buc7m.apps.googleusercontent.com",
         callback: handleGoogleCallback,
       });
 
@@ -325,6 +336,26 @@ export default function AuthClient() {
       setError(result.error);
     } else if (result.success) {
       router.push("/dashboard");
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail || !resetEmail.trim()) {
+      setResetError("Email address is required.");
+      return;
+    }
+    setResetLoading(true);
+    setResetError(null);
+    setResetSuccess(null);
+
+    const res = await requestPasswordReset(resetEmail);
+    setResetLoading(false);
+
+    if (res.error) {
+      setResetError(res.error);
+    } else {
+      setResetSuccess("A password reset link has been generated successfully. Please check your inbox at " + resetEmail + ".");
     }
   };
 
@@ -523,9 +554,23 @@ export default function AuthClient() {
               )}
               {googleInfoMsg && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                  className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                  {googleInfoMsg}
+                  className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] shrink-0 text-emerald-600">check_circle</span>
+                    <span>{googleInfoMsg}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGoogleEmail("");
+                      setGoogleInfoMsg(null);
+                      setNameVal("");
+                      setEmailVal("");
+                    }}
+                    className="text-[10px] uppercase font-black text-emerald-800 hover:underline text-left self-start cursor-pointer"
+                  >
+                    Disconnect Google & Use password
+                  </button>
                 </motion.div>
               )}
               {mode === "register" && (
@@ -535,6 +580,7 @@ export default function AuthClient() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">person</span>
                       <input type="text" placeholder="Wanjiku Maina" name="name" required
+                        suppressHydrationWarning
                         value={nameVal}
                         onChange={(e) => setNameVal(e.target.value)}
                         readOnly={!!googleEmail}
@@ -548,6 +594,7 @@ export default function AuthClient() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
                       <input type="email" placeholder="wanjiku@gmail.com" name="email" required
+                        suppressHydrationWarning
                         value={emailVal}
                         onChange={(e) => setEmailVal(e.target.value)}
                         readOnly={!!googleEmail}
@@ -561,6 +608,7 @@ export default function AuthClient() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">call</span>
                       <input type="tel" placeholder="0712345678" name="phone" required
+                        suppressHydrationWarning
                         className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                     </div>
                   </div>
@@ -571,6 +619,7 @@ export default function AuthClient() {
                         <div className="relative">
                           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
                           <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="password" required={!googleEmail}
+                            suppressHydrationWarning
                             value={password}
                             onChange={(e) => validatePassword(e.target.value)}
                             className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
@@ -614,6 +663,7 @@ export default function AuthClient() {
                         <div className="relative">
                           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock_reset</span>
                           <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="confirmPassword" required={!googleEmail}
+                            suppressHydrationWarning
                             className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                         </div>
                       </div>
@@ -625,6 +675,7 @@ export default function AuthClient() {
                       <div className="relative">
                         <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">storefront</span>
                         <input type="text" placeholder="Eldo Groceries" name="storeName" required={!inviteToken}
+                          suppressHydrationWarning
                           className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                       </div>
                     </div>
@@ -640,6 +691,7 @@ export default function AuthClient() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
                       <input type="email" placeholder="owner@business.com" name="email" required
+                        suppressHydrationWarning
                         className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
                     </div>
                   </div>
@@ -647,11 +699,23 @@ export default function AuthClient() {
                   <div className="group">
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
-                      <button type="button" className="text-[10px] font-black uppercase tracking-widest text-[#584fbc] hover:underline">{t.form.forgotPin}</button>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setResetEmail("");
+                          setResetError(null);
+                          setResetSuccess(null);
+                          setIsResetModalOpen(true);
+                        }}
+                        className="text-[10px] font-black uppercase tracking-widest text-[#584fbc] hover:underline cursor-pointer"
+                      >
+                        {t.form.forgotPin}
+                      </button>
                     </div>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
                       <input type={showPassword ? "text" : "password"} placeholder="••••" name="password" required
+                        suppressHydrationWarning
                         className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-xl font-black outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm tracking-[0.4em]" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
                         <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
@@ -666,14 +730,18 @@ export default function AuthClient() {
                 {!loading && <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
               </button>
 
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#dee4de]"></div></div>
-                <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-[#6d7a73]">{t.form.or}</span></div>
-              </div>
+              {!googleEmail && (
+                <>
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#dee4de]"></div></div>
+                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-[#6d7a73]">{t.form.or}</span></div>
+                  </div>
 
-              <div className="w-full flex justify-center">
-                <div id="google-signin-btn" className="w-full flex justify-center"></div>
-              </div>
+                  <div className="w-full flex justify-center">
+                    <div id="google-signin-btn" className="w-full flex justify-center text-center"></div>
+                  </div>
+                </>
+              )}
 
               <p className="text-center text-sm font-medium text-[#6d7a73]">
                 {mode === "login" ? t.form.newTo : t.form.alreadyHave}{" "}
@@ -701,6 +769,83 @@ export default function AuthClient() {
           &copy; 2026 Akiba AI &nbsp;·&nbsp; Secure &amp; Encrypted
         </div>
       </div>
+
+      {/* ── FORGOT PASSWORD / PIN MODAL ── */}
+      <AnimatePresence>
+        {isResetModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative border border-[#e4eae4]"
+            >
+              <button
+                type="button"
+                onClick={() => setIsResetModalOpen(false)}
+                className="absolute right-4 top-4 w-8 h-8 rounded-full border border-[#e4eae4] hover:bg-[#f8faf9] flex items-center justify-center text-[#6d7a73] transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+
+              <h3 className="text-lg font-black text-[#171d1a] tracking-tight mb-2">
+                Reset Account PIN
+              </h3>
+              <p className="text-xs font-semibold text-[#6d7a73] mb-6 leading-relaxed">
+                Enter your registered business email and we will verify your account.
+              </p>
+
+              {resetError && (
+                <div className="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  {resetError}
+                </div>
+              )}
+
+              {resetSuccess ? (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 leading-relaxed">
+                    <span className="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">check_circle</span>
+                    <span>{resetSuccess}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsResetModalOpen(false)}
+                    className="w-full h-11 bg-[#171d1a] hover:bg-black text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="group">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">
+                      Business Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      suppressHydrationWarning
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="e.g. manager@store.com"
+                      className="w-full h-12 px-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-xs font-semibold outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="w-full h-12 bg-[#00694c] hover:bg-[#008560] text-white text-xs font-black rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  >
+                    {resetLoading ? "Verifying..." : "Verify Account Email"}
+                    {!resetLoading && <span className="material-symbols-outlined text-[18px]">arrow_forward</span>}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

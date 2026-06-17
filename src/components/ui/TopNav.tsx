@@ -17,7 +17,7 @@ const navItems: Array<{ label: string; href: string; permission: Permission | nu
   { label: "Reports", href: "/reports", permission: "reports" },
 ];
 
-export function TopNav({ userRole = "owner", userName = "" }: { userRole?: string; userName?: string }) {
+export function TopNav({ userRole = "owner", userName = "", avatar = "" }: { userRole?: string; userName?: string; avatar?: string }) {
   const pathname = usePathname();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
@@ -99,7 +99,7 @@ export function TopNav({ userRole = "owner", userName = "" }: { userRole?: strin
   }
 
   return (
-    <nav className="h-20 bg-white border-b border-[#e4eae4] px-4 md:px-10 flex items-center justify-between sticky top-0 z-[100] shadow-sm">
+    <nav className="h-20 bg-white border-b border-[#e4eae4] px-4 md:px-10 flex items-center justify-between fixed top-0 left-0 right-0 w-full z-[100] shadow-sm">
       <div className="flex items-center gap-4 md:gap-12">
         {/* Brand */}
         <Link href="/dashboard" className="flex items-center gap-2 sm:gap-3">
@@ -334,15 +334,20 @@ export function TopNav({ userRole = "owner", userName = "" }: { userRole?: strin
                  )}
               </div>
 
-              <button onClick={handleLogout} className="h-11 px-3 sm:px-4 rounded-[16px] border border-[#ba1a1a]/15 bg-[#ba1a1a]/5 flex items-center gap-1.5 sm:gap-2 text-xs font-black text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-sm shrink-0">
-                 <span className="material-symbols-outlined text-[18px]">logout</span>
-                 <span className="hidden sm:inline">Sign Out</span>
-              </button>
-              
+
+
               <Link href="/dashboard/settings" className="block shrink-0">
-                 <div className="w-11 h-11 rounded-[16px] bg-[#171d1a] flex items-center justify-center text-white font-black text-xs shadow-lg shadow-black/10 cursor-pointer hover:scale-105 transition-transform uppercase">
-                    {userName ? userName.charAt(0) : "A"}
-                 </div>
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt="Profile"
+                    className="w-11 h-11 rounded-[16px] object-cover shadow-lg shadow-black/10 cursor-pointer hover:scale-105 transition-transform border border-[#e4eae4]"
+                  />
+                ) : (
+                  <div className="w-11 h-11 rounded-[16px] bg-[#171d1a] flex items-center justify-center text-white font-black text-xs shadow-lg shadow-black/10 cursor-pointer hover:scale-105 transition-transform uppercase">
+                     {userName ? userName.charAt(0) : "A"}
+                  </div>
+                )}
               </Link>
           </div>
       </div>

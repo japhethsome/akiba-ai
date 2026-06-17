@@ -209,9 +209,6 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             {isLoggedIn ? (
                <div className="flex items-center gap-3">
                   <Link href="/dashboard" className="bg-[#00694c] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Dashboard</Link>
-                  <button onClick={handleLogout} className="text-[#6d7a73] hover:text-[#ba1a1a] transition-colors">
-                     <span className="material-symbols-outlined text-[20px]">logout</span>
-                  </button>
                </div>
             ) : (
                <Link href="/auth" className="bg-[#00694c] text-white px-6 py-2 rounded-xl text-xs font-black shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Login</Link>
