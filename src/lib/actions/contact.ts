@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { sendEmail } from "@/lib/email";
 
 export async function sendContactEmail(formData: {
   name: string;
@@ -16,53 +17,33 @@ export async function sendContactEmail(formData: {
   }
 
   try {
-    const resendKey = process.env.RESEND_API_KEY;
     let emailSent = false;
     let emailError = null;
 
-    if (resendKey) {
-      try {
-        // Fetch the store owner's email dynamically to allow successful testing in Resend sandbox
-        const fallbackStore = await prisma.store.findFirst({
-          include: { users: { where: { role: "owner" } } }
-        });
-        const ownerEmail = fallbackStore?.users[0]?.email || "akibaai.eh@gmail.com";
+    try {
+      // Fetch the store owner's email dynamically
+      const fallbackStore = await prisma.store.findFirst({
+        include: { users: { where: { role: "owner" } } }
+      });
+      const ownerEmail = fallbackStore?.users[0]?.email || "akibaai.eh@gmail.com";
 
-        // Try sending to the store owner first
-        let recipientEmail = ownerEmail;
-
-        let response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${resendKey}`,
-          },
-          body: JSON.stringify({
-            from: "Contact Form <akibaai.eh@gmail.com>",
-            to: "akibaai.eh@gmail.com",
-            subject: `[Support Inquiry] ${name}`,
-            html: `
-              <h3>New Support Inquiry (Contact Form Submission)</h3>
-              <p><strong>Name:</strong> ${name}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p><strong>Phone:</strong> ${phone}</p>
-              <p><strong>Message:</strong></p>
-              <p>${message.replace(/\n/g, "<br/>")}</p>
-            `,
-          }),
-        });
-
-        if (response.ok) {
-          emailSent = true;
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          emailError = errData.message || "Resend API error";
-          console.error("Resend API failed:", errData);
-        }
-      } catch (err: any) {
-        emailError = err.message || "Resend fetch error";
-        console.error("Error calling Resend API:", err);
-      }
+      await sendEmail({
+        to: ownerEmail,
+        subject: `[Support Inquiry] ${name}`,
+        fromName: "Contact Form",
+        html: `
+          <h3>New Support Inquiry (Contact Form Submission)</h3>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, "<br/>")}</p>
+        `,
+      });
+      emailSent = true;
+    } catch (err: any) {
+      emailError = err.message || "Email send error";
+      console.error("Error sending contact email:", err);
     }
 
     // Fallback / Audit logging: Record in database SystemLog

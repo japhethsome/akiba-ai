@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { setSession } from "@/lib/session";
 import crypto from "crypto";
 import { getSafeErrorMessage } from "@/lib/error";
+import { sendEmail } from "@/lib/email";
 
 export async function registerOwner(formData: FormData) {
   const name = formData.get("name") as string;
@@ -162,6 +163,10 @@ export async function loginUser(formData: FormData) {
       return { error: "No account found with this email address. Please register first." };
     }
 
+    if (!user.is_active) {
+      return { error: "This account has been locked. Please contact support." };
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
@@ -213,6 +218,10 @@ export async function loginUserWithGoogle(email: string) {
       return { error: "No account found with this Google email. Please register first using the registration form." };
     }
 
+    if (!user.is_active) {
+      return { error: "This account has been locked. Please contact support." };
+    }
+
     await setSession(user.user_id, user.role, user.store_id);
 
     return { 
@@ -227,5 +236,127 @@ export async function loginUserWithGoogle(email: string) {
   } catch (error: any) {
     console.error("Google login error details:", error);
     return { error: getSafeErrorMessage(error, "An unexpected error occurred during Google login. Please try again in a few moments.") };
+  }
+}
+
+// ─── Request Password Reset OTP ──────────────────────────────────────────────
+export async function requestPasswordResetOtp(email: string) {
+  if (!email) {
+    return { error: "Email is required." };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return { success: true, message: "If the email exists, an OTP has been sent." };
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: {
+        reset_otp: otp,
+        reset_otp_expires: expires
+      }
+    });
+
+    // Send email via sendEmail
+    try {
+      await sendEmail({
+        to: [user.email, "akibaai.eh@gmail.com"],
+        subject: `[Akiba AI] Forgot Password OTP Verification`,
+        html: `
+          <h3>Akiba AI Password Reset Request</h3>
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>You requested to reset your password. Use the verification OTP code below to set a new password/PIN:</p>
+          <h2 style="letter-spacing: 0.2em; font-size: 28px; color: #00694c;">${otp}</h2>
+          <p>This code will expire in 15 minutes.</p>
+          <br/>
+          <p>If you did not make this request, please secure your account.</p>
+          <p>Akiba AI Support</p>
+        `,
+        fromName: "Akiba AI",
+      });
+    } catch (err) {
+      console.error("Failed to send OTP verification email:", err);
+    }
+
+    return { success: true, message: "OTP sent successfully. Please check your email!" };
+  } catch (error: any) {
+    console.error("OTP Request Error:", error);
+    return { error: "Failed to process OTP request. Please try again." };
+  }
+}
+
+// ─── Verify Password Reset OTP ──────────────────────────────────────────────
+export async function verifyOtp(email: string, otp: string) {
+  if (!email || !otp) {
+    return { error: "Email and OTP code are required." };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user || user.reset_otp !== otp) {
+      return { error: "Invalid OTP code." };
+    }
+
+    if (!user.reset_otp_expires || user.reset_otp_expires < new Date()) {
+      return { error: "OTP has expired. Please request a new one." };
+    }
+
+    return { success: true, message: "OTP verified successfully. Please enter your new password." };
+  } catch (error: any) {
+    console.error("OTP Verification Error:", error);
+    return { error: "Failed to verify OTP. Please try again." };
+  }
+}
+
+// ─── Reset Password with OTP ──────────────────────────────────────────────────
+export async function resetPasswordWithOtp(formData: FormData) {
+  const email = formData.get("email") as string;
+  const otp = formData.get("otp") as string;
+  const password = formData.get("password") as string;
+
+  if (!email || !otp || !password) {
+    return { error: "All fields are required." };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user || user.reset_otp !== otp) {
+      return { error: "Invalid OTP code or email." };
+    }
+
+    if (!user.reset_otp_expires || user.reset_otp_expires < new Date()) {
+      return { error: "OTP has expired. Please request a new one." };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: {
+        password_hash: hashedPassword,
+        reset_otp: null,
+        reset_otp_expires: null
+      }
+    });
+
+    return { success: true, message: "Password updated successfully! You can now log in." };
+  } catch (error: any) {
+    console.error("Password reset with OTP error:", error);
+    return { error: "Failed to reset password. Please try again." };
   }
 }

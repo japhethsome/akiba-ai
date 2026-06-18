@@ -40,9 +40,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed?: boolean
             <Image
               src="/main.png"
               alt="Akiba AI Logo"
-              width={120}
-              height={35}
-              className="object-contain"
+              width={160}
+              height={56}
+              className="h-[56px] w-auto object-contain"
             />
           )}
         </div>

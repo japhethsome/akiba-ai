@@ -42,6 +42,9 @@ model User {
   created_at    DateTime       @default(now())
   store_id      String?
   last_login    DateTime?
+  is_active     Boolean        @default(true)
+  reset_otp     String?
+  reset_otp_expires DateTime?
   inventoryLogs InventoryLog[]
   transactions  Transaction[]
   store         Store?         @relation(fields: [store_id], references: [id], onDelete: Cascade)

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { registerOwner, loginUser, registerAttendant, loginUserWithGoogle } from "@/lib/actions/auth";
+import { registerOwner, loginUser, registerAttendant, loginUserWithGoogle, requestPasswordResetOtp, resetPasswordWithOtp, verifyOtp } from "@/lib/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type Language = "en" | "sw";
@@ -101,11 +101,12 @@ export default function AuthClient() {
   const inviteToken = searchParams.get("invite");
   const modeParam = searchParams.get("mode");
   
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot_pin">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [lang, setLang] = useState<Language>("en");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [nameVal, setNameVal] = useState("");
   const [emailVal, setEmailVal] = useState("");
@@ -113,6 +114,10 @@ export default function AuthClient() {
   const [googleInfoMsg, setGoogleInfoMsg] = useState<string | null>(null);
 
   const [password, setPassword] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [otpStage, setOtpStage] = useState<"email" | "otp" | "password">("email");
+  const [resetOtpVal, setResetOtpVal] = useState("");
 
   // Parse JWT token safely
   function parseJwt(token: string) {
@@ -256,6 +261,74 @@ export default function AuthClient() {
       formData.append("isGoogleRegister", "true");
     }
     
+    if (mode === "forgot_pin") {
+      if (otpStage === "email") {
+        const email = formData.get("email") as string;
+        const res = await requestPasswordResetOtp(email);
+        setLoading(false);
+        if (res.error) {
+          setError(res.error);
+        } else {
+          setResetEmail(email);
+          setOtpStage("otp");
+          setSuccessMsg(res.message || "OTP code has been sent!");
+        }
+      } else if (otpStage === "otp") {
+        const otp = formData.get("otp") as string;
+        const res = await verifyOtp(resetEmail, otp);
+        setLoading(false);
+        if (res.error) {
+          setError(res.error);
+        } else {
+          setResetOtpVal(otp);
+          setPassword("");
+          setOtpStage("password");
+          setSuccessMsg(res.message || "OTP verified! Please enter your new password.");
+        }
+      } else {
+        const passwordVal = formData.get("password") as string;
+        const confirmPassword = formData.get("confirmPassword") as string;
+
+        // Password strength validation
+        const isPassStrong = passwordVal.length >= 8 &&
+                             /[0-9]/.test(passwordVal) &&
+                             /[^A-Za-z0-9]/.test(passwordVal) &&
+                             /[A-Z]/.test(passwordVal) &&
+                             /[a-z]/.test(passwordVal);
+
+        if (!isPassStrong) {
+          setLoading(false);
+          setError("Password is too weak. It must be at least 8 characters and include uppercase, lowercase, a number, and a special character.");
+          return;
+        }
+
+        if (passwordVal !== confirmPassword) {
+          setLoading(false);
+          setError("Passwords do not match");
+          return;
+        }
+
+        formData.append("email", resetEmail);
+        formData.append("otp", resetOtpVal);
+        const res = await resetPasswordWithOtp(formData);
+        setLoading(false);
+        if (res.error) {
+          setError(res.error);
+        } else {
+          setSuccessMsg(res.message || "Password updated successfully!");
+          setTimeout(() => {
+            setMode("login");
+            setOtpStage("email");
+            setResetEmail("");
+            setResetOtpVal("");
+            setPassword("");
+            setSuccessMsg(null);
+          }, 2000);
+        }
+      }
+      return;
+    }
+
     let result;
     if (mode === "register") {
       const name = formData.get("name") as string;
@@ -490,28 +563,30 @@ export default function AuthClient() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-4xl font-black mb-3 text-[#171d1a]"
               >
-                {mode === "login" ? t.form.loginGreeting : t.form.registerGreeting}
+                {mode === "forgot_pin" ? "Forgot PIN?" : (mode === "login" ? t.form.loginGreeting : t.form.registerGreeting)}
               </motion.h2>
               <p className="text-base text-[#6d7a73] font-medium leading-relaxed">
-                {mode === "login" ? t.form.loginDesc : t.form.registerDesc}
+                {mode === "forgot_pin" ? "Reset your password/PIN using email OTP verification." : (mode === "login" ? t.form.loginDesc : t.form.registerDesc)}
               </p>
             </div>
 
             {/* Tab Toggle */}
-            <div className="flex p-1.5 bg-[#f0f4f0] rounded-[18px] mb-8 border border-[#bccac1]">
-              <button
-                onClick={() => setMode("login")}
-                className={`flex-1 py-3 rounded-[14px] text-xs font-black uppercase tracking-widest transition-all ${mode === "login" ? "bg-white text-[#00694c] shadow-lg shadow-black/5" : "text-[#6d7a73]"}`}
-              >
-                {t.form.loginTab}
-              </button>
-              <button
-                onClick={() => setMode("register")}
-                className={`flex-1 py-3 rounded-[14px] text-xs font-black uppercase tracking-widest transition-all ${mode === "register" ? "bg-white text-[#00694c] shadow-lg shadow-black/5" : "text-[#6d7a73]"}`}
-              >
-                {t.form.registerTab}
-              </button>
-            </div>
+            {mode !== "forgot_pin" && (
+              <div className="flex p-1.5 bg-[#f0f4f0] rounded-[18px] mb-8 border border-[#bccac1]">
+                <button
+                  onClick={() => setMode("login")}
+                  className={`flex-1 py-3 rounded-[14px] text-xs font-black uppercase tracking-widest transition-all ${mode === "login" ? "bg-white text-[#00694c] shadow-lg shadow-black/5" : "text-[#6d7a73]"}`}
+                >
+                  {t.form.loginTab}
+                </button>
+                <button
+                  onClick={() => setMode("register")}
+                  className={`flex-1 py-3 rounded-[14px] text-xs font-black uppercase tracking-widest transition-all ${mode === "register" ? "bg-white text-[#00694c] shadow-lg shadow-black/5" : "text-[#6d7a73]"}`}
+                >
+                  {t.form.registerTab}
+                </button>
+              </div>
+            )}
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               {error && (
@@ -526,6 +601,13 @@ export default function AuthClient() {
                   className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px]">check_circle</span>
                   {googleInfoMsg}
+                </motion.div>
+              )}
+              {successMsg && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  {successMsg}
                 </motion.div>
               )}
               {mode === "register" && (
@@ -647,7 +729,7 @@ export default function AuthClient() {
                   <div className="group">
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.pinLabel}</label>
-                      <button type="button" className="text-[10px] font-black uppercase tracking-widest text-[#584fbc] hover:underline">{t.form.forgotPin}</button>
+                      <button type="button" onClick={() => { setMode("forgot_pin"); setOtpStage("email"); setError(null); setSuccessMsg(null); }} className="text-[10px] font-black uppercase tracking-widest text-[#584fbc] hover:underline cursor-pointer">{t.form.forgotPin}</button>
                     </div>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
@@ -661,26 +743,118 @@ export default function AuthClient() {
                 </motion.div>
               )}
 
-              <button type="submit" disabled={loading} className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-[#00694c] to-[#008560] shadow-xl shadow-[#00694c]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100">
-                {loading ? "..." : (mode === "login" ? t.form.signInBtn : t.form.createAccountBtn)}
+              {mode === "forgot_pin" && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  {otpStage === "email" && (
+                    <div className="group">
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">{t.form.emailLabel}</label>
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">mail</span>
+                        <input type="email" placeholder="owner@business.com" name="email" required
+                          className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                      </div>
+                    </div>
+                  )}
+
+                  {otpStage === "otp" && (
+                    <div className="group">
+                      <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Verification OTP Code</label>
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">domain_verification</span>
+                        <input type="text" placeholder="123456" name="otp" required maxLength={6}
+                          className="w-full h-14 pl-12 pr-4 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-lg font-black outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm tracking-[0.2em]" />
+                      </div>
+                    </div>
+                  )}
+
+                  {otpStage === "password" && (
+                    <div className="space-y-4">
+                      <div className="group">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">New Password / PIN</label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock</span>
+                          <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="password" required
+                            value={password}
+                            onChange={(e) => validatePassword(e.target.value)}
+                            className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bccac1] hover:text-[#00694c] transition-colors">
+                            <span className="material-symbols-outlined text-[20px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                          </button>
+                        </div>
+                        {/* Password Strength Indicators */}
+                        {password.length > 0 && (
+                          <div className="mt-2.5 p-3.5 bg-[#f8faf9] border border-[#e4eae4] rounded-2xl space-y-1.5 text-[11px] font-bold text-[#6d7a73] transition-all">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-[#3d4943] mb-1">Password Requirements:</p>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.length ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.length ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.length ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least 8 characters</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.case ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.case ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.case ? "text-[#171d1a]" : "text-[#6d7a73]"}>Uppercase & lowercase letters</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.number ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.number ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.number ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one number</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`material-symbols-outlined text-[14px] ${passwordStrength.special ? "text-emerald-600 font-bold" : "text-rose-500"}`}>
+                                {passwordStrength.special ? "check_circle" : "cancel"}
+                              </span>
+                              <span className={passwordStrength.special ? "text-[#171d1a]" : "text-[#6d7a73]"}>At least one special character</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="group">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-[#3d4943] group-focus-within:text-[#00694c] transition-colors">Confirm New Password</label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[20px] text-[#bccac1] group-focus-within:text-[#00694c] transition-colors">lock_reset</span>
+                          <input type={showPassword ? "text" : "password"} placeholder="••••••••" name="confirmPassword" required
+                            className="w-full h-14 pl-12 pr-12 bg-[#f5fbf5] border-2 border-[#bccac1] rounded-2xl text-sm font-medium outline-none focus:border-[#00694c] focus:bg-white transition-all shadow-sm" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              <button type="submit" disabled={loading} className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-[#00694c] to-[#008560] shadow-xl shadow-[#00694c]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 cursor-pointer">
+                {loading ? "..." : (mode === "forgot_pin" ? (otpStage === "email" ? "Send Reset OTP" : (otpStage === "otp" ? "Verify OTP" : "Reset Password")) : (mode === "login" ? t.form.signInBtn : t.form.createAccountBtn))}
                 {!loading && <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
               </button>
 
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#dee4de]"></div></div>
-                <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-[#6d7a73]">{t.form.or}</span></div>
-              </div>
+              {mode !== "forgot_pin" ? (
+                <>
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#dee4de]"></div></div>
+                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-[#6d7a73]">{t.form.or}</span></div>
+                  </div>
 
-              <div className="w-full flex justify-center">
-                <div id="google-signin-btn" className="w-full flex justify-center"></div>
-              </div>
+                  <div className="w-full flex justify-center">
+                    <div id="google-signin-btn" className="w-full flex justify-center"></div>
+                  </div>
 
-              <p className="text-center text-sm font-medium text-[#6d7a73]">
-                {mode === "login" ? t.form.newTo : t.form.alreadyHave}{" "}
-                <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="font-black text-[#584fbc] hover:underline">
-                  {mode === "login" ? t.form.registerTab : t.form.loginTab}
-                </button>
-              </p>
+                  <p className="text-center text-sm font-medium text-[#6d7a73]">
+                    {mode === "login" ? t.form.newTo : t.form.alreadyHave}{" "}
+                    <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="font-black text-[#584fbc] hover:underline cursor-pointer">
+                      {mode === "login" ? t.form.registerTab : t.form.loginTab}
+                    </button>
+                  </p>
+                </>
+              ) : (
+                <div className="text-center mt-4">
+                  <button type="button" onClick={() => { setMode("login"); setOtpStage("email"); setError(null); setSuccessMsg(null); }} className="text-xs font-black text-[#584fbc] hover:underline cursor-pointer">
+                    Back to Login
+                  </button>
+                </div>
+              )}
             </form>
 
             <motion.div 

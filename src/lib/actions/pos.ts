@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { getSafeErrorMessage } from "@/lib/error";
+import { sendEmail } from "@/lib/email";
 
 export async function processCheckout(
   cart: { productId: string, quantity: number }[],
@@ -291,8 +292,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
     const ownerEmail = storeOwner?.email || "akibaai.eh@gmail.com";
 
     // Send an email to the owner
-    const apiKey = process.env.RESEND_API_KEY;
-    if (apiKey) {
+    try {
       const itemsHtml = items.map(i => `
         <tr style="border-bottom: 1px solid #e4eae4;">
           <td style="padding: 12px; font-weight: bold; color: #171d1a; font-size: 14px;">${i.name}</td>
@@ -334,27 +334,14 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
         </div>
       `;
 
-      // Try sending to the store owner
-      let recipientEmail = ownerEmail;
-
-      let res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Akiba AI POS <akibaai.eh@gmail.com>",
-          to: recipientEmail,
-          subject: `[Low Stock Alert] Critical Stock Shortage in ${user.store?.name}`,
-          html: emailHtml,
-        }),
+      await sendEmail({
+        to: ownerEmail,
+        subject: `[Low Stock Alert] Critical Stock Shortage in ${user.store?.name}`,
+        html: emailHtml,
+        fromName: "Akiba AI POS",
       });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("Resend Low Stock Alert API failed:", errorData);
-      }
+    } catch (err: any) {
+      console.error("Failed to send low stock alert email:", err);
     }
 
     return { success: true };

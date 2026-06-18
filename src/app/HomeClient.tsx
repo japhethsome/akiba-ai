@@ -162,11 +162,11 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             className="flex items-center gap-2"
           >
             <Image
-              src="/main.png"
+              src="/main.webp"
               alt="Akiba AI Logo"
-              width={120}
-              height={35}
-              className="object-contain"
+              width={150}
+              height={48}
+              className="h-[48px] w-auto object-contain"
               priority
             />
           </motion.div>
@@ -205,7 +205,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 )}
               </AnimatePresence>
             </div>
-
+ 
             {isLoggedIn ? (
                <div className="flex items-center gap-3">
                   <Link href="/dashboard" className="bg-[#00694c] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Dashboard</Link>
@@ -219,7 +219,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
         </div>
       </header>
-
+ 
       {/* HERO */}
       <section ref={heroRef} className="relative pt-32 pb-16 px-6 overflow-hidden">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center relative z-10">
@@ -264,7 +264,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               </Link>
             </div>
           </motion.div>
-
+ 
           <motion.div 
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -285,7 +285,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               className="relative rounded-[40px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,105,76,0.25)] border border-white/50 aspect-square bg-white"
             >
               <Image 
-                src="/hero.png" 
+                src="/hero.webp" 
                 alt="Kenyan Shop Owner" 
                 fill 
                 className="object-cover"

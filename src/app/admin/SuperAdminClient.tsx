@@ -2,7 +2,15 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { adminResetUserPassword, adminDeleteStore, updateSuperAdminPassword } from "@/lib/actions/superadmin";
+import { useRouter } from "next/navigation";
+import { 
+  adminResetUserPassword, 
+  adminDeleteStore, 
+  updateSuperAdminPassword,
+  adminToggleUserStatus,
+  adminDeleteUser,
+  adminCreateUser 
+} from "@/lib/actions/superadmin";
 import { logout } from "@/lib/actions/auth";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -20,6 +28,7 @@ interface StoreUser {
   email: string;
   phone: string;
   role: string;
+  is_active: boolean;
   created_at: string;
   last_login: string | null;
 }
@@ -43,6 +52,7 @@ interface User {
   email: string;
   phone: string;
   role: string;
+  isActive: boolean;
   createdAt: string;
   lastLogin: string | null;
   store: { id: string; name: string; phone: string | null; email: string | null; address: string | null } | null;
@@ -81,6 +91,7 @@ function roleColor(role: string) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function SuperAdminClient({ overview, stores, users, profile }: Props) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "stores" | "users" | "account">("overview");
 
   // Reset password state
@@ -95,16 +106,35 @@ export function SuperAdminClient({ overview, stores, users, profile }: Props) {
   const [pwMsg, setPwMsg] = useState("");
   const [pwPending, setPwPending] = useState(false);
 
+  // Add user state
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [addPassword, setAddPassword] = useState("");
+  const [addRole, setAddRole] = useState("owner");
+  const [addStoreId, setAddStoreId] = useState("NEW_STORE");
+  const [newStoreName, setNewStoreName] = useState("");
+  const [addMsg, setAddMsg] = useState("");
+  const [addPending, setAddPending] = useState(false);
+
   // Search
   const [userSearch, setUserSearch] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
 
-  const filteredUsers = users.filter(
-    (u) =>
+  // Filters
+  const [filterStoreId, setFilterStoreId] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
       u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.phone.includes(userSearch)
-  );
+      u.phone.includes(userSearch);
+    const matchesStore = !filterStoreId || u.store?.id === filterStoreId;
+    const matchesRole = !filterRole || u.role === filterRole;
+    return matchesSearch && matchesStore && matchesRole;
+  });
 
   const filteredStores = stores.filter(
     (s) =>
@@ -124,7 +154,7 @@ export function SuperAdminClient({ overview, stores, users, profile }: Props) {
       {/* Top Bar */}
       <header className="bg-white border-b border-[#e4eae4] h-[68px] flex items-center px-6 md:px-10 justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
-          <Image src="/main.png" alt="Akiba AI" width={110} height={32} className="object-contain" priority />
+          <Image src="/main.png" alt="Akiba AI" width={140} height={48} className="h-[48px] w-auto object-contain" priority />
           <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-rose-600 text-white">Superadmin</span>
         </div>
         <div className="flex items-center gap-4">
@@ -278,6 +308,9 @@ export function SuperAdminClient({ overview, stores, users, profile }: Props) {
                         <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shrink-0 ${roleColor(u.role)}`}>
                           {u.role.split(":")[0]}
                         </span>
+                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shrink-0 ${u.is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                          {u.is_active ? 'Active' : 'Locked'}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -290,79 +323,182 @@ export function SuperAdminClient({ overview, stores, users, profile }: Props) {
         {/* ── USERS TAB ── */}
         {activeTab === "users" && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 max-w-sm">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[#bccac1]">search</span>
-                <input
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  placeholder="Search by name, email, or phone..."
-                  className="w-full pl-9 pr-4 h-11 bg-white border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
-                />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3 flex-1">
+                {/* Search */}
+                <div className="relative flex-1 min-w-[200px] max-w-sm">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[#bccac1]">search</span>
+                  <input
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Search by name, email, or phone..."
+                    className="w-full pl-9 pr-4 h-11 bg-white border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
+                  />
+                </div>
+                
+                {/* Store Filter */}
+                <select
+                  value={filterStoreId}
+                  onChange={(e) => setFilterStoreId(e.target.value)}
+                  className="h-11 px-3 bg-white border border-[#e4eae4] rounded-xl text-xs font-bold text-[#6d7a73] outline-none focus:border-[#00694c] transition-all cursor-pointer"
+                >
+                  <option value="">All Stores</option>
+                  {stores.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+
+                {/* Role Filter */}
+                <select
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
+                  className="h-11 px-3 bg-white border border-[#e4eae4] rounded-xl text-xs font-bold text-[#6d7a73] outline-none focus:border-[#00694c] transition-all cursor-pointer"
+                >
+                  <option value="">All Roles</option>
+                  <option value="owner">Owner</option>
+                  <option value="attendant">Attendant</option>
+                </select>
               </div>
-              <span className="text-sm font-bold text-[#6d7a73]">{filteredUsers.length} user{filteredUsers.length !== 1 ? "s" : ""}</span>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-sm font-bold text-[#6d7a73]">{filteredUsers.length} user{filteredUsers.length !== 1 ? "s" : ""}</span>
+                <button
+                  onClick={() => {
+                    setIsAddUserOpen(true);
+                    setAddName("");
+                    setAddEmail("");
+                    setAddPhone("");
+                    setAddPassword("");
+                    setAddStoreId("NEW_STORE");
+                    setNewStoreName("");
+                    setAddMsg("");
+                  }}
+                  className="h-11 px-4 bg-[#00694c] hover:bg-[#00553e] text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">person_add</span>
+                  Add User
+                </button>
+              </div>
             </div>
 
-            <div className="bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#f8faf9] border-b border-[#e4eae4]">
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">User</th>
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Contact</th>
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Store</th>
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Role</th>
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Last Login</th>
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">Joined</th>
-                    <th className="p-4 text-[10px] font-black uppercase tracking-widest text-[#6d7a73] text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((u) => (
-                    <tr key={u.id} className="border-b border-[#e4eae4] hover:bg-[#f5fbf5] transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-[#171d1a] text-white flex items-center justify-center font-black text-sm uppercase shrink-0">
-                            {u.name[0]}
-                          </div>
-                          <div className="font-black text-[#171d1a] text-sm">{u.name}</div>
+            {/* Group Users by Store */}
+            {(() => {
+              const groupedUsers: { [storeIdOrUnassigned: string]: { storeName: string; users: User[] } } = {};
+              filteredUsers.forEach((u) => {
+                const storeId = u.store?.id || "unassigned";
+                const storeName = u.store?.name || "Unassigned / Admin Accounts";
+                if (!groupedUsers[storeId]) {
+                  groupedUsers[storeId] = { storeName, users: [] };
+                }
+                groupedUsers[storeId].users.push(u);
+              });
+
+              return (
+                <div className="space-y-6">
+                  {Object.entries(groupedUsers).map(([storeId, group]) => (
+                    <div key={storeId} className="bg-white border border-[#e4eae4] rounded-[24px] overflow-hidden shadow-sm">
+                      {/* Group Header */}
+                      <div className="bg-[#f8faf9] px-6 py-4 border-b border-[#e4eae4] flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-[#00694c]">storefront</span>
+                          <h3 className="font-black text-[#171d1a] text-sm uppercase tracking-wider">{group.storeName}</h3>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-xs font-bold text-[#171d1a]">{u.email}</div>
-                        <div className="text-[10px] text-[#bccac1] font-medium mt-0.5">{u.phone}</div>
-                      </td>
-                      <td className="p-4">
-                        {u.store ? (
-                          <div>
-                            <div className="text-xs font-bold text-[#171d1a]">{u.store.name}</div>
-                            {u.store.phone && <div className="text-[10px] text-[#bccac1] font-medium">{u.store.phone}</div>}
-                            {u.store.address && <div className="text-[10px] text-[#bccac1] font-medium">{u.store.address}</div>}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-[#bccac1]">—</span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${roleColor(u.role)}`}>
-                          {u.role.split(":")[0]}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#00694c]/10 text-[#00694c]">
+                          {group.users.length} User{group.users.length !== 1 ? 's' : ''}
                         </span>
-                      </td>
-                      <td className="p-4 text-xs font-bold text-[#6d7a73]">{formatDate(u.lastLogin)}</td>
-                      <td className="p-4 text-xs font-bold text-[#6d7a73]">{formatDate(u.createdAt)}</td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => { setResetTarget(u); setNewPassword(""); setResetMsg(""); }}
-                          className="text-[#00694c] hover:text-[#00553e] font-bold text-xs flex items-center gap-1 ml-auto transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">lock_reset</span>
-                          Reset PW
-                        </button>
-                      </td>
-                    </tr>
+                      </div>
+
+                      {/* Users Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-[#f8faf9]/50 border-b border-[#e4eae4] text-[10px] font-black uppercase tracking-widest text-[#6d7a73]">
+                              <th className="p-4 pl-6">User</th>
+                              <th className="p-4">Contact</th>
+                              <th className="p-4">Role & Status</th>
+                              <th className="p-4">Last Login</th>
+                              <th className="p-4">Joined</th>
+                              <th className="p-4 pr-6 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.users.map((u) => (
+                              <tr key={u.id} className="border-b border-[#e4eae4] last:border-0 hover:bg-[#f5fbf5] transition-colors">
+                                <td className="p-4 pl-6">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-[#171d1a] text-white flex items-center justify-center font-black text-sm uppercase shrink-0">
+                                      {u.name[0]}
+                                    </div>
+                                    <div className="font-black text-[#171d1a] text-sm">{u.name}</div>
+                                  </div>
+                                </td>
+                                <td className="p-4">
+                                  <div className="text-xs font-bold text-[#171d1a]">{u.email}</div>
+                                  <div className="text-[10px] text-[#bccac1] font-medium mt-0.5">{u.phone}</div>
+                                </td>
+                                <td className="p-4">
+                                  <div className="flex flex-col gap-1">
+                                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest w-fit ${roleColor(u.role)}`}>
+                                      {u.role.split(":")[0]}
+                                    </span>
+                                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest w-fit ${u.isActive ? 'bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0]' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                                      {u.isActive ? 'Active' : 'Locked'}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="p-4 text-xs font-bold text-[#6d7a73]">{formatDate(u.lastLogin)}</td>
+                                <td className="p-4 text-xs font-bold text-[#6d7a73]">{formatDate(u.createdAt)}</td>
+                                <td className="p-4 pr-6 text-right">
+                                  <div className="flex items-center justify-end gap-3.5">
+                                    {/* Lock/Unlock */}
+                                    <button
+                                      onClick={async () => {
+                                        const res = await adminToggleUserStatus(u.id);
+                                        if (res.success) router.refresh();
+                                      }}
+                                      className={`font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer ${u.isActive ? 'text-amber-600 hover:text-amber-700' : 'text-emerald-600 hover:text-emerald-700'}`}
+                                      title={u.isActive ? 'Lock Account' : 'Unlock Account'}
+                                    >
+                                      <span className="material-symbols-outlined text-[16px]">{u.isActive ? 'lock' : 'lock_open'}</span>
+                                      {u.isActive ? 'Lock' : 'Unlock'}
+                                    </button>
+
+                                    {/* Reset PW */}
+                                    <button
+                                      onClick={() => { setResetTarget(u); setNewPassword(""); setResetMsg(""); }}
+                                      className="text-[#00694c] hover:text-[#00553e] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                                      title="Reset Password"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px]">lock_reset</span>
+                                      Reset PW
+                                    </button>
+
+                                    {/* Delete */}
+                                    <button
+                                      onClick={async () => {
+                                        if (confirm(`Are you sure you want to permanently delete user ${u.name}?`)) {
+                                          const res = await adminDeleteUser(u.id);
+                                          if (res.success) router.refresh();
+                                        }
+                                      }}
+                                      className="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                                      title="Delete User"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                                      Delete
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -478,6 +614,149 @@ export function SuperAdminClient({ overview, stores, users, profile }: Props) {
                 className="w-full h-11 bg-[#00694c] hover:bg-[#00553e] disabled:opacity-50 text-white rounded-xl font-black text-sm transition-colors flex items-center justify-center gap-2"
               >
                 {resetPending ? <span className="material-symbols-outlined animate-spin">refresh</span> : <><span className="material-symbols-outlined text-[18px]">lock_reset</span> Reset Password</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ADD USER MODAL ── */}
+      {isAddUserOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-[#171d1a]/80 backdrop-blur-sm" onClick={() => setIsAddUserOpen(false)} />
+          <div className="bg-white rounded-[28px] p-6 w-full max-w-md relative z-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xl font-black text-[#171d1a]">Add New User</h2>
+              <button onClick={() => setIsAddUserOpen(false)} className="text-[#bccac1] hover:text-rose-600 transition-colors cursor-pointer">
+                <span className="material-symbols-outlined text-[22px]">close</span>
+              </button>
+            </div>
+            <p className="text-[#6d7a73] text-sm mb-5 font-medium">
+              Create a new user account directly under a specific store.
+            </p>
+            {addMsg && (
+              <div className={`p-3 rounded-xl text-xs font-bold mb-4 ${addMsg.includes("successfully") ? "bg-[#f0fdf4] text-[#166534] border border-[#bbf7d0]" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>
+                {addMsg}
+              </div>
+            )}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="w-full h-11 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">Email Address</label>
+                <input
+                  type="email"
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  placeholder="e.g. john@example.com"
+                  className="w-full h-11 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">Phone Number</label>
+                <input
+                  type="tel"
+                  value={addPhone}
+                  onChange={(e) => setAddPhone(e.target.value)}
+                  placeholder="e.g. +254700000000"
+                  className="w-full h-11 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">Password</label>
+                <input
+                  type="password"
+                  value={addPassword}
+                  onChange={(e) => setAddPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  className="w-full h-11 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">Role</label>
+                  <select
+                    value={addRole}
+                    onChange={(e) => setAddRole(e.target.value)}
+                    className="w-full h-11 px-3 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-xs font-bold text-[#6d7a73] outline-none focus:border-[#00694c] transition-all cursor-pointer"
+                  >
+                    <option value="owner">Owner</option>
+                    <option value="attendant">Attendant</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">Assigned Store</label>
+                  <select
+                    value={addStoreId}
+                    onChange={(e) => setAddStoreId(e.target.value)}
+                    className="w-full h-11 px-3 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-xs font-bold text-[#6d7a73] outline-none focus:border-[#00694c] transition-all cursor-pointer"
+                  >
+                    <option value="NEW_STORE">[ Create New Store / Business ]</option>
+                    {stores.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {addStoreId === "NEW_STORE" && (
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#6d7a73] mb-1.5">New Store / Business Name</label>
+                  <input
+                    type="text"
+                    value={newStoreName}
+                    onChange={(e) => setNewStoreName(e.target.value)}
+                    placeholder="e.g. Eldoret Wholesalers"
+                    className="w-full h-11 px-4 bg-[#f8faf9] border border-[#e4eae4] rounded-xl text-sm font-bold outline-none focus:border-[#00694c] transition-all"
+                  />
+                </div>
+              )}
+
+              <button
+                disabled={addPending || !addName || !addEmail || !addPhone || addPassword.length < 6 || !addStoreId || (addStoreId === "NEW_STORE" && !newStoreName)}
+                onClick={async () => {
+                  setAddPending(true); setAddMsg("");
+                  const fd = new FormData();
+                  fd.append("name", addName);
+                  fd.append("email", addEmail);
+                  fd.append("phone", addPhone);
+                  fd.append("password", addPassword);
+                  fd.append("role", addRole);
+                  fd.append("storeId", addStoreId);
+                  if (addStoreId === "NEW_STORE") {
+                    fd.append("newStoreName", newStoreName);
+                  }
+ 
+                  const res = await adminCreateUser(fd);
+                  setAddPending(false);
+                  if (res.success) {
+                    setAddMsg("User created successfully!");
+                    router.refresh();
+                    setTimeout(() => {
+                      setIsAddUserOpen(false);
+                      setAddName("");
+                      setAddEmail("");
+                      setAddPhone("");
+                      setAddPassword("");
+                      setAddStoreId("NEW_STORE");
+                      setNewStoreName("");
+                      setAddMsg("");
+                    }, 1500);
+                  } else {
+                    setAddMsg(res.error || "Failed to create user.");
+                  }
+                }}
+                className="w-full h-11 bg-[#00694c] hover:bg-[#00553e] disabled:opacity-50 text-white rounded-xl font-black text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer mt-4"
+              >
+                {addPending ? <span className="material-symbols-outlined animate-spin">refresh</span> : <><span className="material-symbols-outlined text-[18px]">person_add</span> Create User</>}
               </button>
             </div>
           </div>

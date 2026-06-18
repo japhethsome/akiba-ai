@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { Prisma } from "@prisma/client";
+import { sendEmail } from "@/lib/email";
 
 export async function getDailyPLReport(dateStr: string) {
   const session = await getSession();
@@ -124,41 +125,13 @@ export async function sendReportEmail(recipientEmail: string, subject: string, r
   const session = await getSession();
   if (!session) return { success: false, error: "Unauthorized", redirected: false };
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return {
-      success: false,
-      error: "RESEND_API_KEY is not configured in your .env file.",
-      fallback: true,
-      redirected: false
-    };
-  }
-
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Akiba AI Reports <akibaai.eh@gmail.com>",
-        to: recipientEmail,
-        subject: subject,
-        html: reportHtml,
-      }),
+    await sendEmail({
+      to: recipientEmail,
+      subject: subject,
+      html: reportHtml,
+      fromName: "Akiba AI Reports",
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      console.error("Resend API error:", errorData);
-      return {
-        success: false,
-        error: errorData.message || "Failed to send email via Resend.",
-        fallback: false,
-        redirected: false
-      };
-    }
 
     return { success: true, redirected: false, redirectedTo: "" };
   } catch (error: any) {
