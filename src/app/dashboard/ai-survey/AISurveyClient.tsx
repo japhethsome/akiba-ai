@@ -103,7 +103,6 @@ export default function AISurveyClient() {
                   <span className="material-symbols-outlined text-sm">arrow_back</span>
                   Previous
                </button>
-               <span className="text-[10px] font-bold text-[#bccac1] italic">Akiba Intelligence Layer 1.0</span>
             </div>
           </motion.div>
         </AnimatePresence>

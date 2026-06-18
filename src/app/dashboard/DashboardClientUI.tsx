@@ -72,48 +72,27 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
       animate="show" 
       className="grid grid-cols-1 lg:grid-cols-12 gap-6"
     >
-      {/* MASSIVE HERO BENTO (Span 8) */}
-      <motion.div variants={item} className="lg:col-span-8 bg-[#171d1a] rounded-[32px] md:rounded-[40px] p-6 md:p-10 lg:p-12 relative overflow-hidden text-white flex flex-col justify-between min-h-[300px] md:min-h-[380px] shadow-2xl shadow-black/10">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00a87a]/15 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-full h-[50%] bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-        
-        <div className="relative z-10">
-           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-black mb-4 md:mb-6 tracking-tighter leading-[1.05] md:leading-[0.95]">
-              Hello, <span className="text-[#00a87a]">{userName}</span>.<br/>Your {formattedCategory} is thriving.
-           </h2>
-           <p className="text-[#bccac1] text-sm md:text-lg max-w-md font-medium leading-relaxed">
-              Akiba AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
-           </p>
-        </div>
-        <div className="relative z-10 flex flex-wrap gap-4 mt-6 md:mt-10">
-           <Link href="/dashboard/inventory">
-             <button className="bg-[#00a87a] text-[#171d1a] px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl font-black text-sm hover:scale-[1.03] active:scale-[0.98] transition-all shadow-xl shadow-[#00a87a]/20">
-                Review Restocks
-             </button>
-           </Link>
-           <button className="bg-white/10 backdrop-blur-md text-white px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl font-black text-sm hover:bg-white/20 transition-colors border border-white/10">
-              View Full Analytics
-           </button>
-        </div>
-      </motion.div>
-
-      {/* AI INTELLIGENCE BENTO (Span 4) */}
-      <motion.div variants={item} className="lg:col-span-4 bg-gradient-to-br from-[#584fbc] to-[#3a3385] rounded-[32px] md:rounded-[40px] p-6 md:p-10 relative overflow-hidden text-white flex flex-col shadow-2xl shadow-[#584fbc]/20 group">
-         <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+      {/* MASSIVE HERO BENTO (Span 12) */}
+      <motion.div variants={item} className="lg:col-span-12 bg-[#171d1a] rounded-[32px] md:rounded-[40px] p-6 md:p-10 lg:p-12 relative overflow-hidden text-white flex flex-col justify-between min-h-[300px] md:min-h-[380px] shadow-2xl shadow-black/10">
+         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00a87a]/15 blur-[120px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/3" />
+         <div className="absolute bottom-0 left-0 w-full h-[50%] bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
          
-         <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl md:rounded-3xl flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-xl">
-            <span className="material-symbols-outlined text-[28px] md:text-[32px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+         <div className="relative z-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-black mb-4 md:mb-6 tracking-tighter leading-[1.05] md:leading-[0.95]">
+               Hello, <span className="text-[#00a87a]">{userName}</span>.<br/>Your {formattedCategory} is thriving.
+            </h2>
+            <p className="text-[#bccac1] text-sm md:text-lg max-w-md font-medium leading-relaxed">
+               Akiba AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
+            </p>
          </div>
-         
-         <h3 className="text-2xl md:text-3xl font-black mb-3 tracking-tight">Intelligence Layer</h3>
-         <p className="text-white/70 text-xs md:text-sm font-medium mb-6 md:mb-8 leading-relaxed flex-1">
-            Your Akiba AI requires full shop context. Complete the onboarding survey to unlock predictive ordering and automated insights.
-         </p>
-         
-         <button onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))} className="flex items-center justify-between bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 p-4 md:p-5 rounded-2xl transition-colors mt-auto text-left w-full">
-            <span className="text-xs md:text-sm font-black uppercase tracking-wider text-white">Ask Akiba AI</span>
-            <span className="material-symbols-outlined text-white group-hover:translate-x-2 transition-transform">arrow_forward</span>
-         </button>
+         <div className="relative z-10 flex flex-wrap gap-4 mt-6 md:mt-10">
+            <Link href="/dashboard/inventory" className="bg-[#00a87a] text-[#171d1a] px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl font-black text-sm hover:scale-[1.03] active:scale-[0.98] transition-all shadow-xl shadow-[#00a87a]/20 flex items-center justify-center">
+               Review Restocks
+            </Link>
+            <button className="bg-white/10 backdrop-blur-md text-white px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl font-black text-sm hover:bg-white/20 transition-colors border border-white/10">
+               View Full Analytics
+            </button>
+         </div>
       </motion.div>
 
       {/* KPI GRID - 4 blocks spanning 3 cols each */}
@@ -180,11 +159,9 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
                </div>
             )}
          </div>
-         <Link href="/dashboard/inventory">
-            <button className="w-full py-4 md:py-5 mt-6 bg-white border-2 border-dashed border-[#bccac1] rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-[#6d7a73] hover:border-[#00694c] hover:text-[#00694c] transition-all hover:bg-[#00694c]/5">
-               View All Inventory
-            </button>
-         </Link>
+          <Link href="/dashboard/inventory" className="w-full py-4 md:py-5 mt-6 bg-white border-2 border-dashed border-[#bccac1] rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-[#6d7a73] hover:border-[#00694c] hover:text-[#00694c] transition-all hover:bg-[#00694c]/5 flex items-center justify-center">
+             View All Inventory
+          </Link>
       </motion.div>
 
     </motion.div>

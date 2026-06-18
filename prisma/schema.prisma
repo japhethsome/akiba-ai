@@ -14,10 +14,24 @@ model Store {
   category           String?
   onboarded          Boolean             @default(false)
   createdAt          DateTime            @default(now())
-  storeAddress           String?
-  storePhone             String?
-  storeEmail             String?
+  storeAddress       String?
+  storePhone         String?
+  storeEmail         String?
   managerPin         String              @default("1234")
+  description        String?
+  regNumber          String?
+  taxPin             String?
+  website            String?
+  city               String?
+  county             String?
+  postalCode         String?
+  receiptFooter      String?             @default("Thank you for shopping with us.")
+  twoFactorEnabled   Boolean             @default(false)
+  theme              String              @default("light")
+  language           String              @default("en")
+  currency           String              @default("KES")
+  timezone           String              @default("Africa/Nairobi")
+  dateFormat         String              @default("DD/MM/YYYY")
   forecastResults    ForecastResult[]
   insights           Insight[]
   inventoryLogs      InventoryLog[]
@@ -45,6 +59,7 @@ model User {
   is_active     Boolean        @default(true)
   reset_otp     String?
   reset_otp_expires DateTime?
+  avatar        String?
   inventoryLogs InventoryLog[]
   transactions  Transaction[]
   store         Store?         @relation(fields: [store_id], references: [id], onDelete: Cascade)

@@ -168,23 +168,16 @@ export function ForecastsClientUI({
       {/* 1. SECTOR HEADER & SEASONAL BANNER */}
       <motion.div variants={item} className="lg:col-span-12 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center mb-2">
         <div>
-          <span className="text-[11px] font-black text-[#00694c] uppercase tracking-[0.25em] bg-[#f0fdf4] px-4 py-2 rounded-full border border-[#00694c]/10">
-            Akiba Intelligence Layer
-          </span>
           <h1 className="text-4xl lg:text-5xl font-black text-[#171d1a] tracking-tight mt-3">
             Predictive Ordering &amp; Demand Forecasts
           </h1>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <Link href="/dashboard" className="flex-1 md:flex-initial">
-            <button className="w-full bg-white border border-[#e4eae4] text-[#6d7a73] hover:text-[#171d1a] px-6 py-3.5 rounded-2xl font-black text-xs hover:border-[#bccac1] transition-all">
-              Dashboard
-            </button>
+          <Link href="/dashboard" className="flex-1 md:flex-initial bg-white border border-[#e4eae4] text-[#6d7a73] hover:text-[#171d1a] px-6 py-3.5 rounded-2xl font-black text-xs hover:border-[#bccac1] transition-all flex items-center justify-center">
+            Dashboard
           </Link>
-          <Link href="/dashboard/inventory" className="flex-1 md:flex-initial">
-            <button className="w-full bg-[#171d1a] text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-black transition-all shadow-md">
-              Manage Stock
-            </button>
+          <Link href="/dashboard/inventory" className="flex-1 md:flex-initial bg-[#171d1a] text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-black transition-all shadow-md flex items-center justify-center">
+            Manage Stock
           </Link>
         </div>
       </motion.div>

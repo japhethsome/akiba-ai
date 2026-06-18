@@ -209,9 +209,6 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             {isLoggedIn ? (
                <div className="flex items-center gap-3">
                   <Link href="/dashboard" className="bg-[#00694c] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Dashboard</Link>
-                  <button onClick={handleLogout} className="text-[#6d7a73] hover:text-[#ba1a1a] transition-colors">
-                     <span className="material-symbols-outlined text-[20px]">logout</span>
-                  </button>
                </div>
             ) : (
                <Link href="/auth" className="bg-[#00694c] text-white px-6 py-2 rounded-xl text-xs font-black shadow-lg shadow-[#00694c]/20 hover:scale-105 transition-transform">Login</Link>
@@ -228,23 +225,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="flex flex-col items-start">
-              <Link href="#ai-features">
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.03 }}
-                  className="inline-flex items-center gap-2 bg-[#584fbc]/10 text-[#584fbc] text-[10px] px-4 py-2 rounded-full mb-6 font-black uppercase tracking-wider border border-[#584fbc]/20 cursor-pointer shadow-sm shadow-[#584fbc]/5 group"
-                >
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#584fbc] opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#584fbc]"></span>
-                  </span>
-                  <span className="material-symbols-outlined text-[16px] group-hover:rotate-12 transition-transform">auto_awesome</span>
-                  {t.hero.aiBadge}
-                </motion.div>
-              </Link>
-            </div>
+
             <h1 className="text-4xl lg:text-6xl font-black leading-[1] mb-6 text-[#171d1a] tracking-tight">
               {t.hero.title1} <br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00694c] to-[#00a87a]">{t.hero.title2}</span> <br/>
@@ -257,10 +238,6 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <Link href={isLoggedIn ? "/dashboard" : "/auth?mode=register"} className="bg-[#00694c] text-white h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-3 active:scale-[0.95] hover:bg-[#005a40] transition-all shadow-2xl shadow-[#00694c]/20 group">
                 {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
                 <span className="material-symbols-outlined text-[24px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-              </Link>
-              <Link href="#ai-features" className="bg-white text-[#171d1a] h-16 px-10 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-[0.95] hover:bg-[#f8fff9] transition-all border border-[#00694c]/10 shadow-sm cursor-pointer group">
-                <span className="material-symbols-outlined text-[#584fbc] group-hover:animate-bounce">auto_awesome</span>
-                {t.hero.aiCta}
               </Link>
             </div>
           </motion.div>
@@ -498,8 +475,6 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
         </div>
       </section>
-
-
       {/* CTA BANNER */}
       <section className="py-24 px-6">
         <motion.div 
