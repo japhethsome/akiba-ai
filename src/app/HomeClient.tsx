@@ -109,6 +109,15 @@ const translations = {
   }
 };
 
+const heroImages = [
+  "/hero.webp",
+  "/hero1.webp",
+  "/hero2.webp",
+  "/hero3.webp",
+  "/hero4.webp",
+  "/hero5.webp"
+];
+
 export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -123,6 +132,15 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
   const [lang, setLang] = useState<Language>("en");
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 3000); // 3-second intervals
+    return () => clearInterval(timer);
+  }, []);
   
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -261,14 +279,25 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
               }}
               className="relative rounded-[40px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,105,76,0.25)] border border-white/50 aspect-square bg-white"
             >
-              <Image 
-                src="/hero.webp" 
-                alt="Kenyan Shop Owner" 
-                fill 
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#00694c]/20 via-transparent to-transparent" />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentImageIndex}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  <Image 
+                    src={heroImages[currentImageIndex]} 
+                    alt="Kenyan Shop Owner" 
+                    fill 
+                    className="object-cover"
+                    priority
+                  />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#00694c]/20 via-transparent to-transparent pointer-events-none z-10" />
             </motion.div>
 
             <motion.div 
