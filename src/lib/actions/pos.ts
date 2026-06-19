@@ -329,7 +329,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
           </div>
           <hr style="border: 0; border-top: 1px solid #e4eae4; margin: 24px 0;" />
           <p style="color: #bccac1; font-size: 10px; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">
-            Powered by Akiba AI • Smart Retail Sourcing System
+            Powered by Akiba Yangu • Smart Retail Sourcing System
           </p>
         </div>
       `;
@@ -338,7 +338,7 @@ export async function notifyOwnerLowStock(items: { name: string; stock: number }
         to: ownerEmail,
         subject: `[Low Stock Alert] Critical Stock Shortage in ${user.store?.name}`,
         html: emailHtml,
-        fromName: "Akiba AI POS",
+        fromName: "Akiba Yangu POS",
       });
     } catch (err: any) {
       console.error("Failed to send low stock alert email:", err);

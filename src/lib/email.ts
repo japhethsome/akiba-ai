@@ -4,7 +4,7 @@ export async function sendEmail({
   to,
   subject,
   html,
-  fromName = "Akiba AI"
+  fromName = "Akiba Yangu"
 }: {
   to: string | string[];
   subject: string;

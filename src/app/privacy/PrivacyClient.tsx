@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         </div>
 
         <footer className="mt-16 pt-8 border-t border-[#f0f4f0] text-center">
-          <p className="text-xs opacity-50">&copy; 2026 Akiba AI. Built for the future of Kenyan retail.</p>
+          <p className="text-xs opacity-50">&copy; 2026 Akiba Yangu. Built for the future of Kenyan retail.</p>
         </footer>
       </motion.div>
     </div>

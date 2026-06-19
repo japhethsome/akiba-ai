@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       // 4. Autonomous AI Analysis
       const { text: analysis } = await generateText({
         model: openaiClient('gpt-4o-mini'),
-        system: `You are Akiba AI's autonomous logistics agent. Analyze the inventory snapshot for "${store.name}". 
+        system: `You are Akiba Yangu's autonomous logistics agent. Analyze the inventory snapshot for "${store.name}". 
                  Identify critical stockouts and provide a 3-sentence briefing. 
                  Format: [ENGLISH REPORT] followed by [KISWAHILI REPORT].`,
         prompt: `Inventory Snapshot: ${JSON.stringify(lowStockItems)}`,

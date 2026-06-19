@@ -295,7 +295,7 @@ export function InventoryClient({
                 <div>
                   <h3 className="text-base font-black text-[#9f1239]">Action Required</h3>
                   <p className="text-[#be123c] text-xs font-medium">
-                    Akiba AI detected <strong className="font-black">{lowStockCount} items</strong> at or below critical reorder levels.
+                    Akiba Yangu detected <strong className="font-black">{lowStockCount} items</strong> at or below critical reorder levels.
                   </p>
                 </div>
               </div>

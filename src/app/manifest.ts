@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Akiba AI",
-    short_name: "Akiba AI",
+    name: "Akiba Yangu",
+    short_name: "Akiba Yangu",
     description: "Smart inventory intelligence for your business growth.",
     start_url: "/",
     display: "standalone",

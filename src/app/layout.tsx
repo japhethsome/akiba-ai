@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "https://akiba-ai.vercel.app"
   ),
-  title: "Akiba AI - AI-Powered Inventory",
+  title: "Akiba Yangu - AI-Powered Inventory",
   description: "Smart inventory intelligence for your business growth.",
   icons: {
     icon: "/logo.png",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Akiba AI",
+    title: "Akiba Yangu",
   },
 };
 

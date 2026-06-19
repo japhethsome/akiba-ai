@@ -1,8 +1,8 @@
-# 🇰🇪 Akiba AI
+# 🇰🇪 Akiba Yangu
 
-> **Akiba AI** is a premium, AI-driven inventory operating system and Point-of-Sale (POS) terminal tailored specifically for Kenyan Small and Medium Enterprises (SMEs). 
+> **Akiba Yangu** is a premium, AI-driven inventory operating system and Point-of-Sale (POS) terminal tailored specifically for Kenyan Small and Medium Enterprises (SMEs). 
 
-Akiba AI helps store owners track stock, physically register attendants, process transactions, link suppliers, and chat with a localized AI assistant trained directly on their active store inventory and sales ledger.
+Akiba Yangu helps store owners track stock, physically register attendants, process transactions, link suppliers, and chat with a localized AI assistant trained directly on their active store inventory and sales ledger.
 
 ---
 

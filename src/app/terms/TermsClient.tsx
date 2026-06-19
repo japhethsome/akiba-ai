@@ -26,7 +26,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-black text-[#171d1a] mb-3">1. Service Description</h2>
             <p>
-              Akiba AI provides an inventory management and forecasting platform for SMEs. We aim for high accuracy 
+              Akiba Yangu provides an inventory management and forecasting platform for SMEs. We aim for high accuracy 
               in our AI predictions, but these should be used as a guide alongside professional business judgment.
             </p>
           </section>
@@ -50,14 +50,14 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-black text-[#171d1a] mb-3">4. Limitation of Liability</h2>
             <p>
-              Akiba AI is not liable for business losses resulting from stockouts, overstocking, or system downtime. 
+              Akiba Yangu is not liable for business losses resulting from stockouts, overstocking, or system downtime. 
               We strive for 99.9% uptime but do not guarantee uninterrupted service.
             </p>
           </section>
         </div>
 
         <footer className="mt-16 pt-8 border-t border-[#f0f4f0] text-center">
-          <p className="text-xs text-[#6d7a73] mb-4">&copy; 2026 Akiba AI. All rights reserved.</p>
+          <p className="text-xs text-[#6d7a73] mb-4">&copy; 2026 Akiba Yangu. All rights reserved.</p>
           <Link href="/auth?mode=register" className="text-[#00694c] font-black hover:underline">Accept &amp; Start Trial</Link>
         </footer>
       </motion.div>

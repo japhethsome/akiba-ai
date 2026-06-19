@@ -270,18 +270,18 @@ export async function requestPasswordResetOtp(email: string) {
     try {
       await sendEmail({
         to: [user.email, "akibaai.eh@gmail.com"],
-        subject: `[Akiba AI] Forgot Password OTP Verification`,
+        subject: `[Akiba Yangu] Forgot Password OTP Verification`,
         html: `
-          <h3>Akiba AI Password Reset Request</h3>
+          <h3>Akiba Yangu Password Reset Request</h3>
           <p>Hello <strong>${user.name}</strong>,</p>
           <p>You requested to reset your password. Use the verification OTP code below to set a new password/PIN:</p>
           <h2 style="letter-spacing: 0.2em; font-size: 28px; color: #00694c;">${otp}</h2>
           <p>This code will expire in 15 minutes.</p>
           <br/>
           <p>If you did not make this request, please secure your account.</p>
-          <p>Akiba AI Support</p>
+          <p>Akiba Yangu Support</p>
         `,
-        fromName: "Akiba AI",
+        fromName: "Akiba Yangu",
       });
     } catch (err) {
       console.error("Failed to send OTP verification email:", err);

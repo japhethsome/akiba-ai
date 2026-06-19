@@ -31,7 +31,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed?: boolean
           {collapsed ? (
             <Image
               src="/logo.png"
-              alt="Akiba AI Icon"
+              alt="Akiba Yangu Icon"
               width={32}
               height={32}
               className="object-contain"
@@ -39,7 +39,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: { isCollapsed?: boolean
           ) : (
             <Image
               src="/main.png"
-              alt="Akiba AI Logo"
+              alt="Akiba Yangu Logo"
               width={160}
               height={56}
               className="h-[56px] w-auto object-contain"

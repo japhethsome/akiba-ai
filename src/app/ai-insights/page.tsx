@@ -29,7 +29,7 @@ interface Message {
 
 export default function AIInsightsPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "ai", text: "Habari! Mimi ni Akiba AI. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!", time: "Just now" },
+    { role: "ai", text: "Habari! Mimi ni Akiba Yangu. Ninaweza kukusaidia kuelewa biashara yako. Ask me anything about your inventory, sales, or finances — in English or Kiswahili!", time: "Just now" },
   ]);
 
   const [input, setInput] = useState("");
@@ -160,7 +160,7 @@ export default function AIInsightsPage() {
                   <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                 </div>
                 <div>
-                  <h2 className="text-sm font-black text-[#171d1a] leading-none">Akiba AI</h2>
+                  <h2 className="text-sm font-black text-[#171d1a] leading-none">Akiba Yangu</h2>
                   <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#00694c" }}>● Online</span>
                 </div>
               </div>

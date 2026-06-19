@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       .map(t => `- Sold ${t.quantity}x ${t.product?.name || "Product"} for KES ${t.total_price} on ${t.created_at.toLocaleDateString()}`)
       .join("\n") || "No transactions recorded yet.";
 
-    const systemInstruction = `You are Akiba AI, a retail analytics expert for "${store.name}" (Category: ${store.category || "Retail"}).
+    const systemInstruction = `You are Akiba Yangu, a retail analytics expert for "${store.name}" (Category: ${store.category || "Retail"}).
 Based on the products and transaction data below, generate exactly 3 retail insights.
 Return ONLY a valid JSON array of exactly 3 objects. Do not wrap the JSON output in markdown blocks like \`\`\`json. Return only the raw JSON.
 

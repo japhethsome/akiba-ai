@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { registerOwner, loginUser, registerAttendant, loginUserWithGoogle, requestPasswordResetOtp, resetPasswordWithOtp, verifyOtp } from "@/lib/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,13 +15,13 @@ const translations = {
       badge: "AI-Powered for Kenyan SMEs",
       title: "Smart Inventory",
       subtitle: "for Every Shop.",
-      desc: "Never run out of stock again. Akiba AI predicts what you need, when you need it — in English or Kiswahili.",
+      desc: "Never run out of stock again. Akiba Yangu predicts what you need, when you need it — in English or Kiswahili.",
       features: [
         { icon: "insights", text: "AI demand forecasting" },
         { icon: "translate", text: "English & Kiswahili support" },
         { icon: "wifi_off", text: "Works fully offline" },
       ],
-      testimonial: "Akiba AI showed me I was losing KES 12,000 a month to dead stock. I fixed it in a week.",
+      testimonial: "Akiba Yangu showed me I was losing KES 12,000 a month to dead stock. I fixed it in a week.",
       owner: "Wanjiku M.",
       location: "Mini-Mart Owner · Eldoret"
     },
@@ -28,7 +29,7 @@ const translations = {
       loginGreeting: "Welcome back",
       registerGreeting: "Create your account",
       loginDesc: "Sign in to manage your inventory with AI.",
-      registerDesc: "Join 500+ Kenyan businesses on Akiba AI.",
+      registerDesc: "Join 500+ Kenyan businesses on Akiba Yangu.",
       loginTab: "Login",
       registerTab: "Register",
       phoneLabel: "Phone Number (M-Pesa linked)",
@@ -39,7 +40,7 @@ const translations = {
       createAccountBtn: "Create My Account",
       or: "OR",
       googleBtn: "Continue with Google",
-      newTo: "New to Akiba AI?",
+      newTo: "New to Akiba Yangu?",
       alreadyHave: "Already have an account?",
       fullName: "Full Name",
       storeName: "Store Name",
@@ -48,7 +49,7 @@ const translations = {
       ownerRole: "Owner",
       attendantRole: "Attendant",
       backHome: "Back to Home",
-      aiAccent: "Akiba AI predicts stock needs, flags dead stock, and explains your P&L in plain language — in English or Kiswahili."
+      aiAccent: "Akiba Yangu predicts stock needs, flags dead stock, and explains your P&L in plain language — in English or Kiswahili."
     }
   },
   sw: {
@@ -56,13 +57,13 @@ const translations = {
       badge: "Inatumia AI kwa Biashara za Kenya",
       title: "Inventori ya Kidijitali",
       subtitle: "kwa Kila Duka.",
-      desc: "Usiishiwe na bidhaa tena. Akiba AI inatabiri unachohitaji, wakati unapokihitaji — kwa Kiingereza au Kiswahili.",
+      desc: "Usiishiwe na bidhaa tena. Akiba Yangu inatabiri unachohitaji, wakati unapokihitaji — kwa Kiingereza au Kiswahili.",
       features: [
         { icon: "insights", text: "Utabiri wa mahitaji wa AI" },
         { icon: "translate", text: "Msaada wa Kiingereza na Kiswahili" },
         { icon: "wifi_off", text: "Inafanya kazi bila mtandao" },
       ],
-      testimonial: "Akiba AI ilinionyesha nilikuwa nikipoteza KES 12,000 kila mwezi kwa bidhaa zisizouzika. Nilirekebisha kwa wiki moja tu.",
+      testimonial: "Akiba Yangu ilinionyesha nilikuwa nikipoteza KES 12,000 kila mwezi kwa bidhaa zisizouzika. Nilirekebisha kwa wiki moja tu.",
       owner: "Wanjiku M.",
       location: "Mmiliki wa Mini-Mart · Eldoret"
     },
@@ -70,7 +71,7 @@ const translations = {
       loginGreeting: "Karibu tena",
       registerGreeting: "Fungua akaunti yako",
       loginDesc: "Ingia ili usimamie bidhaa zako kwa AI.",
-      registerDesc: "Jiunge na biashara 500+ za Kenya kwenye Akiba AI kama mmiliki.",
+      registerDesc: "Jiunge na biashara 500+ za Kenya kwenye Akiba Yangu kama mmiliki.",
       loginTab: "Ingia",
       registerTab: "Jisajili",
       phoneLabel: "Nambari ya Simu (M-Pesa)",
@@ -81,7 +82,7 @@ const translations = {
       createAccountBtn: "Fungua Akaunti Yangu",
       or: "AU",
       googleBtn: "Endelea na Google",
-      newTo: "Mgeni kwenye Akiba AI?",
+      newTo: "Mgeni kwenye Akiba Yangu?",
       alreadyHave: "Tayari una akaunti?",
       fullName: "Jina Kamili",
       storeName: "Jina la Duka",
@@ -90,7 +91,7 @@ const translations = {
       ownerRole: "Mmiliki",
       attendantRole: "Mhudumu",
       backHome: "Rudi Mwanzo",
-      aiAccent: "Akiba AI inatabiri mahitaji ya bidhaa, inaonyesha bidhaa zisizouzika, na kuelezea faida na hasara kwa lugha rahisi."
+      aiAccent: "Akiba Yangu inatabiri mahitaji ya bidhaa, inaonyesha bidhaa zisizouzika, na kuelezea faida na hasara kwa lugha rahisi."
     }
   }
 };
@@ -447,10 +448,14 @@ export default function AuthClient() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-1.5 mb-4"
           >
-            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-[20px]">wallet</span>
-            </div>
-            <span className="text-white font-black tracking-tight">Akiba<span style={{ color: "#86f8c9" }}>AI</span></span>
+            <Image
+              src="/main.webp"
+              alt="Akiba Yangu Logo"
+              width={160}
+              height={60}
+              className="h-[60px] w-auto object-contain brightness-0 invert"
+              priority
+            />
           </motion.div>
 
           {/* Main copy */}
@@ -872,7 +877,7 @@ export default function AuthClient() {
         </div>
 
         <div className="py-8 text-center text-[10px] font-black uppercase tracking-[0.3em] text-[#bccac1]">
-          &copy; 2026 Akiba AI &nbsp;·&nbsp; Secure &amp; Encrypted
+          &copy; 2026 Akiba Yangu &nbsp;·&nbsp; Secure &amp; Encrypted
         </div>
       </div>
     </div>

@@ -95,7 +95,7 @@ export function ForecastsClientUI({
         }
       } else if (type === "TAB_ALREADY_EXISTS") {
         if (event.data.targetTabId === myTabId) {
-          alert("Akiba AI is already open in another tab. Please use that tab or close it to continue here.");
+          alert("Akiba Yangu is already open in another tab. Please use that tab or close it to continue here.");
           window.location.href = "/";
         }
       }
@@ -527,7 +527,7 @@ export function ForecastsClientUI({
         </div>
       </motion.div>
 
-      {/* Floating Sparkles 'Ask Akiba AI Coach' Button */}
+      {/* Floating Sparkles 'Ask Akiba Yangu Coach' Button */}
       <div className="fixed bottom-24 right-6 z-[160] pointer-events-auto">
         <motion.button
           whileHover={{ scale: 1.05, y: -2 }}
@@ -546,7 +546,7 @@ export function ForecastsClientUI({
             <path d="M11.5 2C11.5 2 12.3 5.7 14 7.4C15.7 9.1 19.4 9.9 19.4 9.9C19.4 9.9 15.7 10.7 14 12.4C12.3 14.1 11.5 17.8 11.5 17.8C11.5 17.8 10.7 14.1 9 12.4C7.3 10.7 3.6 9.9 3.6 9.9C3.6 9.9 7.3 9.1 9 7.4C10.7 5.7 11.5 2 11.5 2Z" />
             <path d="M19 14C19 14 19.4 15.8 20.2 16.6C21 17.4 22.8 17.8 22.8 17.8C22.8 17.8 21 18.2 20.2 19C19.4 19.8 19 21.6 19 21.6C19 21.6 18.6 19.8 17.8 19C17 18.2 15.2 17.8 15.2 17.8C15.2 17.8 17 17.4 17.8 16.6C18.6 15.8 19 14 19 14Z" />
           </svg>
-          <span>Ask Akiba AI Coach</span>
+          <span>Ask Akiba Yangu Coach</span>
         </motion.button>
       </div>
     </motion.div>
