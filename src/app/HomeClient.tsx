@@ -591,7 +591,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-2 md:col-span-1">
-              <span className="text-3xl font-black text-[#86f8c9] mb-6 block">Akiba <span className="text-[#958dff]">AI</span></span>
+              <span className="text-3xl font-black text-[#86f8c9] mb-6 block">Akiba <span className="text-[#958dff]">Yangu</span></span>
               <p className="text-sm opacity-60 mb-8 leading-relaxed max-w-xs">Smart inventory for the modern Kenyan business. Automate, predict, and grow.</p>
               <div className="flex gap-6">
                 <Link href="#" className="material-symbols-outlined cursor-pointer hover:text-[#86f8c9] transition-all hover:scale-110">social_leaderboard</Link>

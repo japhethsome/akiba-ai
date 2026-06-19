@@ -403,7 +403,7 @@ export default function OnboardingClient({ storeName, ownerName }: Props) {
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
         <span className="text-white font-black text-lg">
-          Akiba<span style={{ color: "#4ade80" }}>AI</span>
+          Akiba<span style={{ color: "#4ade80" }}>Yangu</span>
         </span>
         <div className="flex bg-white/10 p-1 rounded-full gap-1">
           {(["en", "sw"] as Lang[]).map(l => (

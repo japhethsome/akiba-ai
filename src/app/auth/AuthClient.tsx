@@ -532,7 +532,7 @@ export default function AuthClient() {
         {/* Language & Nav Header */}
         <div className="flex items-center justify-between px-6 py-6 lg:px-10">
           <Link href="/" className="lg:hidden flex items-center gap-2">
-            <span className="text-xl font-black text-[#00694c]">Akiba <span className="text-[#584fbc]">AI</span></span>
+            <span className="text-xl font-black text-[#00694c]">Akiba <span className="text-[#584fbc]">Yangu</span></span>
           </Link>
           <div className="hidden lg:block">
             <Link href="/" className="text-xs font-black text-[#584fbc] hover:underline flex items-center gap-1">

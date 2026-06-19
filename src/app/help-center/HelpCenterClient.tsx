@@ -145,7 +145,7 @@ export default function HelpCenterClient() {
             <span className="text-white text-lg font-black">A</span>
           </div>
           <span className="text-[#171d1a]">
-            Akiba<span className="text-[#00694c]">AI</span>
+            Akiba<span className="text-[#00694c]">Yangu</span>
           </span>
         </Link>
         <Link 
