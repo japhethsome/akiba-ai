@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-[#f5fbf5] flex flex-col items-center py-20 px-6">
       <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-[#bccac1] z-50 flex items-center justify-between px-6 md:px-12">
         <Link href="/" className="text-2xl font-black text-[#00694c]">
-          Akiba <span className="text-[#584fbc]">AI</span>
+          Akiba <span className="text-[#584fbc]">Yangu</span>
         </Link>
         <Link href="/" className="text-sm font-black text-[#3d4943] hover:text-[#00694c]">Home</Link>
       </nav>

@@ -103,10 +103,11 @@ export function TopNav({ userRole = "owner", userName = "", avatar = "" }: { use
       <div className="flex items-center gap-4 md:gap-12">
         {/* Brand */}
         <Link href="/dashboard" className="flex items-center gap-2 sm:gap-3">
-          <div className="w-9 h-9 rounded-[12px] bg-gradient-to-tr from-[#171d1a] to-[#3d4943] flex items-center justify-center shadow-lg shadow-black/10 shrink-0">
-            <span className="material-symbols-outlined text-[20px] text-white">account_balance_wallet</span>
-          </div>
-          <span className="font-black text-xl sm:text-2xl text-[#171d1a] tracking-tighter">Akiba<span className="text-[#00a87a]">AI</span></span>
+          <img
+            src="/main.webp"
+            alt="Akiba Yangu Logo"
+            className="h-[56px] w-auto object-contain"
+          />
         </Link>
  
         {/* Links */}
