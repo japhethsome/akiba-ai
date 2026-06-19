@@ -106,7 +106,7 @@ export function TopNav({ userRole = "owner", userName = "", avatar = "" }: { use
           <img
             src="/main.webp"
             alt="Akiba Yangu Logo"
-            className="h-[56px] w-auto object-contain"
+            className="h-[68px] w-auto object-contain"
           />
         </Link>
  

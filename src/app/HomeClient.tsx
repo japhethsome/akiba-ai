@@ -164,9 +164,9 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Image
               src="/main.webp"
               alt="Akiba Yangu Logo"
-              width={150}
-              height={48}
-              className="h-[48px] w-auto object-contain"
+              width={180}
+              height={58}
+              className="h-[58px] w-auto object-contain"
               priority
             />
           </motion.div>
