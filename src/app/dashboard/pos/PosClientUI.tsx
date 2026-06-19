@@ -91,6 +91,9 @@ export function PosClientUI({
   const [isScanning, setIsScanning] = useState(false);
   const [scanLaserActive, setScanLaserActive] = useState(false);
   const [scannedMessage, setScannedMessage] = useState("");
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Customer & Loyalty States
   const [customers, setCustomers] = useState<Customer[]>([
@@ -312,21 +315,93 @@ export function PosClientUI({
     }
   };
 
-  // Simulated camera scanner sequence
-  const startCameraScan = () => {
+  // Live Camera Scanner Access and Controls
+  const startCameraScan = async () => {
     setIsScanning(true);
     setScanLaserActive(true);
-    // Simulate finding a barcode in 2.5 seconds
-    setTimeout(() => {
-      if (products.length > 0) {
-        // Select a random product to simulate
-        const randomProduct = products[Math.floor(Math.random() * products.length)];
-        const barcode = getProductBarcode(randomProduct.id);
-        handleBarcodeScanned(barcode);
-      }
-      setIsScanning(false);
-    }, 2200);
+    setCameraError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      setCameraStream(stream);
+    } catch (err: any) {
+      console.error("Camera access failed:", err);
+      setCameraError("Camera permission denied or camera unavailable. Please grant permission.");
+      setScanLaserActive(false);
+    }
   };
+
+  const stopCameraScan = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setIsScanning(false);
+    setScanLaserActive(false);
+  };
+
+  // Bind video element to camera stream
+  useEffect(() => {
+    if (isScanning && cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+      videoRef.current.play().catch(err => {
+        console.error("Error playing video:", err);
+      });
+    }
+  }, [isScanning, cameraStream]);
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  // Real-time scanning loop utilizing native browser BarcodeDetector API if available
+  useEffect(() => {
+    let active = true;
+    let animationFrameId: number;
+
+    async function scanLoop() {
+      if (!active || !isScanning || !cameraStream || !videoRef.current) return;
+
+      if (typeof window !== "undefined" && "BarcodeDetector" in window) {
+        try {
+          const formats = ["qr_code", "ean_13", "ean_8", "code_128", "code_39", "upc_a"];
+          // @ts-ignore
+          const detector = new window.BarcodeDetector({ formats });
+          const video = videoRef.current;
+          if (video.readyState === video.HAVE_CURRENT_DATA || video.readyState === video.HAVE_ENOUGH_DATA) {
+            const barcodes = await detector.detect(video);
+            if (barcodes.length > 0 && active) {
+              const code = barcodes[0].rawValue;
+              handleBarcodeScanned(code);
+              stopCameraScan();
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("BarcodeDetector error during frame capture:", err);
+        }
+      }
+
+      if (active) {
+        animationFrameId = requestAnimationFrame(scanLoop);
+      }
+    }
+
+    if (isScanning && cameraStream) {
+      scanLoop();
+    }
+
+    return () => {
+      active = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [isScanning, cameraStream]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => 
@@ -2700,47 +2775,83 @@ export function PosClientUI({
         )}
       </AnimatePresence>
 
-      {/* MODAL 6: CAMERA SCANNER SIMULATION MODAL */}
+      {/* MODAL 6: CAMERA SCANNER MODAL */}
       <AnimatePresence>
         {isScanning && (
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-[#171d1a]/85 backdrop-blur-sm"
-              onClick={() => setIsScanning(false)}
+              onClick={stopCameraScan}
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 w-full max-w-sm relative z-10 shadow-2xl flex flex-col items-center space-y-6 text-center"
+              className="bg-white rounded-3xl p-6 w-full max-w-sm relative z-10 shadow-2xl flex flex-col items-center space-y-5 text-center"
             >
               <div className="space-y-1">
-                <h3 className="font-black text-sm text-[#171d1a]">Simulated QR/Barcode Camera Scanner</h3>
-                <p className="text-[10px] text-[#6d7a73]">Accessing register scanner camera feed...</p>
+                <h3 className="font-black text-sm text-[#171d1a]">Live Barcode & QR Scanner</h3>
+                <p className="text-[10px] text-[#6d7a73]">Accessing device camera stream...</p>
               </div>
 
-              {/* Glowing Scan Box with Laser line */}
-              <div className="w-56 h-56 border-2 border-emerald-500 rounded-3xl relative overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner">
-                <span className="material-symbols-outlined text-gray-300 text-[64px]">qr_code_scanner</span>
+              {/* Camera Video / Status Box */}
+              <div className="w-60 h-60 border-2 border-emerald-500 rounded-3xl relative overflow-hidden bg-black flex items-center justify-center shadow-inner">
+                {cameraError ? (
+                  <div className="p-4 text-xs font-bold text-rose-500 leading-normal">{cameraError}</div>
+                ) : (
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover" 
+                  />
+                )}
                 
                 {/* Horizontal scan line */}
-                {scanLaserActive && (
+                {scanLaserActive && !cameraError && (
                   <motion.div 
-                    animate={{ y: [0, 224, 0] }}
+                    animate={{ y: [0, 236, 0] }}
                     transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                    className="absolute left-0 right-0 h-0.5 bg-emerald-500 shadow-md shadow-emerald-500/50"
+                    className="absolute left-0 right-0 h-0.5 bg-emerald-500 shadow-md shadow-emerald-500/50 z-10"
                     style={{ top: 0 }}
                   />
+                )}
+
+                {/* Loading State */}
+                {!cameraStream && !cameraError && (
+                  <span className="material-symbols-outlined text-emerald-500 text-[64px] animate-pulse z-10">photo_camera</span>
                 )}
               </div>
 
               <div className="text-[10px] font-bold text-[#6d7a73] leading-normal">
-                Align the product barcode within the scanner box.<br />
-                Simulating camera recognition...
+                {cameraStream 
+                  ? "Align the product barcode/QR code within the scanner box." 
+                  : "Requesting camera access permissions..."
+                }
+              </div>
+
+              {/* Simulation triggers when testing or if camera is unavailable */}
+              <div className="w-full space-y-2 border-t border-gray-100 pt-3">
+                <div className="text-[9px] uppercase text-[#6d7a73] font-black tracking-widest text-left">Quick Scan Simulation</div>
+                <div className="grid grid-cols-2 gap-1.5 max-h-[100px] overflow-y-auto pr-1 no-scrollbar">
+                  {products.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        handleBarcodeScanned(getProductBarcode(p.id));
+                        stopCameraScan();
+                      }}
+                      className="h-8 px-2 bg-gray-50 hover:bg-[#f0fdf4] border border-[#e4eae4] hover:border-[#00a87a] text-[10px] font-black text-gray-700 hover:text-[#00694c] rounded-lg transition-colors truncate text-left"
+                    >
+                      ⚡ Scan {p.name}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <button 
-                onClick={() => setIsScanning(false)}
-                className="w-full h-11 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-xl font-black text-xs transition-all active:scale-95"
+                onClick={stopCameraScan}
+                className="w-full h-11 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-xl font-black text-xs transition-all active:scale-95 cursor-pointer"
               >
                 Cancel Scanning Session
               </button>
