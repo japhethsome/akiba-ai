@@ -102,7 +102,7 @@ function getLocalFallbackResponse(query: string, store: any, todaySalesCount: nu
   }
 
   // 6. Help / Greeting / Fallback default
-  return `Jambo! I am **Akiba AI**, your smart retail assistant.\n\nI am currently running in **offline backup mode** because the Gemini API connection is busy or unavailable. However, I still have direct access to your local store records!\n\nYou can ask me about:\n1. **Low stock alerts** (e.g. *"what is low in stock?"*)\n2. **Supplier contacts** (e.g. *"list my suppliers"*)\n3. **Today's sales** (e.g. *"how much did we sell today?"*)\n4. **Product details & margins** (e.g. *"show my inventory margins"*)\n5. **Drafting orders** (e.g. *"draft a reorder message"*)\n\nWhat would you like to check?`;
+  return `Jambo! I am **Akiba Yangu**, your smart retail assistant.\n\nI am currently running in **offline backup mode** because the Gemini API connection is busy or unavailable. However, I still have direct access to your local store records!\n\nYou can ask me about:\n1. **Low stock alerts** (e.g. *"what is low in stock?"*)\n2. **Supplier contacts** (e.g. *"list my suppliers"*)\n3. **Today's sales** (e.g. *"how much did we sell today?"*)\n4. **Product details & margins** (e.g. *"show my inventory margins"*)\n5. **Drafting orders** (e.g. *"draft a reorder message"*)\n\nWhat would you like to check?`;
 }
 
 // ─── POST — Main AI chat handler ─────────────────────────────────────────────
@@ -247,7 +247,7 @@ ${marketFeedContext}
       .map(e => `• KES ${Number(e.amount).toLocaleString()} for "${e.reason}" on ${new Date(e.created_at).toLocaleDateString("en-KE")}`)
       .join("\n") || "No operating expenses logged recently.";
 
-    const systemPrompt = `You are Akiba AI, an advanced, highly intelligent business intelligence assistant and financial coach for a Kenyan SME retail store named "${store?.name || "this store"}" (Category: ${store?.category || "Retail"}).
+    const systemPrompt = `You are Akiba Yangu, an advanced, highly intelligent business intelligence assistant and financial coach for a Kenyan SME retail store named "${store?.name || "this store"}" (Category: ${store?.category || "Retail"}).
 
 You have access to the store's LIVE, multi-dimensional database data:
 

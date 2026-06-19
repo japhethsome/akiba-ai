@@ -154,7 +154,7 @@ export function SuperAdminClient({ overview, stores, users, profile }: Props) {
       {/* Top Bar */}
       <header className="bg-white border-b border-[#e4eae4] h-[68px] flex items-center px-6 md:px-10 justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3">
-          <Image src="/main.png" alt="Akiba AI" width={140} height={48} className="h-[48px] w-auto object-contain" priority />
+          <Image src="/main.png" alt="Akiba Yangu" width={160} height={56} className="h-[56px] w-auto object-contain" priority />
           <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-rose-600 text-white">Superadmin</span>
         </div>
         <div className="flex items-center gap-4">

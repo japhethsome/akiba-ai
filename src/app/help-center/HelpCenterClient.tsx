@@ -30,7 +30,7 @@ const helpCategories: Category[] = [
       },
       {
         question: "Does the POS work offline?",
-        answer: "Yes! Akiba AI stores transaction logs locally in your browser storage if the internet connection is lost. It will automatically synchronize all sales records to the database as soon as connection is restored."
+        answer: "Yes! Akiba Yangu stores transaction logs locally in your browser storage if the internet connection is lost. It will automatically synchronize all sales records to the database as soon as connection is restored."
       },
       {
         question: "Can my staff use the POS?",
@@ -326,7 +326,7 @@ export default function HelpCenterClient() {
 
       {/* Footer bar */}
       <footer className="w-full bg-[#171d1a] border-t border-white/5 py-6 px-6 text-center text-[10px] text-[#6d7a73] uppercase tracking-[0.25em]">
-        Akiba AI &copy; 2026. Designed for Uasin Gishu County SMEs.
+        Akiba Yangu &copy; 2026. Designed for Uasin Gishu County SMEs.
       </footer>
     </div>
   );

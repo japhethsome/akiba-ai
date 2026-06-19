@@ -164,7 +164,7 @@ function buildWhatsAppMessage(
     `2. Expected delivery date\n` +
     `3. Any price adjustments from the last order\n\n` +
     `Asante sana! 🙏\n` +
-    `*${storeName}* — Powered by Akiba AI`;
+    `*${storeName}* — Powered by Akiba Yangu`;
 
   return message;
 }
@@ -389,7 +389,7 @@ export function PurchaseOrderModal({
                       </div>
                       <span className="font-black text-[#171d1a] text-base">{storeName}</span>
                     </div>
-                    <p className="text-[10px] text-[#6d7a73] font-bold uppercase tracking-widest">Powered by Akiba AI</p>
+                    <p className="text-[10px] text-[#6d7a73] font-bold uppercase tracking-widest">Powered by Akiba Yangu</p>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] font-black uppercase tracking-widest text-[#6d7a73] mb-1">Purchase Order</div>

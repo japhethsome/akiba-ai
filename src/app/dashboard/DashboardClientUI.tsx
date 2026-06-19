@@ -32,7 +32,7 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
         }
       } else if (type === "TAB_ALREADY_EXISTS") {
         if (event.data.targetTabId === myTabId) {
-          alert("Akiba AI is already open in another tab. Please use that tab or close it to continue here.");
+          alert("Akiba Yangu is already open in another tab. Please use that tab or close it to continue here.");
           window.location.href = "/";
         }
       }
@@ -82,7 +82,7 @@ export function DashboardClientUI({ userName, storeCategory, kpis, lowStockCount
                Hello, <span className="text-[#00a87a]">{userName}</span>.<br/>Your {formattedCategory} is thriving.
             </h2>
             <p className="text-[#bccac1] text-sm md:text-lg max-w-md font-medium leading-relaxed">
-               Akiba AI has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
+               Akiba Yangu has analyzed your recent sales. You have <span className="text-white font-bold border-b-2 border-[#00a87a]">{lowStockCount} critical restock actions</span> needed before the weekend rush.
             </p>
          </div>
          <div className="relative z-10 flex flex-wrap gap-4 mt-6 md:mt-10">

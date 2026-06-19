@@ -190,7 +190,7 @@ export function AiChatBubble() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Mambo! I am Akiba AI, your business intelligence assistant. I have live access to your store's inventory, suppliers, and sales data. Ask me anything!",
+      content: "Mambo! I am Akiba Yangu, your business intelligence assistant. I have live access to your store's inventory, suppliers, and sales data. Ask me anything!",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -250,7 +250,7 @@ export function AiChatBubble() {
       setMessages([
         {
           role: "assistant",
-          content: "Chat cleared! I am Akiba AI, your business intelligence assistant. How can I help you today?",
+          content: "Chat cleared! I am Akiba Yangu, your business intelligence assistant. How can I help you today?",
         },
       ]);
       setApiError("");
@@ -400,7 +400,7 @@ export function AiChatBubble() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-black text-sm text-white flex items-center gap-2">
-                  Akiba AI
+                  Akiba Yangu
                   <span className="bg-[#00a87a]/20 border border-[#00a87a]/40 text-[#00a87a] text-[9px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded">Live Data</span>
                 </h3>
                 <p className="text-[10px] text-[#bccac1] font-bold">
@@ -453,7 +453,7 @@ export function AiChatBubble() {
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00694c] animate-bounce" style={{ animationDelay: "0ms" }}></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00694c] animate-bounce" style={{ animationDelay: "150ms" }}></span>
                     <span className="w-1.5 h-1.5 rounded-full bg-[#00694c] animate-bounce" style={{ animationDelay: "300ms" }}></span>
-                    <span className="text-[10px] font-bold text-[#6d7a73] ml-1">Akiba AI is thinking...</span>
+                    <span className="text-[10px] font-bold text-[#6d7a73] ml-1">Akiba Yangu is thinking...</span>
                   </div>
                 </div>
               )}

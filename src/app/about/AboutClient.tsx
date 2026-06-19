@@ -35,7 +35,7 @@ export default function AboutClient() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#171d1a] mb-6 sm:mb-8 leading-tight text-center">
-            The Brains Behind <br className="hidden sm:inline"/> <span className="text-[#00694c]">Akiba AI</span>
+            The Brains Behind <br className="hidden sm:inline"/> <span className="text-[#00694c]">Akiba Yangu</span>
           </h1>
           <p className="text-base sm:text-xl text-[#3d4943] leading-relaxed text-center mb-10 sm:mb-16 opacity-80">
             We are a group of developers, designers, and thinkers dedicated to digitizing the Kenyan SME landscape through high-fidelity AI solutions.
@@ -46,7 +46,7 @@ export default function AboutClient() {
           <section>
             <h2 className="text-xl sm:text-3xl font-black text-[#171d1a] mb-4 sm:mb-6">Our Mission</h2>
             <p>
-              Akiba AI was born from a simple observation: running a shop in Kenya shouldn't be a game of guesswork. 
+              Akiba Yangu was born from a simple observation: running a shop in Kenya shouldn't be a game of guesswork. 
               Millions of small business owners lose revenue every day because they either run out of their best-selling stock 
               or have their capital trapped in items that don't move.
             </p>
@@ -79,7 +79,7 @@ export default function AboutClient() {
             <h2 className="text-xl sm:text-3xl font-black text-[#171d1a] mb-4 sm:mb-6">Our Vision</h2>
             <p>
               We envision a future where every SME in Africa has the digital tools to thrive, scale, and contribute 
-              meaningfully to their local economies. Akiba AI is just the beginning of that journey.
+              meaningfully to their local economies. Akiba Yangu is just the beginning of that journey.
             </p>
           </section>
         </div>

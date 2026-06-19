@@ -130,7 +130,7 @@ export async function sendReportEmail(recipientEmail: string, subject: string, r
       to: recipientEmail,
       subject: subject,
       html: reportHtml,
-      fromName: "Akiba AI Reports",
+      fromName: "Akiba Yangu Reports",
     });
 
     return { success: true, redirected: false, redirectedTo: "" };

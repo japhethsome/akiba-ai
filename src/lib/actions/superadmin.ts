@@ -119,9 +119,9 @@ export async function adminResetUserPassword(userId: string, newPassword: string
   try {
     await sendEmail({
       to: [user.email, "akibaai.eh@gmail.com"],
-      subject: `[Akiba AI] Password Reset Notification`,
+      subject: `[Akiba Yangu] Password Reset Notification`,
       html: `
-        <h3>Akiba AI Security Notification</h3>
+        <h3>Akiba Yangu Security Notification</h3>
         <p>Hello <strong>${user.name}</strong>,</p>
         <p>A request to reset your password was approved by the System Administrator.</p>
         <p>Your password/PIN has been successfully updated to: <strong>${newPassword}</strong></p>
@@ -129,7 +129,7 @@ export async function adminResetUserPassword(userId: string, newPassword: string
         <br/>
         <p>This notification is also sent to the official Akiba archive: <em>akibaai.eh@gmail.com</em></p>
       `,
-      fromName: "Akiba AI",
+      fromName: "Akiba Yangu",
     });
   } catch (err) {
     console.error("Failed to send password reset email:", err);

@@ -31,7 +31,7 @@ const questions = [
   },
   {
     id: 5,
-    question: "What is your primary goal for Akiba AI?",
+    question: "What is your primary goal for Akiba Yangu?",
     options: ["Automated restock alerts", "Sales forecasting", "Financial reporting", "Fraud prevention"],
     icon: "auto_awesome"
   }

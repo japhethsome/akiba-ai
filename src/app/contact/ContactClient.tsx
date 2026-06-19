@@ -99,7 +99,7 @@ export default function ContactClient() {
                 Let&apos;s build <br className="hidden md:block" />something great.
               </h1>
               <p className="text-sm font-medium text-[#6d7a73] leading-relaxed">
-                Have questions about how Akiba AI can automate your shop&apos;s inventory, predict stockouts, or sync dynamic payment methods? Our team is here to assist.
+                Have questions about how Akiba Yangu can automate your shop&apos;s inventory, predict stockouts, or sync dynamic payment methods? Our team is here to assist.
               </p>
             </div>
 
@@ -161,7 +161,7 @@ export default function ContactClient() {
 
             {/* Small Footer Signature */}
             <div className="hidden md:block text-[10px] font-black text-[#bccac1] uppercase tracking-[0.2em]">
-              &copy; 2026 Akiba AI. Secure Connection.
+              &copy; 2026 Akiba Yangu. Secure Connection.
             </div>
           </div>
 
@@ -308,7 +308,7 @@ export default function ContactClient() {
                   <div>
                     <h3 className="text-xl font-black text-[#171d1a]">Message Sent Successfully!</h3>
                     <p className="text-xs text-[#6d7a73] font-medium leading-relaxed max-w-sm mt-2">
-                      Thank you for contacting Akiba AI, {form.name}. Our customer support desk will reach back to you at {form.email} or {form.phone} shortly.
+                      Thank you for contacting Akiba Yangu, {form.name}. Our customer support desk will reach back to you at {form.email} or {form.phone} shortly.
                     </p>
                   </div>
                   <button
@@ -329,7 +329,7 @@ export default function ContactClient() {
 
       {/* footer bar */}
       <footer className="w-full bg-[#171d1a] border-t border-white/5 py-6 px-6 text-center text-[10px] text-[#6d7a73] uppercase tracking-[0.25em]">
-        Akiba AI &copy; 2026. Designed for Uasin Gishu County SMEs.
+        Akiba Yangu &copy; 2026. Designed for Uasin Gishu County SMEs.
       </footer>
     </div>
   );

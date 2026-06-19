@@ -163,10 +163,10 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
           >
             <Image
               src="/main.webp"
-              alt="Akiba AI Logo"
-              width={150}
-              height={48}
-              className="h-[48px] w-auto object-contain"
+              alt="Akiba Yangu Logo"
+              width={180}
+              height={58}
+              className="h-[58px] w-auto object-contain"
               priority
             />
           </motion.div>
@@ -465,7 +465,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     <span className="material-symbols-outlined text-[28px]">{c.icon}</span>
                   </div>
                   <span className="text-[9px] font-black text-[#584fbc] bg-[#584fbc]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    Akiba AI
+                    Akiba Yangu
                   </span>
                 </div>
                 <h3 className="text-lg font-black text-[#171d1a] mb-3 tracking-tight z-10">{c.title}</h3>
@@ -493,7 +493,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <span className="material-symbols-outlined text-white text-2xl">rocket_launch</span>
               </motion.div>
               <h2 className="text-3xl md:text-4xl font-black leading-[1.1] mb-6 tracking-tight">Ready to grow <br/> smarter?</h2>
-              <p className="text-base md:text-lg mb-10 text-white/70 leading-relaxed font-medium max-w-lg">Join 500+ Kenyan businesses using Akiba AI to automate inventory and understand their profits.</p>
+              <p className="text-base md:text-lg mb-10 text-white/70 leading-relaxed font-medium max-w-lg">Join 500+ Kenyan businesses using Akiba Yangu to automate inventory and understand their profits.</p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href={isLoggedIn ? "/dashboard" : "/auth?mode=register"} className="bg-[#00694c] text-white h-14 px-10 rounded-2xl font-black text-base flex items-center justify-center active:scale-[0.95] hover:bg-[#005a40] transition-all">
                   {isLoggedIn ? "Go to Dashboard" : t.hero.cta}
@@ -602,7 +602,7 @@ export default function LandingPage({ isLoggedIn }: { isLoggedIn?: boolean }) {
             ))}
           </div>
           <div className="pt-10 border-t border-white/5 text-center">
-            <p className="text-[10px] opacity-30 uppercase tracking-[0.4em] font-black">&copy; 2026 Akiba AI. Secure &amp; Encrypted.</p>
+            <p className="text-[10px] opacity-30 uppercase tracking-[0.4em] font-black">&copy; 2026 Akiba Yangu. Secure &amp; Encrypted.</p>
           </div>
         </div>
       </footer>
