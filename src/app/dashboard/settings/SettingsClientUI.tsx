@@ -979,41 +979,41 @@ export function SettingsClientUI({ initialData }: SettingsClientUIProps) {
       </div>
 
       {/* STICKY BOTTOM ACTION BAR */}
-      <div className={`fixed bottom-0 left-0 right-0 h-20 bg-white/95 border-t border-[#e4eae4] shadow-lg flex items-center justify-between px-6 z-40 transition-transform duration-300   ${
+      <div className={`fixed bottom-[68px] md:bottom-0 left-0 right-0 h-20 bg-white/95 border-t border-[#e4eae4] shadow-lg flex items-center justify-between px-4 sm:px-6 z-40 transition-transform duration-300 ${
         hasChanges() ? "translate-y-0" : "translate-y-0"
       }`}>
-        <div className="max-w-6xl mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="max-w-6xl mx-auto w-full flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             {hasChanges() ? (
               <>
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-xs font-bold text-amber-600">You have unsaved changes</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-bold text-amber-600 truncate">Unsaved changes</span>
               </>
             ) : (
               <>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#00694c]" />
-                <span className="text-xs font-bold text-[#00694c]">All settings in sync</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#00694c] flex-shrink-0" />
+                <span className="text-[10px] sm:text-xs font-bold text-[#00694c] truncate">All in sync</span>
               </>
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <button
               type="button"
               onClick={handleReset}
               disabled={!hasChanges() || loading}
-              className="px-4 py-2 text-xs font-black text-[#ba1a1a] hover:bg-red-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
+              className="px-2.5 sm:px-4 py-2 text-[10px] sm:text-xs font-black text-[#ba1a1a] hover:bg-red-50 rounded-xl transition-all disabled:opacity-30 disabled:hover:bg-transparent"
             >
-              Reset Changes
+              Reset
             </button>
             <button
               type="button"
               onClick={() => handleSave()}
               disabled={!hasChanges() || loading}
-              className="px-6 h-11 bg-[#171d1a] hover:bg-black text-white text-xs font-black rounded-xl transition-all flex items-center gap-2 shadow-sm disabled:opacity-40 cursor-pointer"
+              className="px-3.5 sm:px-6 h-10 sm:h-11 bg-[#171d1a] hover:bg-black text-white text-[10px] sm:text-xs font-black rounded-xl transition-all flex items-center gap-1.5 sm:gap-2 shadow-sm disabled:opacity-40 cursor-pointer"
             >
-              {loading ? "Saving..." : "Save Changes"}
-              {!loading && <span className="material-symbols-outlined text-[16px]">check</span>}
+              {loading ? "Saving..." : "Save"}
+              {!loading && <span className="material-symbols-outlined text-[14px] sm:text-[16px]">check</span>}
             </button>
           </div>
         </div>
